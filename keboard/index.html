@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Letter Hunt with Pip the Robot!</title>
+<style>
+  :root{
+    --red:#FF5A5F; --red-dark:#D6383D;
+    --blue:#3FA7FF; --blue-dark:#1E7FD6;
+    --yellow:#FFC93C; --yellow-dark:#E0A400;
+    --green:#4CD97B; --green-dark:#22B25A;
+    --purple:#B57BFF; --purple-dark:#8A4FE0;
+    --ink:#2B2A4C;
+    --paper:#FFF8EC;
+    --card:#FFFFFF;
+    --shadow:0 6px 0 rgba(43,42,76,0.18);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:'Baloo 2','Trebuchet MS','Segoe UI Rounded','Comic Sans MS',system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 10% 15%, #FFE9C7 0%, transparent 40%),
+      radial-gradient(circle at 90% 10%, #CFEFFF 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #E4FFE0 0%, transparent 40%),
+      var(--paper);
+    color:var(--ink);
+    overflow-x:hidden;
+    user-select:none;
+  }
+  #app{
+    min-height:100%;
+    display:flex; flex-direction:column; align-items:center;
+    padding:14px 14px 26px;
+  }
+
+  header{
+    width:100%; max-width:760px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; margin-bottom:6px;
+  }
+  header h1{ margin:0; font-size:clamp(20px,4.5vw,32px); }
+  header h1 span.hi{color:var(--purple-dark);}
+  .badge{
+    background:var(--card); border-radius:16px; padding:8px 14px;
+    box-shadow:var(--shadow); font-weight:700; font-size:clamp(14px,3vw,18px);
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .badge .star{color:var(--yellow-dark);}
+
+  .robot-row{
+    width:100%; max-width:760px;
+    display:flex; align-items:flex-end; gap:14px;
+    margin:6px 0 14px;
+  }
+  #robot{ width:70px; height:70px; flex:0 0 auto;
+    filter:drop-shadow(0 4px 0 rgba(43,42,76,0.15));
+    transition:transform .25s ease;
+  }
+  #robot.bounce{animation:bounce .5s ease;}
+  @keyframes bounce{
+    0%{transform:translateY(0) rotate(0);}
+    30%{transform:translateY(-10px) rotate(-4deg);}
+    60%{transform:translateY(0) rotate(4deg);}
+    100%{transform:translateY(0) rotate(0);}
+  }
+  #speech{
+    position:relative; background:var(--card); border-radius:18px;
+    padding:10px 16px; box-shadow:var(--shadow);
+    font-size:clamp(14px,3.2vw,18px); font-weight:700;
+    min-height:20px; flex:1 1 auto; max-width:560px;
+  }
+  #speech:before{
+    content:""; position:absolute; left:-10px; bottom:14px;
+    border:10px solid transparent; border-right-color:var(--card);
+  }
+  #speech.pulse{animation:pulse .3s ease;}
+  @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.04);}100%{transform:scale(1);}}
+
+  /* -------- TARGET LETTER CARD -------- */
+  #target-wrap{
+    position:relative;
+    width:170px; height:170px;
+    margin:6px 0 18px;
+  }
+  #target-card{
+    width:100%; height:100%;
+    background:linear-gradient(160deg, var(--purple), var(--purple-dark));
+    border-radius:32px;
+    box-shadow:0 10px 0 #6d3bb8, 0 16px 24px rgba(43,42,76,0.25);
+    display:flex; align-items:center; justify-content:center;
+    border:5px solid rgba(255,255,255,0.5);
+    transition:transform .12s ease;
+  }
+  #target-card.shake{animation:shake .4s ease;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-10px) rotate(-3deg);}
+    75%{transform:translateX(10px) rotate(3deg);}
+  }
+  #target-letter{
+    font-size:96px; font-weight:800; color:#fff;
+    text-shadow:0 4px 0 rgba(0,0,0,0.15);
+    line-height:1;
+  }
+  #tick-overlay{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:110px; color:var(--green-dark);
+    opacity:0; transform:scale(0.4);
+    pointer-events:none;
+    text-shadow:0 4px 0 rgba(0,0,0,0.1);
+  }
+  #tick-overlay.show{
+    animation:tickPop .55s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes tickPop{
+    0%{opacity:0; transform:scale(0.3);}
+    50%{opacity:1; transform:scale(1.15);}
+    75%{opacity:1; transform:scale(0.95);}
+    100%{opacity:0; transform:scale(1);}
+  }
+
+  /* -------- PROGRESS -------- */
+  #progress-wrap{ width:100%; max-width:760px; margin:2px 0 18px; }
+  #progress-bar{
+    background:#EFE7D8; border-radius:20px; height:16px; overflow:hidden;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,0.12);
+  }
+  #progress-fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--purple), var(--blue));
+    border-radius:20px; transition:width .35s ease;
+  }
+
+  /* -------- ON-SCREEN KEYBOARD -------- */
+  #keyboard{
+    width:100%; max-width:760px;
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:8px;
+  }
+  .key{
+    background:var(--card);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    border:none;
+    font-family:inherit;
+    font-weight:800;
+    font-size:clamp(16px,3.6vw,22px);
+    color:var(--ink);
+    padding:12px 0;
+    cursor:pointer;
+    transition:transform .08s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .key:active{ transform:translateY(4px); box-shadow:0 2px 0 rgba(43,42,76,0.18); }
+  .key.correct{
+    background:linear-gradient(160deg, var(--green), var(--green-dark));
+    color:#fff;
+    box-shadow:0 6px 0 #187a3f;
+  }
+  .key.wrong{
+    animation:keyWrong .4s ease;
+  }
+  @keyframes keyWrong{
+    0%,100%{background:var(--card);}
+    40%{background:#FFD3D3;}
+  }
+  .key.done{
+    opacity:0.35;
+    pointer-events:none;
+  }
+
+  #reset-btn{
+    margin-top:20px;
+    background:var(--ink); color:#fff; border:none;
+    border-radius:16px; padding:10px 22px; font-size:16px; font-weight:700;
+    font-family:inherit; box-shadow:0 5px 0 #16152b; cursor:pointer;
+  }
+  #reset-btn:active{ transform:translateY(3px); box-shadow:0 2px 0 #16152b; }
+
+  #hint{
+    margin-top:10px;
+    font-size:13px;
+    color:#6b6889;
+    text-align:center;
+  }
+
+  /* -------- WIN SCREEN -------- */
+  #win-screen{
+    position:fixed; inset:0; background:rgba(43,42,76,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:1000; opacity:0; pointer-events:none; transition:opacity .3s ease;
+  }
+  #win-screen.show{ opacity:1; pointer-events:auto; }
+  #win-card{
+    background:var(--card); border-radius:28px; padding:34px 30px;
+    text-align:center; max-width:420px; width:88%;
+    box-shadow:0 20px 40px rgba(0,0,0,0.3);
+    transform:translateY(30px) scale(0.9);
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  #win-screen.show #win-card{ transform:translateY(0) scale(1); }
+  #win-card .stars{ font-size:44px; letter-spacing:6px; margin-bottom:6px; }
+  #win-card h2{ margin:6px 0; font-size:clamp(22px,6vw,30px); }
+  #win-card p{ font-size:16px; color:#5a5878; margin:6px 0 18px; }
+  #play-again{
+    background:var(--green-dark); color:#fff; border:none; border-radius:16px;
+    padding:12px 26px; font-size:18px; font-weight:800; font-family:inherit;
+    box-shadow:0 5px 0 #187a3f; cursor:pointer;
+  }
+  #play-again:active{ transform:translateY(3px); box-shadow:0 2px 0 #187a3f; }
+
+  .confetti-piece{
+    position:fixed; top:-20px; width:10px; height:14px; z-index:1001;
+    opacity:0.95; pointer-events:none;
+  }
+
+  @media (max-width:520px){
+    #keyboard{ grid-template-columns:repeat(6,1fr); }
+    #target-wrap{ width:140px; height:140px; }
+    #target-letter{ font-size:78px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <h1><span class="hi">Letter</span> Hunt!</h1>
+    <div class="badge"><span class="star">⭐</span> <span id="score">0</span></div>
+  </header>
+
+  <div class="robot-row">
+    <svg id="robot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="38" width="40" height="36" rx="10" fill="#B9C4D0"/>
+      <rect x="38" y="18" width="24" height="22" rx="8" fill="#DCE3EA"/>
+      <circle cx="46" cy="28" r="4" fill="#2B2A4C"/>
+      <circle cx="58" cy="28" r="4" fill="#2B2A4C"/>
+      <rect x="47" y="8" width="6" height="10" rx="3" fill="#B9C4D0"/>
+      <circle cx="50" cy="6" r="5" fill="#B57BFF"/>
+      <rect x="16" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="70" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="40" y="52" width="20" height="8" rx="4" fill="#3FA7FF"/>
+    </svg>
+    <div id="speech">Hi! I'm Pip. Find the letter on your keyboard and press it — I'll check!</div>
+  </div>
+
+  <div id="target-wrap">
+    <div id="target-card"><div id="target-letter">A</div></div>
+    <div id="tick-overlay">✅</div>
+  </div>
+
+  <div id="progress-wrap">
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+  </div>
+
+  <div id="keyboard"></div>
+  <div id="hint">You can tap a letter above, or type it on your keyboard.</div>
+
+  <button id="reset-btn">🔄 New Round</button>
+</div>
+
+<div id="win-screen">
+  <div id="win-card">
+    <div class="stars">⭐⭐⭐</div>
+    <h2>You found them all!</h2>
+    <p id="win-msg">Pip is so proud. Every letter, A to Z!</p>
+    <button id="play-again">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  var order = [];
+  var currentIndex = 0;
+  var score = 0;
+  var awaitingScan = false;
+
+  var speech = document.getElementById('speech');
+  var robot = document.getElementById('robot');
+  var scoreEl = document.getElementById('score');
+  var targetLetter = document.getElementById('target-letter');
+  var targetCard = document.getElementById('target-card');
+  var tickOverlay = document.getElementById('tick-overlay');
+  var progressFill = document.getElementById('progress-fill');
+  var keyboard = document.getElementById('keyboard');
+  var winScreen = document.getElementById('win-screen');
+  var winMsg = document.getElementById('win-msg');
+
+  var keyEls = {};
+
+  /* ---------------- SOUND ---------------- */
+  var AudioCtx = window.AudioContext || window.webkitAudioContext;
+  var actx = null;
+  function ctx(){ if(!actx){ actx = new AudioCtx(); } return actx; }
+  function beep(freq, start, dur, type, vol){
+    try{
+      var c = ctx();
+      var o = c.createOscillator();
+      var g = c.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.value = vol || 0.15;
+      o.connect(g); g.connect(c.destination);
+      var t = c.currentTime + start;
+      o.start(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.stop(t + dur + 0.02);
+    }catch(e){}
+  }
+  function soundCorrect(){ beep(880,0,0.12,'triangle',0.16); beep(1320,0.08,0.16,'triangle',0.14); }
+  function soundWrong(){ beep(220,0,0.18,'sawtooth',0.10); }
+  function soundWin(){
+    [523,659,784,1047].forEach(function(f,i){ beep(f, i*0.14, 0.22, 'triangle', 0.16); });
+  }
+
+  function say(text){
+    speech.textContent = text;
+    speech.classList.remove('pulse'); void speech.offsetWidth; speech.classList.add('pulse');
+  }
+  function bounceRobot(){
+    robot.classList.remove('bounce'); void robot.offsetWidth; robot.classList.add('bounce');
+  }
+
+  /* ---------------- BUILD KEYBOARD ---------------- */
+  function buildKeyboard(){
+    keyboard.innerHTML = '';
+    keyEls = {};
+    ALPHABET.forEach(function(letter){
+      var btn = document.createElement('button');
+      btn.className = 'key';
+      btn.textContent = letter;
+      btn.dataset.letter = letter;
+      btn.addEventListener('click', function(){ handleGuess(letter, btn); });
+      keyboard.appendChild(btn);
+      keyEls[letter] = btn;
+    });
+  }
+
+  /* ---------------- ROUND SETUP ---------------- */
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+
+  function buildRound(){
+    order = shuffle(ALPHABET);
+    currentIndex = 0;
+    score = 0;
+    awaitingScan = false;
+    scoreEl.textContent = score;
+    Object.keys(keyEls).forEach(function(l){
+      keyEls[l].classList.remove('correct','done','wrong');
+    });
+    updateProgress();
+    showTarget();
+    say("Hi! I'm Pip. Find the letter on your keyboard and press it — I'll check!");
+  }
+
+  function showTarget(){
+    var letter = order[currentIndex];
+    targetLetter.textContent = letter;
+  }
+
+  function updateProgress(){
+    var pct = Math.round((currentIndex/ALPHABET.length)*100);
+    progressFill.style.width = pct + '%';
+  }
+
+  /* ---------------- GUESS HANDLING ---------------- */
+  function handleGuess(letter, keyEl){
+    if(awaitingScan) return;
+    var target = order[currentIndex];
+
+    if(letter === target){
+      awaitingScan = true;
+      say("Scanning… 🔎");
+      setTimeout(function(){
+        if(keyEl){ keyEl.classList.add('correct'); }
+        tickOverlay.classList.remove('show'); void tickOverlay.offsetWidth; tickOverlay.classList.add('show');
+        soundCorrect();
+        bounceRobot();
+        score += 10;
+        scoreEl.textContent = score;
+        var msg = "Yes! That's " + target + ". Great job!";
+        say(msg);
+
+        setTimeout(function(){
+          if(keyEl){ keyEl.classList.add('done'); }
+          currentIndex++;
+          updateProgress();
+          awaitingScan = false;
+          if(currentIndex >= ALPHABET.length){
+            setTimeout(showWin, 400);
+          } else {
+            showTarget();
+          }
+        }, 550);
+      }, 350);
+    } else {
+      if(keyEl){
+        keyEl.classList.remove('wrong'); void keyEl.offsetWidth; keyEl.classList.add('wrong');
+        setTimeout(function(){ keyEl.classList.remove('wrong'); }, 400);
+      }
+      targetCard.classList.remove('shake'); void targetCard.offsetWidth; targetCard.classList.add('shake');
+      setTimeout(function(){ targetCard.classList.remove('shake'); }, 400);
+      soundWrong();
+      say("Not quite! Look for the letter " + target + " and try again.");
+    }
+  }
+
+  /* physical keyboard support */
+  window.addEventListener('keydown', function(e){
+    var letter = (e.key || '').toUpperCase();
+    if(letter.length === 1 && letter >= 'A' && letter <= 'Z'){
+      var keyEl = keyEls[letter];
+      if(keyEl && keyEl.classList.contains('done')) return;
+      handleGuess(letter, keyEl);
+    }
+  });
+
+  /* ---------------- WIN + CONFETTI ---------------- */
+  function showWin(){
+    winMsg.textContent = "Pip is so proud. Every letter, A to Z! Score: " + score + " points.";
+    winScreen.classList.add('show');
+    soundWin();
+    launchConfetti();
+  }
+  function launchConfetti(){
+    var colors = ['#FF5A5F','#3FA7FF','#FFC93C','#4CD97B','#B57BFF'];
+    for(var i=0;i<60;i++){
+      (function(){
+        var p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = (Math.random()*100)+'vw';
+        p.style.background = colors[Math.floor(Math.random()*colors.length)];
+        p.style.transform = 'rotate('+Math.floor(Math.random()*360)+'deg)';
+        var duration = 2.2 + Math.random()*1.6;
+        var delay = Math.random()*0.6;
+        p.style.transition = 'transform '+duration+'s ease-in, top '+duration+'s ease-in, opacity 0.4s ease '+ (duration+delay-0.4) +'s';
+        document.body.appendChild(p);
+        requestAnimationFrame(function(){
+          setTimeout(function(){
+            p.style.top = (100+Math.random()*10)+'vh';
+            p.style.transform = 'rotate('+Math.floor(Math.random()*720)+'deg)';
+            p.style.opacity = '0';
+          }, delay*1000);
+        });
+        setTimeout(function(){ p.remove(); }, (duration+delay+0.6)*1000);
+      })();
+    }
+  }
+
+  document.getElementById('play-again').addEventListener('click', function(){
+    winScreen.classList.remove('show');
+    buildRound();
+  });
+  document.getElementById('reset-btn').addEventListener('click', buildRound);
+
+  buildKeyboard();
+  buildRound();
+})();
+</script>
+</body>
+</html>

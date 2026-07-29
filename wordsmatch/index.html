@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Keyboard Quest with Pip!</title>
+<style>
+  :root {
+    --red: #FF5A5F;
+    --red-dark: #D6383D;
+    --blue: #3FA7FF;
+    --blue-dark: #1E7FD6;
+    --yellow: #FFC93C;
+    --yellow-dark: #E0A400;
+    --green: #4CD97B;
+    --green-dark: #22B25A;
+    --purple: #B57BFF;
+    --purple-dark: #8A4FE0;
+    --ink: #2B2A4C;
+    --paper: #FFF8EC;
+    --card: #FFFFFF;
+    --shadow: 0 6px 0 rgba(43,42,76,0.18);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Baloo 2', 'Trebuchet MS', 'Segoe UI Rounded', 'Comic Sans MS', system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 10% 15%, #FFE9C7 0%, transparent 40%),
+      radial-gradient(circle at 90% 10%, #CFEFFF 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #E4FFE0 0%, transparent 40%),
+      var(--paper);
+    color: var(--ink);
+    overflow-x: hidden;
+    user-select: none;
+  }
+
+  #app {
+    min-height: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 14px 14px 26px;
+  }
+
+  header {
+    width: 100%; max-width: 820px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin-bottom: 6px;
+  }
+  header h1 { margin: 0; font-size: clamp(20px, 4.5vw, 32px); }
+  header h1 span.hi { color: var(--purple-dark); }
+
+  .badge-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    background: var(--card); border-radius: 16px; padding: 8px 14px;
+    box-shadow: var(--shadow); font-weight: 700; font-size: clamp(13px, 2.8vw, 16px);
+    display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .badge .star { color: var(--yellow-dark); }
+  .badge .error-icon { color: var(--red); }
+
+  /* Robot & Speech */
+  .robot-row {
+    width: 100%; max-width: 820px;
+    display: flex; align-items: flex-end; gap: 14px;
+    margin: 6px 0 12px;
+  }
+  #robot {
+    width: 70px; height: 70px; flex: 0 0 auto;
+    filter: drop-shadow(0 4px 0 rgba(43,42,76,0.15));
+    transition: transform .25s ease;
+  }
+  #robot.bounce { animation: bounce .5s ease; }
+  #robot.shake { animation: shake .4s ease; }
+
+  @keyframes bounce {
+    0% { transform: translateY(0) rotate(0); }
+    30% { transform: translateY(-10px) rotate(-4deg); }
+    60% { transform: translateY(0) rotate(4deg); }
+    100% { transform: translateY(0) rotate(0); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+  }
+
+  #speech {
+    position: relative; background: var(--card); border-radius: 18px;
+    padding: 10px 16px; box-shadow: var(--shadow);
+    font-size: clamp(13px, 3vw, 17px); font-weight: 700;
+    min-height: 20px; flex: 1 1 auto; max-width: 620px;
+  }
+  #speech:before {
+    content: ""; position: absolute; left: -10px; bottom: 14px;
+    border: 10px solid transparent; border-right-color: var(--card);
+  }
+  #speech.pulse { animation: pulse .3s ease; }
+  @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.04);} 100%{transform:scale(1);} }
+
+  /* Main Display Arena */
+  #game-card {
+    width: 100%; max-width: 820px;
+    background: var(--card); border-radius: 26px;
+    box-shadow: var(--shadow); padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 16px; border: 4px solid #EAE5FF;
+    position: relative; overflow: hidden;
+  }
+
+  .category-pill {
+    background: var(--purple-dark); color: #fff;
+    padding: 6px 18px; border-radius: 20px;
+    font-size: 14px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  #target-icon {
+    font-size: clamp(60px, 12vw, 90px);
+    line-height: 1; margin: 4px 0;
+    filter: drop-shadow(0 6px 0 rgba(0,0,0,0.08));
+    transition: transform .2s ease;
+  }
+
+  /* Word Display & Letter Slots */
+  #word-display {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 4px;
+  }
+  .letter-slot {
+    width: clamp(36px, 7vw, 48px);
+    height: clamp(46px, 8vw, 58px);
+    border-2px: 3px solid #D2CBF0;
+    border-bottom: 5px solid var(--purple-dark);
+    border-radius: 12px; background: #F8F6FF;
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(22px, 5vw, 32px); font-weight: 800; color: var(--ink);
+    text-transform: uppercase; transition: all .2s ease;
+  }
+  .letter-slot.typed {
+    background: #E4FFE0; border-color: var(--green-dark);
+    color: var(--green-dark); transform: scale(1.05);
+  }
+  .letter-slot.current {
+    border-color: var(--blue);
+    background: #EBF5FF;
+    animation: blinkGlow 1s infinite alternate;
+  }
+  @keyframes blinkGlow {
+    0% { box-shadow: 0 0 0px var(--blue); }
+    100% { box-shadow: 0 0 10px var(--blue); }
+  }
+
+  /* Virtual Keyboard */
+  #keyboard {
+    width: 100%; max-width: 820px;
+    display: flex; flex-direction: column; gap: 6px;
+    margin-top: 10px;
+  }
+  .kb-row {
+    display: flex; justify-content: center; gap: 5px; width: 100%;
+  }
+  .key {
+    background: var(--card); border: 2px solid #DCD8F0;
+    border-radius: 10px; box-shadow: 0 4px 0 #CBD0E0;
+    font-size: clamp(14px, 3.5vw, 20px); font-weight: 800;
+    color: var(--ink); text-transform: uppercase;
+    flex: 1; max-width: 60px; height: clamp(42px, 8vw, 54px);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .1s ease;
+  }
+  .key:active, .key.active-key {
+    transform: translateY(3px); box-shadow: 0 1px 0 #CBD0E0;
+  }
+  .key.target-key {
+    background: #EBF5FF; border-color: var(--blue);
+    color: var(--blue-dark);
+  }
+  .key.wrong-key-anim {
+    background: #FFD8D9 !important; border-color: var(--red) !important;
+    color: var(--red-dark) !important;
+    animation: keyShake .25s ease;
+  }
+  @keyframes keyShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  /* Controls */
+  #controls {
+    width: 100%; max-width: 820px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 14px; gap: 10px;
+  }
+  .btn {
+    background: var(--ink); color: #fff; border: none;
+    border-radius: 16px; padding: 10px 20px; font-size: 15px; font-weight: 700;
+    font-family: inherit; box-shadow: 0 4px 0 #16152b; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #16152b; }
+
+  /* Win Modal */
+  #win-screen {
+    position: fixed; inset: 0; background: rgba(43,42,76,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  }
+  #win-screen.show { opacity: 1; pointer-events: auto; }
+  #win-card {
+    background: var(--card); border-radius: 28px; padding: 30px;
+    text-align: center; max-width: 420px; width: 88%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    transform: translateY(30px) scale(0.9);
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  #win-screen.show #win-card { transform: translateY(0) scale(1); }
+  #win-card .stars { font-size: 40px; margin-bottom: 6px; }
+  #win-card h2 { margin: 6px 0; font-size: clamp(22px, 5vw, 28px); }
+  #win-card p { font-size: 15px; color: #5a5878; margin: 8px 0 18px; line-height: 1.4; }
+
+  .confetti-piece {
+    position: fixed; top: -20px; width: 10px; height: 14px; z-index: 1001;
+    opacity: 0.95; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <h1><span class="hi">Keyboard</span> Quest!</h1>
+    <div class="badge-row">
+      <div class="badge"><span class="star">⭐</span> <span id="score">0</span></div>
+      <div class="badge"><span class="error-icon">❌</span> <span id="wrong-count">0</span></div>
+    </div>
+  </header>
+
+  <div class="robot-row">
+    <svg id="robot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="38" width="40" height="36" rx="10" fill="#B9C4D0"/>
+      <rect x="38" y="18" width="24" height="22" rx="8" fill="#DCE3EA"/>
+      <circle cx="46" cy="28" r="4" fill="#2B2A4C"/>
+      <circle cx="58" cy="28" r="4" fill="#2B2A4C"/>
+      <rect x="47" y="8" width="6" height="10" rx="3" fill="#B9C4D0"/>
+      <circle cx="50" cy="6" r="5" fill="#B57BFF"/>
+      <rect x="16" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="70" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="40" y="52" width="20" height="8" rx="4" fill="#4CD97B"/>
+    </svg>
+    <div id="speech">Hi! I'm Pip. Type the letters on your keyboard or tap the keys below!</div>
+  </div>
+
+  <div id="game-card">
+    <div id="category-pill" class="category-pill">FRUIT</div>
+    <div id="target-icon">🍎</div>
+    <div id="word-display"></div>
+  </div>
+
+  <!-- On-Screen QWERTY Keyboard -->
+  <div id="keyboard">
+    <div class="kb-row" id="row-1"></div>
+    <div class="kb-row" id="row-2"></div>
+    <div class="kb-row" id="row-3"></div>
+  </div>
+
+  <div id="controls">
+    <button class="btn" id="skip-btn">⏩ Skip Word</button>
+    <button class="btn" id="reset-btn">🔄 Reset Game</button>
+  </div>
+</div>
+
+<!-- WIN / ROUND COMPLETE SCREEN -->
+<div id="win-screen">
+  <div id="win-card">
+    <div class="stars">⭐⭐⭐</div>
+    <h2>Quest Complete!</h2>
+    <p id="win-msg">You typed all the words wonderfully!</p>
+    <button class="btn" id="play-again" style="background:var(--green-dark); margin:0 auto;">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Data Bank (Fruits, Vegetables, Animals, Birds)
+  var WORD_BANK = [
+    // Fruits
+    { word: "APPLE", cat: "Fruit", icon: "🍎" },
+    { word: "BANANA", cat: "Fruit", icon: "🍌" },
+    { word: "GRAPE", cat: "Fruit", icon: "🍇" },
+    { word: "MANGO", cat: "Fruit", icon: "🥭" },
+    { word: "PEACH", cat: "Fruit", icon: "🍑" },
+    
+    // Vegetables
+    { word: "CARROT", cat: "Vegetable", icon: "🥕" },
+    { word: "CORN", cat: "Vegetable", icon: "🌽" },
+    { word: "BROCCOLI", cat: "Vegetable", icon: "🥦" },
+    { word: "TOMATO", cat: "Vegetable", icon: "🍅" },
+    { word: "ONION", cat: "Vegetable", icon: "🧅" },
+
+    // Animals
+    { word: "LION", cat: "Animal", icon: "🦁" },
+    { word: "TIGER", cat: "Animal", icon: "🐯" },
+    { word: "RABBIT", cat: "Animal", icon: "🐰" },
+    { word: "MONKEY", cat: "Animal", icon: "🐒" },
+    { word: "PANDA", cat: "Animal", icon: "🐼" },
+
+    // Birds
+    { word: "DUCK", cat: "Bird", icon: "🦆" },
+    { word: "OWL", cat: "Bird", icon: "🦉" },
+    { word: "PARROT", cat: "Bird", icon: "🦜" },
+    { word: "EAGLE", cat: "Bird", icon: "🦅" },
+    { word: "SWAN", cat: "Bird", icon: "🦢" }
+  ];
+
+  var KEYBOARD_ROWS = [
+    ["Q","W","E","R","T","Y","U","I","O","P"],
+    ["A","S","D","F","G","H","J","K","L"],
+    ["Z","X","C","V","B","N","M"]
+  ];
+
+  // Game state
+  var currentList = [];
+  var currentIndex = 0;
+  var charIndex = 0;
+  var score = 0;
+  var wrongCount = 0;
+  var keyMap = {};
+
+  // Elements
+  var speech = document.getElementById('speech');
+  var robot = document.getElementById('robot');
+  var scoreEl = document.getElementById('score');
+  var wrongEl = document.getElementById('wrong-count');
+  var categoryPill = document.getElementById('category-pill');
+  var targetIcon = document.getElementById('target-icon');
+  var wordDisplay = document.getElementById('word-display');
+  var winScreen = document.getElementById('win-screen');
+
+  /* ---------------- AUDIO ---------------- */
+  var AudioCtx = window.AudioContext || window.webkitAudioContext;
+  var actx = null;
+  function ctx(){ if(!actx){ actx = new AudioCtx(); } return actx; }
+  function beep(freq, start, dur, type, vol){
+    try{
+      var c = ctx();
+      var o = c.createOscillator();
+      var g = c.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.value = vol || 0.15;
+      o.connect(g); g.connect(c.destination);
+      var t = c.currentTime + start;
+      o.start(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.stop(t + dur + 0.02);
+    }catch(e){}
+  }
+  function soundCorrect(){ beep(600,0,0.08,'sine',0.12); beep(800,0.06,0.1,'sine',0.12); }
+  function soundWrong(){ beep(220,0,0.15,'sawtooth',0.12); }
+  function soundWordWin(){ 
+    [523, 659, 784].forEach(function(f,i){ beep(f, i*0.1, 0.15, 'triangle', 0.15); }); 
+  }
+  function soundGameWin(){
+    [523,659,784,1047].forEach(function(f,i){ beep(f, i*0.14, 0.22, 'triangle', 0.16); });
+  }
+
+  /* ---------------- ROBOT ACTIONS ---------------- */
+  function say(text){
+    speech.textContent = text;
+    speech.classList.remove('pulse'); void speech.offsetWidth; speech.classList.add('pulse');
+  }
+  function bounceRobot(){
+    robot.classList.remove('bounce','shake'); void robot.offsetWidth; robot.classList.add('bounce');
+  }
+  function shakeRobot(){
+    robot.classList.remove('bounce','shake'); void robot.offsetWidth; robot.classList.add('shake');
+  }
+
+  /* ---------------- KEYBOARD RENDER ---------------- */
+  function buildVirtualKeyboard(){
+    KEYBOARD_ROWS.forEach(function(rowKeys, rIdx){
+      var rowEl = document.getElementById('row-' + (rIdx + 1));
+      rowEl.innerHTML = '';
+      rowKeys.forEach(function(keyStr){
+        var keyBtn = document.createElement('div');
+        keyBtn.className = 'key';
+        keyBtn.textContent = keyStr;
+        keyBtn.dataset.key = keyStr;
+        keyMap[keyStr] = keyBtn;
+
+        keyBtn.addEventListener('pointerdown', function(e){
+          e.preventDefault();
+          processInput(keyStr);
+        });
+
+        rowEl.appendChild(keyBtn);
+      });
+    });
+  }
+
+  /* ---------------- GAME LOGIC ---------------- */
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = a[i]; a[i] = a[j]; a[j] = temp;
+    }
+    return a;
+  }
+
+  function initGame(){
+    score = 0;
+    wrongCount = 0;
+    scoreEl.textContent = score;
+    wrongEl.textContent = wrongCount;
+    currentList = shuffle(WORD_BANK);
+    currentIndex = 0;
+    loadWord();
+  }
+
+  function loadWord(){
+    if(currentIndex >= currentList.length){
+      showWinScreen();
+      return;
+    }
+
+    var item = currentList[currentIndex];
+    charIndex = 0;
+
+    categoryPill.textContent = item.cat;
+    targetIcon.textContent = item.icon;
+    
+    // Animate target icon
+    targetIcon.style.transform = 'scale(0.5)';
+    setTimeout(function(){ targetIcon.style.transform = 'scale(1)'; }, 100);
+
+    // Build Word Slots
+    wordDisplay.innerHTML = '';
+    for(var i = 0; i < item.word.length; i++){
+      var slot = document.createElement('div');
+      slot.className = 'letter-slot' + (i === 0 ? ' current' : '');
+      slot.textContent = '';
+      wordDisplay.appendChild(slot);
+    }
+
+    updateKeyboardHighlights();
+    say("Type the letter '" + item.word[0] + "' for " + item.word + "!");
+  }
+
+  function updateKeyboardHighlights(){
+    var item = currentList[currentIndex];
+    var targetChar = item ? item.word[charIndex] : null;
+
+    Object.keys(keyMap).forEach(function(k){
+      keyMap[k].classList.remove('target-key');
+      if(k === targetChar){
+        keyMap[k].classList.add('target-key');
+      }
+    });
+  }
+
+  function processInput(keyChar){
+    if(currentIndex >= currentList.length) return;
+    
+    var keyUpper = keyChar.toUpperCase();
+    var item = currentList[currentIndex];
+    var expectedChar = item.word[charIndex];
+
+    var btnEl = keyMap[keyUpper];
+
+    if(keyUpper === expectedChar){
+      // --- CORRECT KEY ---
+      soundCorrect();
+      
+      var slot = wordDisplay.children[charIndex];
+      slot.textContent = expectedChar;
+      slot.classList.remove('current');
+      slot.classList.add('typed');
+
+      score += 10;
+      scoreEl.textContent = score;
+
+      charIndex++;
+
+      if(charIndex < item.word.length){
+        wordDisplay.children[charIndex].classList.add('current');
+        updateKeyboardHighlights();
+        say("Great! Next letter: '" + item.word[charIndex] + "'");
+      } else {
+        // Word Finished
+        soundWordWin();
+        bounceRobot();
+        say("Awesome! You typed " + item.word + "! 🎉");
+        currentIndex++;
+        setTimeout(loadWord, 1200);
+      }
+
+    } else {
+      // --- WRONG KEY ---
+      soundWrong();
+      shakeRobot();
+      wrongCount++;
+      wrongEl.textContent = wrongCount;
+
+      if(btnEl){
+        btnEl.classList.add('wrong-key-anim');
+        setTimeout(function(){
+          btnEl.classList.remove('wrong-key-anim');
+        }, 300);
+      }
+
+      say("Oops! That was '" + keyUpper + "'. Try pressing '" + expectedChar + "'!");
+    }
+  }
+
+  /* ---------------- PHYSICAL KEYBOARD LISTENER ---------------- */
+  window.addEventListener('keydown', function(e){
+    if(e.defaultPrevented) return;
+    var k = e.key.toUpperCase();
+    if(k >= 'A' && k <= 'Z' && k.length === 1){
+      processInput(k);
+      if(keyMap[k]){
+        keyMap[k].classList.add('active-key');
+        setTimeout(function(){ keyMap[k].classList.remove('active-key'); }, 150);
+      }
+    }
+  });
+
+  /* ---------------- WIN SCREEN & CONFETTI ---------------- */
+  function showWinScreen(){
+    soundGameWin();
+    var totalAttempts = (score / 10) + wrongCount;
+    var accuracy = totalAttempts > 0 ? Math.round(((score / 10) / totalAttempts) * 100) : 100;
+
+    var msg = "Final Score: " + score + " points!<br>" +
+              "Total Misses: " + wrongCount + "<br>" +
+              "Accuracy: " + accuracy + "%";
+
+    document.getElementById('win-msg').innerHTML = msg;
+    winScreen.classList.add('show');
+    launchConfetti();
+  }
+
+  function launchConfetti(){
+    var colors = ['#FF5A5F','#3FA7FF','#FFC93C','#4CD97B','#B57BFF'];
+    for(var i=0; i<60; i++){
+      (function(){
+        var p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = (Math.random()*100)+'vw';
+        p.style.background = colors[Math.floor(Math.random()*colors.length)];
+        p.style.transform = 'rotate('+Math.floor(Math.random()*360)+'deg)';
+        var duration = 2.2 + Math.random()*1.6;
+        var delay = Math.random()*0.6;
+        p.style.transition = 'transform '+duration+'s ease-in, top '+duration+'s ease-in, opacity 0.4s ease '+ (duration+delay-0.4) +'s';
+        document.body.appendChild(p);
+        requestAnimationFrame(function(){
+          setTimeout(function(){
+            p.style.top = (100+Math.random()*10)+'vh';
+            p.style.transform = 'rotate('+Math.floor(Math.random()*720)+'deg)';
+            p.style.opacity = '0';
+          }, delay*1000);
+        });
+        setTimeout(function(){ p.remove(); }, (duration+delay+0.6)*1000);
+      })();
+    }
+  }
+
+  /* ---------------- BUTTON EVENT HANDLERS ---------------- */
+  document.getElementById('skip-btn').addEventListener('click', function(){
+    if(currentIndex < currentList.length){
+      say("Skipped! Moving to the next item.");
+      currentIndex++;
+      loadWord();
+    }
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', function(){
+    initGame();
+  });
+
+  document.getElementById('play-again').addEventListener('click', function(){
+    winScreen.classList.remove('show');
+    initGame();
+  });
+
+  // Initialization
+  buildVirtualKeyboard();
+  initGame();
+
+})();
+</script>
+</body>
+</html>

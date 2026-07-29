@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Code the Maze with Pip the Robot!</title>
+<style>
+  :root{
+    --red:#FF5A5F; --red-dark:#D6383D;
+    --blue:#3FA7FF; --blue-dark:#1E7FD6;
+    --yellow:#FFC93C; --yellow-dark:#E0A400;
+    --green:#4CD97B; --green-dark:#22B25A;
+    --purple:#B57BFF; --purple-dark:#8A4FE0;
+    --ink:#2B2A4C;
+    --paper:#FFF8EC;
+    --card:#FFFFFF;
+    --wall:#7C8A99;
+    --wall-dark:#5C6A78;
+    --path:#FFF3D6;
+    --shadow:0 6px 0 rgba(43,42,76,0.18);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:'Baloo 2','Trebuchet MS','Segoe UI Rounded','Comic Sans MS',system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 10% 15%, #FFE9C7 0%, transparent 40%),
+      radial-gradient(circle at 90% 10%, #CFEFFF 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #E4FFE0 0%, transparent 40%),
+      var(--paper);
+    color:var(--ink);
+    overflow-x:hidden;
+    user-select:none;
+  }
+  #app{ min-height:100%; display:flex; flex-direction:column; align-items:center; padding:14px 14px 26px; }
+
+  header{
+    width:100%; max-width:900px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; margin-bottom:6px;
+  }
+  header h1{ margin:0; font-size:clamp(20px,4.5vw,30px); }
+  header h1 span.hi{ color:var(--green-dark); }
+  .badge{
+    background:var(--card); border-radius:16px; padding:8px 14px;
+    box-shadow:var(--shadow); font-weight:700; font-size:clamp(14px,3vw,18px);
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .badge .star{ color:var(--yellow-dark); }
+
+  .robot-row{
+    width:100%; max-width:900px;
+    display:flex; align-items:flex-end; gap:14px;
+    margin:6px 0 10px;
+  }
+  #robot-face{ width:60px; height:60px; flex:0 0 auto;
+    filter:drop-shadow(0 4px 0 rgba(43,42,76,0.15));
+    transition:transform .25s ease;
+  }
+  #robot-face.bounce{ animation:bounce .5s ease; }
+  @keyframes bounce{
+    0%{transform:translateY(0) rotate(0);}
+    30%{transform:translateY(-10px) rotate(-4deg);}
+    60%{transform:translateY(0) rotate(4deg);}
+    100%{transform:translateY(0) rotate(0);}
+  }
+  #speech{
+    position:relative; background:var(--card); border-radius:18px;
+    padding:10px 16px; box-shadow:var(--shadow);
+    font-size:clamp(13px,3vw,17px); font-weight:700;
+    min-height:20px; flex:1 1 auto; max-width:680px;
+  }
+  #speech:before{
+    content:""; position:absolute; left:-10px; bottom:14px;
+    border:10px solid transparent; border-right-color:var(--card);
+  }
+  #speech.pulse{ animation:pulse .3s ease; }
+  @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.04);}100%{transform:scale(1);}}
+
+  /* -------- LEVEL SELECT -------- */
+  #levels{
+    width:100%; max-width:900px;
+    display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;
+  }
+  .level-btn{
+    flex:1 1 100px;
+    background:var(--card);
+    border:3px solid transparent;
+    border-radius:14px;
+    padding:9px 10px;
+    font-family:inherit; font-weight:800; font-size:14px;
+    color:var(--ink);
+    box-shadow:var(--shadow);
+    cursor:pointer;
+  }
+  .level-btn.active{
+    border-color:var(--green-dark);
+    background:linear-gradient(160deg, #E4FFE9, #ffffff);
+  }
+  .level-btn:active{ transform:translateY(3px); box-shadow:0 2px 0 rgba(43,42,76,0.18); }
+
+  /* -------- MAIN LAYOUT: maze + palette -------- */
+  #main-row{
+    width:100%; max-width:900px;
+    display:flex; gap:16px; flex-wrap:wrap;
+    justify-content:center;
+  }
+  #maze-wrap{
+    flex:1 1 340px;
+    max-width:480px;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  #maze-grid{
+    position:relative;
+    display:grid;
+    background:var(--wall-dark);
+    border-radius:16px;
+    padding:6px;
+    box-shadow:var(--shadow);
+    width:100%;
+    aspect-ratio:1/1;
+  }
+  .cell{
+    background:var(--wall);
+    border-radius:4px;
+  }
+  .cell.open{
+    background:var(--path);
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,0.5);
+  }
+  .cell.goal-cell{
+    background:var(--path);
+    display:flex; align-items:center; justify-content:center;
+    font-size:60%;
+  }
+  #pip-char{
+    position:absolute;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+    transition:left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1), transform .5s cubic-bezier(.4,0,.2,1);
+  }
+  #pip-char svg{ width:78%; height:78%; }
+  #pip-char.bump{ animation:bump .35s ease; }
+  @keyframes bump{
+    0%,100%{ filter:none; }
+    50%{ filter:drop-shadow(0 0 0 var(--red)) saturate(2); }
+  }
+
+  /* -------- PALETTE + PROGRAM -------- */
+  #panel{
+    flex:1 1 340px;
+    max-width:420px;
+    display:flex; flex-direction:column; gap:12px;
+  }
+  #palette{
+    background:var(--card);
+    border-radius:16px;
+    padding:12px;
+    box-shadow:var(--shadow);
+  }
+  #palette h3, #program h3{ margin:0 0 8px; font-size:15px; color:#6b6889; }
+  .palette-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .block{
+    display:flex; align-items:center; gap:6px;
+    border:none; border-radius:12px;
+    padding:12px 14px;
+    font-family:inherit; font-weight:800; font-size:15px;
+    color:#fff; cursor:grab;
+    box-shadow:0 5px 0 rgba(0,0,0,0.18);
+    touch-action:none;
+  }
+  .block:active{ cursor:grabbing; }
+  .block-left{ background:linear-gradient(160deg, var(--purple), var(--purple-dark)); }
+  .block-right{ background:linear-gradient(160deg, var(--blue), var(--blue-dark)); }
+  .block-jump{ background:linear-gradient(160deg, var(--green), var(--green-dark)); }
+
+  .block.dragging-clone{
+    position:fixed; z-index:999; pointer-events:none;
+    transform:scale(1.12) rotate(-3deg);
+    box-shadow:0 10px 18px rgba(43,42,76,0.35);
+  }
+
+  #program{
+    background:var(--card);
+    border-radius:16px;
+    padding:12px;
+    box-shadow:var(--shadow);
+    flex:1 1 auto;
+    display:flex; flex-direction:column;
+  }
+  #program-head{ display:flex; align-items:center; justify-content:space-between; }
+  #sequence{
+    min-height:64px;
+    border:3px dashed #E2D9C8;
+    border-radius:12px;
+    padding:8px;
+    display:flex; flex-wrap:wrap; gap:8px;
+    align-content:flex-start;
+    margin-top:4px;
+  }
+  #sequence.drag-over{ border-color:var(--green-dark); background:#F3FFF3; }
+  .placeholder-chip{
+    width:44px; height:34px;
+    border-radius:10px;
+    border:3px dashed var(--green-dark);
+    background:rgba(76,217,123,0.15);
+    animation:placeholderPulse 0.6s ease infinite alternate;
+  }
+  @keyframes placeholderPulse{
+    from{ opacity:0.5; } to{ opacity:1; }
+  }
+  .chip{
+    display:flex; align-items:center; gap:5px;
+    border-radius:10px; padding:7px 8px 7px 10px;
+    color:#fff; font-weight:800; font-size:13px;
+    box-shadow:0 3px 0 rgba(0,0,0,0.18);
+    position:relative;
+    cursor:grab;
+    touch-action:none;
+  }
+  .chip:active{ cursor:grabbing; }
+  .chip.active{ outline:3px solid #fff; box-shadow:0 0 0 4px rgba(76,217,123,0.5); }
+  .chip.fail{ outline:3px solid #fff; box-shadow:0 0 0 4px rgba(255,90,95,0.6); }
+  .chip button{
+    background:rgba(255,255,255,0.35);
+    border:none; border-radius:50%;
+    width:18px; height:18px;
+    color:#fff; font-weight:800; font-size:11px;
+    cursor:pointer; line-height:1;
+  }
+  .chip.c-left{ background:linear-gradient(160deg, var(--purple), var(--purple-dark)); }
+  .chip.c-right{ background:linear-gradient(160deg, var(--blue), var(--blue-dark)); }
+  .chip.c-jump{ background:linear-gradient(160deg, var(--green), var(--green-dark)); }
+
+  #program-actions{ display:flex; gap:10px; margin-top:12px; }
+  #run-btn, #clear-btn{
+    border:none; border-radius:14px;
+    font-family:inherit; font-weight:800; font-size:15px;
+    padding:11px 16px; cursor:pointer;
+  }
+  #run-btn{
+    flex:1 1 auto;
+    background:linear-gradient(160deg, var(--yellow), var(--yellow-dark));
+    color:var(--ink);
+    box-shadow:0 5px 0 #a67900;
+  }
+  #run-btn:disabled{ opacity:0.6; cursor:default; }
+  #run-btn:active:not(:disabled){ transform:translateY(3px); box-shadow:0 2px 0 #a67900; }
+  #clear-btn{
+    background:#EFE7D8; color:var(--ink);
+    box-shadow:0 5px 0 #C9BFA9;
+  }
+  #clear-btn:active{ transform:translateY(3px); box-shadow:0 2px 0 #C9BFA9; }
+
+  #hint{ margin-top:14px; font-size:13px; color:#6b6889; text-align:center; max-width:900px; }
+
+  /* -------- WIN SCREEN -------- */
+  #win-screen{
+    position:fixed; inset:0; background:rgba(43,42,76,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:1000; opacity:0; pointer-events:none; transition:opacity .3s ease;
+  }
+  #win-screen.show{ opacity:1; pointer-events:auto; }
+  #win-card{
+    background:var(--card); border-radius:28px; padding:34px 30px;
+    text-align:center; max-width:420px; width:88%;
+    box-shadow:0 20px 40px rgba(0,0,0,0.3);
+    transform:translateY(30px) scale(0.9);
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  #win-screen.show #win-card{ transform:translateY(0) scale(1); }
+  #win-card .stars{ font-size:44px; letter-spacing:6px; margin-bottom:6px; }
+  #win-card h2{ margin:6px 0; font-size:clamp(22px,6vw,30px); }
+  #win-card p{ font-size:16px; color:#5a5878; margin:6px 0 18px; }
+  #win-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  #play-again, #next-level{
+    border:none; border-radius:16px; padding:12px 22px; font-size:16px; font-weight:800;
+    font-family:inherit; cursor:pointer;
+  }
+  #play-again{ background:#EFE7D8; color:var(--ink); box-shadow:0 5px 0 #C9BFA9; }
+  #next-level{ background:var(--green-dark); color:#fff; box-shadow:0 5px 0 #187a3f; }
+  #play-again:active, #next-level:active{ transform:translateY(3px); }
+
+  .confetti-piece{
+    position:fixed; top:-20px; width:10px; height:14px; z-index:1001;
+    opacity:0.95; pointer-events:none;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <h1><span class="hi">Code</span> the Maze!</h1>
+    <div class="badge"><span class="star">⭐</span> <span id="score">0</span></div>
+  </header>
+
+  <div class="robot-row">
+    <svg id="robot-face" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="38" width="40" height="36" rx="10" fill="#B9C4D0"/>
+      <rect x="38" y="18" width="24" height="22" rx="8" fill="#DCE3EA"/>
+      <circle cx="46" cy="28" r="4" fill="#2B2A4C"/>
+      <circle cx="58" cy="28" r="4" fill="#2B2A4C"/>
+      <rect x="47" y="8" width="6" height="10" rx="3" fill="#B9C4D0"/>
+      <circle cx="50" cy="6" r="5" fill="#4CD97B"/>
+      <rect x="16" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="70" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="40" y="52" width="20" height="8" rx="4" fill="#FFC93C"/>
+    </svg>
+    <div id="speech">Hi! I'm Pip. Add Turn Left, Turn Right and Jump blocks in order to guide me to the flag 🚩 — then press Run!</div>
+  </div>
+
+  <div id="levels">
+    <button class="level-btn active" data-level="0">🟢 Easy</button>
+    <button class="level-btn" data-level="1">🟡 Medium</button>
+    <button class="level-btn" data-level="2">🔴 Hard</button>
+  </div>
+
+  <div id="main-row">
+    <div id="maze-wrap">
+      <div id="maze-grid"></div>
+    </div>
+
+    <div id="panel">
+      <div id="palette">
+        <h3>Blocks — tap or drag into your program</h3>
+        <div class="palette-row">
+          <button class="block block-left" data-type="left">↩️ Turn Left</button>
+          <button class="block block-right" data-type="right">↪️ Turn Right</button>
+          <button class="block block-jump" data-type="jump">⬆️ Jump</button>
+        </div>
+      </div>
+
+      <div id="program">
+        <div id="program-head"><h3>Your Program</h3></div>
+        <div id="sequence"></div>
+        <div id="program-actions">
+          <button id="run-btn">▶ Run</button>
+          <button id="clear-btn">🗑 Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="hint">🧩 Tap a block to add it, or press and drag it into "Your Program". Already placed a block in the wrong spot? Press and drag it to a new gap between the other blocks to fix the order — that's exactly how Pip decides which step to follow next!</div>
+</div>
+
+<div id="win-screen">
+  <div id="win-card">
+    <div class="stars">⭐⭐⭐</div>
+    <h2 id="win-title">You reached the flag!</h2>
+    <p id="win-msg">Pip followed your code perfectly!</p>
+    <div id="win-actions">
+      <button id="play-again">Retry Level</button>
+      <button id="next-level">Next Level ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- LEVELS ---------------- */
+  // dir: 0=N(up), 1=E(right), 2=S(down), 3=W(left)
+  var LEVELS = [
+    {
+      name:"Easy", rows:5, cols:5,
+      open:["4,0","3,0","2,0","2,1","2,2","2,3","2,4"],
+      start:{row:4,col:0,dir:0},
+      goal:{row:2,col:4}
+    },
+    {
+      name:"Medium", rows:6, cols:6,
+      open:["5,0","4,0","3,0","3,1","3,2","2,2","1,2","1,3","1,4","1,5","2,5"],
+      start:{row:5,col:0,dir:0},
+      goal:{row:2,col:5}
+    },
+    {
+      name:"Hard", rows:7, cols:7,
+      open:["6,0","5,0","4,0","4,1","4,2","4,3","5,3","6,3","6,4","6,5","5,5","4,5","3,5","2,5","2,6"],
+      start:{row:6,col:0,dir:0},
+      goal:{row:2,col:6}
+    }
+  ];
+
+  var currentLevelIndex = 0;
+  var level = null;
+  var openSet = null;
+  var program = []; // array of 'left' | 'right' | 'jump'
+  var running = false;
+  var score = 0;
+  var cellPx = 0;
+
+  var mazeGrid = document.getElementById('maze-grid');
+  var sequenceEl = document.getElementById('sequence');
+  var speech = document.getElementById('speech');
+  var robotFace = document.getElementById('robot-face');
+  var scoreEl = document.getElementById('score');
+  var runBtn = document.getElementById('run-btn');
+  var clearBtn = document.getElementById('clear-btn');
+  var winScreen = document.getElementById('win-screen');
+  var winMsg = document.getElementById('win-msg');
+  var winTitle = document.getElementById('win-title');
+  var nextLevelBtn = document.getElementById('next-level');
+  var levelBtns = Array.prototype.slice.call(document.querySelectorAll('.level-btn'));
+
+  var pipChar = null; // created per maze build
+
+  /* ---------------- SOUND ---------------- */
+  var AudioCtx = window.AudioContext || window.webkitAudioContext;
+  var actx = null;
+  function ctx(){ if(!actx){ actx = new AudioCtx(); } return actx; }
+  function beep(freq, start, dur, type, vol){
+    try{
+      var c = ctx();
+      var o = c.createOscillator();
+      var g = c.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.value = vol || 0.15;
+      o.connect(g); g.connect(c.destination);
+      var t = c.currentTime + start;
+      o.start(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.stop(t + dur + 0.02);
+    }catch(e){}
+  }
+  function soundStep(){ beep(660,0,0.08,'triangle',0.12); }
+  function soundTurn(){ beep(440,0,0.07,'sine',0.1); }
+  function soundBump(){ beep(180,0,0.2,'sawtooth',0.12); }
+  function soundWin(){ [523,659,784,1047].forEach(function(f,i){ beep(f, i*0.14, 0.22, 'triangle', 0.16); }); }
+
+  function say(text){
+    speech.textContent = text;
+    speech.classList.remove('pulse'); void speech.offsetWidth; speech.classList.add('pulse');
+  }
+  function bounceRobot(){
+    robotFace.classList.remove('bounce'); void robotFace.offsetWidth; robotFace.classList.add('bounce');
+  }
+
+  /* ---------------- BUILD MAZE ---------------- */
+  function buildMaze(){
+    level = LEVELS[currentLevelIndex];
+    openSet = {};
+    level.open.forEach(function(k){ openSet[k] = true; });
+
+    mazeGrid.innerHTML = '';
+    mazeGrid.style.gridTemplateColumns = 'repeat(' + level.cols + ', 1fr)';
+    mazeGrid.style.gridTemplateRows = 'repeat(' + level.rows + ', 1fr)';
+
+    for(var r=0;r<level.rows;r++){
+      for(var c=0;c<level.cols;c++){
+        var cell = document.createElement('div');
+        var key = r+','+c;
+        var isOpen = !!openSet[key];
+        cell.className = 'cell' + (isOpen ? ' open' : '');
+        if(r === level.goal.row && c === level.goal.col){
+          cell.classList.add('goal-cell');
+          cell.textContent = '🚩';
+        }
+        mazeGrid.appendChild(cell);
+      }
+    }
+
+    pipChar = document.createElement('div');
+    pipChar.id = 'pip-char';
+    pipChar.innerHTML =
+      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="30" y="38" width="40" height="36" rx="10" fill="#B9C4D0"/>' +
+      '<rect x="38" y="18" width="24" height="22" rx="8" fill="#DCE3EA"/>' +
+      '<circle cx="46" cy="28" r="4" fill="#2B2A4C"/>' +
+      '<circle cx="58" cy="28" r="4" fill="#2B2A4C"/>' +
+      '<rect x="47" y="8" width="6" height="10" rx="3" fill="#B9C4D0"/>' +
+      '<circle cx="50" cy="6" r="5" fill="#FF5A5F"/>' +
+      '<rect x="16" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>' +
+      '<rect x="70" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>' +
+      '<rect x="40" y="52" width="20" height="8" rx="4" fill="#3FA7FF"/>' +
+      '</svg>';
+    mazeGrid.appendChild(pipChar);
+
+    requestAnimationFrame(function(){
+      var rect = mazeGrid.getBoundingClientRect();
+      cellPx = (rect.width - 12) / level.cols; // minus padding
+      positionPip(level.start.row, level.start.col, level.start.dir, true);
+    });
+  }
+
+  function positionPip(row, col, dir, instant){
+    var size = cellPx;
+    var padding = 6;
+    var x = padding + col*size;
+    var y = padding + row*size;
+    if(instant){ pipChar.style.transition = 'none'; }
+    pipChar.style.width = size + 'px';
+    pipChar.style.height = size + 'px';
+    pipChar.style.left = x + 'px';
+    pipChar.style.top = y + 'px';
+    var rotateDeg = dir*90;
+    pipChar.style.transform = 'rotate(' + rotateDeg + 'deg)';
+    if(instant){
+      void pipChar.offsetWidth;
+      pipChar.style.transition = '';
+    }
+  }
+
+  /* ---------------- LEVEL SELECT ---------------- */
+  levelBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if(running) return;
+      levelBtns.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentLevelIndex = parseInt(btn.dataset.level, 10);
+      resetProgram();
+      buildMaze();
+      say("New maze! Build your code to reach the flag 🚩");
+    });
+  });
+
+  /* ---------------- PROGRAM SEQUENCE ---------------- */
+  function resetProgram(){
+    program = [];
+    renderSequence();
+  }
+
+  var BLOCK_LABEL = { left:'↩️ Left', right:'↪️ Right', jump:'⬆️ Jump' };
+  var BLOCK_CLASS = { left:'c-left', right:'c-right', jump:'c-jump' };
+  var placeholderEl = null;
+
+  function renderSequence(){
+    sequenceEl.innerHTML = '';
+    program.forEach(function(type, idx){
+      var chip = document.createElement('div');
+      chip.className = 'chip ' + BLOCK_CLASS[type];
+      chip.dataset.idx = idx;
+      var label = document.createElement('span');
+      label.textContent = BLOCK_LABEL[type];
+      chip.appendChild(label);
+      var removeBtn = document.createElement('button');
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(running) return;
+        program.splice(idx,1);
+        renderSequence();
+      });
+      chip.appendChild(removeBtn);
+      sequenceEl.appendChild(chip);
+      attachChipDrag(chip, idx);
+    });
+  }
+
+  function addBlock(type){
+    if(running) return;
+    program.push(type);
+    renderSequence();
+  }
+
+  // Finds where a dropped block should land among the current chips,
+  // reading the sequence in normal top-to-bottom, left-to-right order.
+  function getInsertionIndex(clientX, clientY, excludeEl){
+    var children = Array.prototype.slice.call(sequenceEl.children).filter(function(c){
+      return c !== excludeEl && c !== placeholderEl;
+    });
+    for(var idx=0; idx<children.length; idx++){
+      var r = children[idx].getBoundingClientRect();
+      if(clientY < r.top) return idx;
+      if(clientY >= r.top && clientY <= r.bottom){
+        var midX = r.left + r.width/2;
+        if(clientX < midX) return idx;
+      }
+    }
+    return children.length;
+  }
+
+  function showPlaceholderAt(idx, excludeEl){
+    if(!placeholderEl){
+      placeholderEl = document.createElement('div');
+      placeholderEl.className = 'placeholder-chip';
+    }
+    var children = Array.prototype.slice.call(sequenceEl.children).filter(function(c){
+      return c !== excludeEl && c !== placeholderEl;
+    });
+    if(idx >= children.length){
+      sequenceEl.appendChild(placeholderEl);
+    } else {
+      sequenceEl.insertBefore(placeholderEl, children[idx]);
+    }
+  }
+
+  function removePlaceholder(){
+    if(placeholderEl && placeholderEl.parentNode){
+      placeholderEl.parentNode.removeChild(placeholderEl);
+    }
+  }
+
+  // Lets an already-placed block be picked up and dropped between other blocks.
+  function attachChipDrag(chip, startIdx){
+    var startX=0, startY=0, moved=false, clone=null, active=false;
+
+    chip.addEventListener('pointerdown', function(e){
+      if(running) return;
+      if(e.target.tagName === 'BUTTON') return; // let the × button handle its own click
+      active = true; moved = false;
+      startX = e.clientX; startY = e.clientY;
+      var rect = chip.getBoundingClientRect();
+      clone = chip.cloneNode(true);
+      clone.classList.add('dragging-clone');
+      clone.style.width = rect.width+'px';
+      clone.style.left = rect.left+'px';
+      clone.style.top = rect.top+'px';
+      document.body.appendChild(clone);
+      chip.style.opacity = '0.25';
+      try{ chip.setPointerCapture(e.pointerId); }catch(err){}
+    });
+
+    chip.addEventListener('pointermove', function(e){
+      if(!active || !clone) return;
+      var dx = e.clientX-startX, dy = e.clientY-startY;
+      if(Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
+      clone.style.left = (e.clientX - clone.offsetWidth/2) + 'px';
+      clone.style.top = (e.clientY - clone.offsetHeight/2) + 'px';
+      var seqRect = sequenceEl.getBoundingClientRect();
+      var over = e.clientX>=seqRect.left && e.clientX<=seqRect.right && e.clientY>=seqRect.top && e.clientY<=seqRect.bottom;
+      sequenceEl.classList.toggle('drag-over', over);
+      if(over){
+        var insIdx = getInsertionIndex(e.clientX, e.clientY, chip);
+        showPlaceholderAt(insIdx, chip);
+      } else {
+        removePlaceholder();
+      }
+    });
+
+    function finish(e){
+      if(!active) return;
+      active = false;
+      sequenceEl.classList.remove('drag-over');
+      if(clone){ clone.remove(); clone = null; }
+      chip.style.opacity = '';
+      var seqRect = sequenceEl.getBoundingClientRect();
+      var overSeq = e.clientX>=seqRect.left && e.clientX<=seqRect.right && e.clientY>=seqRect.top && e.clientY<=seqRect.bottom;
+      removePlaceholder();
+      if(overSeq && moved){
+        var newIdx = getInsertionIndex(e.clientX, e.clientY, chip);
+        var type = program[startIdx];
+        program.splice(startIdx, 1);
+        if(newIdx > startIdx) newIdx--;
+        program.splice(newIdx, 0, type);
+        renderSequence();
+      }
+    }
+    chip.addEventListener('pointerup', finish);
+    chip.addEventListener('pointercancel', function(){
+      active = false;
+      if(clone){ clone.remove(); clone = null; }
+      chip.style.opacity = '';
+      removePlaceholder();
+    });
+  }
+
+  /* ---------------- PALETTE: tap + drag (both work) ---------------- */
+  var paletteBlocks = Array.prototype.slice.call(document.querySelectorAll('.block'));
+  paletteBlocks.forEach(function(block){
+    var type = block.dataset.type;
+    var startX=0, startY=0, moved=false, clone=null;
+
+    block.addEventListener('pointerdown', function(e){
+      if(running) return;
+      startX = e.clientX; startY = e.clientY; moved = false;
+      var rect = block.getBoundingClientRect();
+      clone = block.cloneNode(true);
+      clone.classList.add('dragging-clone');
+      clone.style.width = rect.width+'px';
+      clone.style.left = rect.left+'px';
+      clone.style.top = rect.top+'px';
+      document.body.appendChild(clone);
+      try{ block.setPointerCapture(e.pointerId); }catch(err){}
+    });
+
+    block.addEventListener('pointermove', function(e){
+      if(!clone) return;
+      var dx = e.clientX-startX, dy = e.clientY-startY;
+      if(Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
+      clone.style.left = (e.clientX - clone.offsetWidth/2) + 'px';
+      clone.style.top = (e.clientY - clone.offsetHeight/2) + 'px';
+      var seqRect = sequenceEl.getBoundingClientRect();
+      var over = e.clientX>=seqRect.left && e.clientX<=seqRect.right && e.clientY>=seqRect.top && e.clientY<=seqRect.bottom;
+      sequenceEl.classList.toggle('drag-over', over);
+      if(over){
+        var insIdx = getInsertionIndex(e.clientX, e.clientY, null);
+        showPlaceholderAt(insIdx, null);
+      } else {
+        removePlaceholder();
+      }
+    });
+
+    function finish(e){
+      if(!clone) return;
+      sequenceEl.classList.remove('drag-over');
+      var seqRect = sequenceEl.getBoundingClientRect();
+      var overSeq = e.clientX>=seqRect.left && e.clientX<=seqRect.right && e.clientY>=seqRect.top && e.clientY<=seqRect.bottom;
+      clone.remove(); clone = null;
+      var insertIdx = program.length; // default: simple tap appends to the end
+      if(overSeq){
+        insertIdx = getInsertionIndex(e.clientX, e.clientY, null);
+      }
+      removePlaceholder();
+      if(overSeq || !moved){
+        if(running) return;
+        program.splice(insertIdx, 0, type); // insert exactly where it was dropped
+        renderSequence();
+      }
+    }
+    block.addEventListener('pointerup', finish);
+    block.addEventListener('pointercancel', function(){ if(clone){ clone.remove(); clone=null; } });
+  });
+
+  clearBtn.addEventListener('click', function(){
+    if(running) return;
+    resetProgram();
+    say("Program cleared. Build a new set of blocks!");
+  });
+
+  /* ---------------- RUN PROGRAM ---------------- */
+  var DELTA = [ [-1,0], [0,1], [1,0], [0,-1] ]; // N,E,S,W
+
+  runBtn.addEventListener('click', function(){
+    if(running || program.length === 0) return;
+    runProgram();
+  });
+
+  function runProgram(){
+    running = true;
+    runBtn.disabled = true;
+    var chips = Array.prototype.slice.call(sequenceEl.children);
+    chips.forEach(function(c){ c.classList.remove('active','fail'); });
+
+    var row = level.start.row, col = level.start.col, dir = level.start.dir;
+    positionPip(row, col, dir, true);
+    say("Running your code…");
+
+    var i = 0;
+    function step(){
+      if(i >= program.length){
+        finishRun(row === level.goal.row && col === level.goal.col);
+        return;
+      }
+      var chip = chips[i];
+      chip.classList.add('active');
+      var type = program[i];
+
+      if(type === 'left'){
+        dir = (dir + 3) % 4;
+        soundTurn();
+      } else if(type === 'right'){
+        dir = (dir + 1) % 4;
+        soundTurn();
+      } else if(type === 'jump'){
+        var d = DELTA[dir];
+        var nr = row + d[0], nc = col + d[1];
+        var key = nr+','+nc;
+        var inBounds = nr>=0 && nr<level.rows && nc>=0 && nc<level.cols;
+        if(inBounds && openSet[key]){
+          row = nr; col = nc;
+          soundStep();
+        } else {
+          // hit a wall
+          chip.classList.remove('active');
+          chip.classList.add('fail');
+          pipChar.classList.remove('bump'); void pipChar.offsetWidth; pipChar.classList.add('bump');
+          soundBump();
+          say("Oops! I hit a wall there. Try dragging your blocks to fix the order, then Run again!");
+          running = false;
+          runBtn.disabled = false;
+          return;
+        }
+      }
+      positionPip(row, col, dir, false);
+
+      setTimeout(function(){
+        chip.classList.remove('active');
+        i++;
+        step();
+      }, 550);
+    }
+    step();
+  }
+
+  function finishRun(reachedGoal){
+    running = false;
+    runBtn.disabled = false;
+    if(reachedGoal){
+      score += 10 * (currentLevelIndex+1);
+      scoreEl.textContent = score;
+      bounceRobot();
+      say("Yes! You reached the flag! Great coding!");
+      setTimeout(showWin, 450);
+    } else {
+      say("So close! I finished all the blocks but didn't reach the flag. Try again!");
+    }
+  }
+
+  /* ---------------- WIN + CONFETTI ---------------- */
+  function showWin(){
+    winTitle.textContent = "You reached the flag!";
+    winMsg.textContent = "Pip followed your code perfectly on " + level.name + "! Score: " + score + " points.";
+    nextLevelBtn.style.display = (currentLevelIndex < LEVELS.length-1) ? 'inline-block' : 'none';
+    winScreen.classList.add('show');
+    soundWin();
+    launchConfetti();
+  }
+  function launchConfetti(){
+    var colors = ['#FF5A5F','#3FA7FF','#FFC93C','#4CD97B','#B57BFF'];
+    for(var i=0;i<60;i++){
+      (function(){
+        var p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = (Math.random()*100)+'vw';
+        p.style.background = colors[Math.floor(Math.random()*colors.length)];
+        p.style.transform = 'rotate('+Math.floor(Math.random()*360)+'deg)';
+        var duration = 2.2 + Math.random()*1.6;
+        var delay = Math.random()*0.6;
+        p.style.transition = 'transform '+duration+'s ease-in, top '+duration+'s ease-in, opacity 0.4s ease '+ (duration+delay-0.4) +'s';
+        document.body.appendChild(p);
+        requestAnimationFrame(function(){
+          setTimeout(function(){
+            p.style.top = (100+Math.random()*10)+'vh';
+            p.style.transform = 'rotate('+Math.floor(Math.random()*720)+'deg)';
+            p.style.opacity = '0';
+          }, delay*1000);
+        });
+        setTimeout(function(){ p.remove(); }, (duration+delay+0.6)*1000);
+      })();
+    }
+  }
+
+  document.getElementById('play-again').addEventListener('click', function(){
+    winScreen.classList.remove('show');
+    resetProgram();
+    buildMaze();
+  });
+  nextLevelBtn.addEventListener('click', function(){
+    winScreen.classList.remove('show');
+    if(currentLevelIndex < LEVELS.length-1){
+      currentLevelIndex++;
+      levelBtns.forEach(function(b){ b.classList.remove('active'); });
+      levelBtns[currentLevelIndex].classList.add('active');
+    }
+    resetProgram();
+    buildMaze();
+  });
+
+  window.addEventListener('resize', function(){
+    if(!level) return;
+    var rect = mazeGrid.getBoundingClientRect();
+    cellPx = (rect.width - 12) / level.cols;
+  });
+
+  buildMaze();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Shape Catch with Pip the Robot!</title>
+<style>
+  :root{
+    --red:#FF5A5F; --red-dark:#D6383D;
+    --blue:#3FA7FF; --blue-dark:#1E7FD6;
+    --yellow:#FFC93C; --yellow-dark:#E0A400;
+    --green:#4CD97B; --green-dark:#22B25A;
+    --purple:#B57BFF; --purple-dark:#8A4FE0;
+    --ink:#2B2A4C;
+    --paper:#FFF8EC;
+    --card:#FFFFFF;
+    --shadow:0 6px 0 rgba(43,42,76,0.18);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:'Baloo 2','Trebuchet MS','Segoe UI Rounded','Comic Sans MS',system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 10% 15%, #FFE9C7 0%, transparent 40%),
+      radial-gradient(circle at 90% 10%, #CFEFFF 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #E4FFE0 0%, transparent 40%),
+      var(--paper);
+    color:var(--ink);
+    overflow-x:hidden;
+    user-select:none;
+  }
+  #app{
+    min-height:100%;
+    display:flex; flex-direction:column; align-items:center;
+    padding:14px 14px 26px;
+  }
+
+  header{
+    width:100%; max-width:820px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; margin-bottom:6px;
+  }
+  header h1{ margin:0; font-size:clamp(20px,4.5vw,32px); }
+  header h1 span.hi{color:var(--blue-dark);}
+  .badge{
+    background:var(--card); border-radius:16px; padding:8px 14px;
+    box-shadow:var(--shadow); font-weight:700; font-size:clamp(14px,3vw,18px);
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .badge .star{color:var(--yellow-dark);}
+  .badge-row{ display:flex; gap:8px; }
+
+  .robot-row{
+    width:100%; max-width:820px;
+    display:flex; align-items:flex-end; gap:14px;
+    margin:6px 0 12px;
+  }
+  #robot{ width:70px; height:70px; flex:0 0 auto;
+    filter:drop-shadow(0 4px 0 rgba(43,42,76,0.15));
+    transition:transform .25s ease;
+  }
+  #robot.bounce{animation:bounce .5s ease;}
+  @keyframes bounce{
+    0%{transform:translateY(0) rotate(0);}
+    30%{transform:translateY(-10px) rotate(-4deg);}
+    60%{transform:translateY(0) rotate(4deg);}
+    100%{transform:translateY(0) rotate(0);}
+  }
+  #speech{
+    position:relative; background:var(--card); border-radius:18px;
+    padding:10px 16px; box-shadow:var(--shadow);
+    font-size:clamp(13px,3vw,17px); font-weight:700;
+    min-height:20px; flex:1 1 auto; max-width:620px;
+  }
+  #speech:before{
+    content:""; position:absolute; left:-10px; bottom:14px;
+    border:10px solid transparent; border-right-color:var(--card);
+  }
+  #speech.pulse{animation:pulse .3s ease;}
+  @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.04);}100%{transform:scale(1);}}
+
+  /* -------- CONTROLS ROW -------- */
+  #controls{
+    width:100%; max-width:820px;
+    display:flex; align-items:center; gap:14px;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+  }
+  #freeze-btn{
+    background:linear-gradient(160deg, var(--blue), var(--blue-dark));
+    color:#fff; border:none; border-radius:14px;
+    padding:10px 18px; font-size:15px; font-weight:800;
+    font-family:inherit; box-shadow:0 5px 0 #12639e; cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  #freeze-btn:active{ transform:translateY(3px); box-shadow:0 2px 0 #12639e; }
+  #freeze-btn:disabled{
+    background:#C6CBD6; box-shadow:0 5px 0 #9BA1AF; cursor:default;
+  }
+  #freeze-timer-wrap{
+    flex:1 1 160px;
+    min-width:120px;
+  }
+  #freeze-timer-label{
+    font-size:12px; font-weight:700; color:#6b6889; margin-bottom:3px;
+  }
+  #freeze-timer-bar{
+    background:#EFE7D8; border-radius:20px; height:12px; overflow:hidden;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,0.12);
+  }
+  #freeze-timer-fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--blue), var(--purple));
+    border-radius:20px;
+  }
+
+  #progress-wrap{ flex:1 1 200px; min-width:160px; }
+  #progress-label{ font-size:12px; font-weight:700; color:#6b6889; margin-bottom:3px; }
+  #progress-bar{
+    background:#EFE7D8; border-radius:20px; height:12px; overflow:hidden;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,0.12);
+  }
+  #progress-fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--green), var(--yellow-dark));
+    border-radius:20px; transition:width .35s ease;
+  }
+
+  /* -------- PLAY AREA -------- */
+  #play-area{
+    width:100%; max-width:820px;
+    height:min(58vh,440px);
+    background:linear-gradient(180deg, #EAF7FF, #F3FFF0);
+    border:4px solid #D9E9E3;
+    border-radius:26px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:inset 0 4px 10px rgba(0,0,0,0.06);
+  }
+  #play-area.frozen{
+    background:linear-gradient(180deg, #DCEFFF, #EAF2FF);
+    box-shadow:inset 0 0 0 4px rgba(63,167,255,0.35), inset 0 4px 10px rgba(0,0,0,0.06);
+  }
+  .shape{
+    position:absolute;
+    width:56px; height:56px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    filter:drop-shadow(0 4px 0 rgba(43,42,76,0.18));
+    transition:opacity .25s ease, transform .25s ease;
+    will-change:left, top;
+  }
+  .shape svg{ width:100%; height:100%; overflow:visible; }
+  .shape.frozen-shape{ filter:drop-shadow(0 4px 0 rgba(43,42,76,0.18)) saturate(1.1) brightness(1.05); }
+  .shape.frozen-shape:after{
+    content:"❄";
+    position:absolute; top:-10px; right:-6px;
+    font-size:20px;
+    color:#3FA7FF;
+    text-shadow:0 2px 2px rgba(0,0,0,0.15);
+  }
+  .shape.caught{
+    opacity:0; transform:scale(0.2) rotate(25deg);
+    pointer-events:none;
+  }
+  .catch-tick{
+    position:absolute;
+    font-size:34px;
+    color:var(--green-dark);
+    pointer-events:none;
+    animation:tickFloat .7s ease forwards;
+    text-shadow:0 2px 0 rgba(0,0,0,0.1);
+  }
+  @keyframes tickFloat{
+    0%{ opacity:0; transform:translateY(0) scale(0.5); }
+    30%{ opacity:1; transform:translateY(-10px) scale(1.2); }
+    100%{ opacity:0; transform:translateY(-40px) scale(1); }
+  }
+
+  #reset-btn{
+    margin-top:18px;
+    background:var(--ink); color:#fff; border:none;
+    border-radius:16px; padding:10px 22px; font-size:16px; font-weight:700;
+    font-family:inherit; box-shadow:0 5px 0 #16152b; cursor:pointer;
+  }
+  #reset-btn:active{ transform:translateY(3px); box-shadow:0 2px 0 #16152b; }
+
+  #hint{
+    margin-top:10px; font-size:13px; color:#6b6889; text-align:center; max-width:820px;
+  }
+
+  /* -------- WIN SCREEN -------- */
+  #win-screen{
+    position:fixed; inset:0; background:rgba(43,42,76,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:1000; opacity:0; pointer-events:none; transition:opacity .3s ease;
+  }
+  #win-screen.show{ opacity:1; pointer-events:auto; }
+  #win-card{
+    background:var(--card); border-radius:28px; padding:34px 30px;
+    text-align:center; max-width:420px; width:88%;
+    box-shadow:0 20px 40px rgba(0,0,0,0.3);
+    transform:translateY(30px) scale(0.9);
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  #win-screen.show #win-card{ transform:translateY(0) scale(1); }
+  #win-card .stars{ font-size:44px; letter-spacing:6px; margin-bottom:6px; }
+  #win-card h2{ margin:6px 0; font-size:clamp(22px,6vw,30px); }
+  #win-card p{ font-size:16px; color:#5a5878; margin:6px 0 18px; }
+  #play-again{
+    background:var(--green-dark); color:#fff; border:none; border-radius:16px;
+    padding:12px 26px; font-size:18px; font-weight:800; font-family:inherit;
+    box-shadow:0 5px 0 #187a3f; cursor:pointer;
+  }
+  #play-again:active{ transform:translateY(3px); box-shadow:0 2px 0 #187a3f; }
+
+  .confetti-piece{
+    position:fixed; top:-20px; width:10px; height:14px; z-index:1001;
+    opacity:0.95; pointer-events:none;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <h1><span class="hi">Shape</span> Catch!</h1>
+    <div class="badge"><span class="star">⭐</span> <span id="score">0</span></div>
+  </header>
+
+  <div class="robot-row">
+    <svg id="robot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="38" width="40" height="36" rx="10" fill="#B9C4D0"/>
+      <rect x="38" y="18" width="24" height="22" rx="8" fill="#DCE3EA"/>
+      <circle cx="46" cy="28" r="4" fill="#2B2A4C"/>
+      <circle cx="58" cy="28" r="4" fill="#2B2A4C"/>
+      <rect x="47" y="8" width="6" height="10" rx="3" fill="#B9C4D0"/>
+      <circle cx="50" cy="6" r="5" fill="#3FA7FF"/>
+      <rect x="16" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="70" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="40" y="52" width="20" height="8" rx="4" fill="#4CD97B"/>
+    </svg>
+    <div id="speech">Hi! I'm Pip. Left-click (or tap the Freeze button) to freeze all the shapes, then right-click — or tap — one to catch it!</div>
+  </div>
+
+  <div id="controls">
+    <button id="freeze-btn">❄️ Freeze (10s)</button>
+    <div id="freeze-timer-wrap">
+      <div id="freeze-timer-label">Frozen time left</div>
+      <div id="freeze-timer-bar"><div id="freeze-timer-fill"></div></div>
+    </div>
+    <div id="progress-wrap">
+      <div id="progress-label">Caught</div>
+      <div id="progress-bar"><div id="progress-fill"></div></div>
+    </div>
+  </div>
+
+  <div id="play-area"></div>
+
+  <div id="hint">🖱️ Mouse: left-click anywhere = freeze all &nbsp;|&nbsp; right-click a shape = catch it. &nbsp; 📱 Touch: tap the Freeze button, then tap a shape to catch it.</div>
+
+  <button id="reset-btn">🔄 New Round</button>
+</div>
+
+<div id="win-screen">
+  <div id="win-card">
+    <div class="stars">⭐⭐⭐</div>
+    <h2>You caught them all!</h2>
+    <p id="win-msg">Pip is so proud. All 10 shapes are safe and sound!</p>
+    <button id="play-again">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var TOTAL_SHAPES = 10;
+  var FREEZE_DURATION = 10000; // 10 seconds
+  var SHAPE_TYPES = ["circle","square","triangle","star","hexagon"];
+  var COLOR_CLASSES = [
+    ["#FF5A5F","#D6383D"],
+    ["#3FA7FF","#1E7FD6"],
+    ["#FFC93C","#E0A400"],
+    ["#4CD97B","#22B25A"],
+    ["#B57BFF","#8A4FE0"]
+  ];
+
+  var playArea = document.getElementById('play-area');
+  var speech = document.getElementById('speech');
+  var robot = document.getElementById('robot');
+  var scoreEl = document.getElementById('score');
+  var progressFill = document.getElementById('progress-fill');
+  var freezeBtn = document.getElementById('freeze-btn');
+  var freezeFill = document.getElementById('freeze-timer-fill');
+  var winScreen = document.getElementById('win-screen');
+  var winMsg = document.getElementById('win-msg');
+
+  var shapes = [];
+  var score = 0;
+  var caughtCount = 0;
+  var isFrozen = false;
+  var freezeEndTime = 0;
+  var rafId = null;
+  var lastTime = null;
+  var freezeTimerRaf = null;
+
+  /* ---------------- SOUND ---------------- */
+  var AudioCtx = window.AudioContext || window.webkitAudioContext;
+  var actx = null;
+  function ctx(){ if(!actx){ actx = new AudioCtx(); } return actx; }
+  function beep(freq, start, dur, type, vol){
+    try{
+      var c = ctx();
+      var o = c.createOscillator();
+      var g = c.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.value = vol || 0.15;
+      o.connect(g); g.connect(c.destination);
+      var t = c.currentTime + start;
+      o.start(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.stop(t + dur + 0.02);
+    }catch(e){}
+  }
+  function soundCatch(){ beep(880,0,0.1,'triangle',0.16); beep(1320,0.06,0.14,'triangle',0.13); }
+  function soundFreeze(){ beep(500,0,0.08,'sine',0.1); beep(700,0.05,0.12,'sine',0.09); }
+  function soundWin(){
+    [523,659,784,1047].forEach(function(f,i){ beep(f, i*0.14, 0.22, 'triangle', 0.16); });
+  }
+
+  function say(text){
+    speech.textContent = text;
+    speech.classList.remove('pulse'); void speech.offsetWidth; speech.classList.add('pulse');
+  }
+  function bounceRobot(){
+    robot.classList.remove('bounce'); void robot.offsetWidth; robot.classList.add('bounce');
+  }
+
+  /* ---------------- SHAPE SVG MARKUP ---------------- */
+  function shapeSvg(type, c1, c2){
+    var fillId = 'g' + Math.random().toString(36).slice(2,8);
+    var grad = '<defs><radialGradient id="'+fillId+'" cx="35%" cy="30%" r="75%">' +
+                 '<stop offset="0%" stop-color="'+c1+'"/><stop offset="100%" stop-color="'+c2+'"/>' +
+               '</radialGradient></defs>';
+    var fill = 'url(#'+fillId+')';
+    if(type === 'circle'){
+      return '<svg viewBox="0 0 64 64">'+grad+'<circle cx="32" cy="32" r="26" fill="'+fill+'"/></svg>';
+    }
+    if(type === 'square'){
+      return '<svg viewBox="0 0 64 64">'+grad+'<rect x="8" y="8" width="48" height="48" rx="10" fill="'+fill+'"/></svg>';
+    }
+    if(type === 'triangle'){
+      return '<svg viewBox="0 0 64 64">'+grad+'<polygon points="32,6 58,56 6,56" fill="'+fill+'" stroke-linejoin="round"/></svg>';
+    }
+    if(type === 'star'){
+      return '<svg viewBox="0 0 64 64">'+grad+'<polygon points="32,4 40,24 62,24 44,37 51,58 32,46 13,58 20,37 2,24 24,24" fill="'+fill+'"/></svg>';
+    }
+    if(type === 'hexagon'){
+      return '<svg viewBox="0 0 64 64">'+grad+'<polygon points="32,4 58,18 58,46 32,60 6,46 6,18" fill="'+fill+'"/></svg>';
+    }
+  }
+
+  /* ---------------- ROUND SETUP ---------------- */
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+
+  function buildRound(){
+    // clean up previous
+    playArea.innerHTML = '';
+    shapes = [];
+    score = 0; caughtCount = 0;
+    isFrozen = false;
+    freezeEndTime = 0;
+    scoreEl.textContent = score;
+    updateProgress();
+    freezeFill.style.width = '0%';
+    freezeBtn.disabled = false;
+    playArea.classList.remove('frozen');
+
+    var rect = playArea.getBoundingClientRect();
+    var w = rect.width, h = rect.height;
+
+    for(var i=0;i<TOTAL_SHAPES;i++){
+      var type = SHAPE_TYPES[i % SHAPE_TYPES.length];
+      var colorPair = COLOR_CLASSES[i % COLOR_CLASSES.length];
+      var el = document.createElement('div');
+      el.className = 'shape';
+      el.innerHTML = shapeSvg(type, colorPair[0], colorPair[1]);
+      var size = 56;
+      var x = rand(0, Math.max(0,w-size));
+      var y = rand(0, Math.max(0,h-size));
+      var speed = rand(55,110); // px per second
+      var angle = rand(0, Math.PI*2);
+      var vx = Math.cos(angle)*speed;
+      var vy = Math.sin(angle)*speed;
+      el.style.left = x+'px';
+      el.style.top = y+'px';
+      playArea.appendChild(el);
+
+      var shapeObj = { el:el, x:x, y:y, vx:vx, vy:vy, size:size, caught:false };
+      shapes.push(shapeObj);
+      attachShapeEvents(shapeObj);
+    }
+
+    say("Hi! I'm Pip. Left-click (or tap the Freeze button) to freeze all the shapes, then right-click — or tap — one to catch it!");
+    startLoop();
+  }
+
+  function updateProgress(){
+    progressFill.style.width = Math.round((caughtCount/TOTAL_SHAPES)*100) + '%';
+    document.getElementById('progress-label').textContent = 'Caught ' + caughtCount + '/' + TOTAL_SHAPES;
+  }
+
+  /* ---------------- ANIMATION LOOP ---------------- */
+  function startLoop(){
+    if(rafId) cancelAnimationFrame(rafId);
+    lastTime = null;
+    rafId = requestAnimationFrame(step);
+  }
+
+  function step(timestamp){
+    if(lastTime === null) lastTime = timestamp;
+    var dt = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+
+    if(!isFrozen){
+      var rect = playArea.getBoundingClientRect();
+      var w = rect.width, h = rect.height;
+      shapes.forEach(function(s){
+        if(s.caught) return;
+        s.x += s.vx*dt;
+        s.y += s.vy*dt;
+        if(s.x <= 0){ s.x = 0; s.vx = Math.abs(s.vx); }
+        if(s.x + s.size >= w){ s.x = w - s.size; s.vx = -Math.abs(s.vx); }
+        if(s.y <= 0){ s.y = 0; s.vy = Math.abs(s.vy); }
+        if(s.y + s.size >= h){ s.y = h - s.size; s.vy = -Math.abs(s.vy); }
+        s.el.style.left = s.x+'px';
+        s.el.style.top = s.y+'px';
+      });
+    }
+    rafId = requestAnimationFrame(step);
+  }
+
+  /* ---------------- FREEZE LOGIC ---------------- */
+  function freezeAll(){
+    if(isFrozen) return;
+    isFrozen = true;
+    playArea.classList.add('frozen');
+    shapes.forEach(function(s){ if(!s.caught) s.el.classList.add('frozen-shape'); });
+    freezeBtn.disabled = true;
+    soundFreeze();
+    say("Freeze! ❄️ Quick, right-click (or tap) a shape to catch it!");
+
+    freezeEndTime = performance.now() + FREEZE_DURATION;
+    if(freezeTimerRaf) cancelAnimationFrame(freezeTimerRaf);
+    freezeTimerRaf = requestAnimationFrame(freezeTick);
+  }
+
+  function freezeTick(now){
+    var remaining = freezeEndTime - now;
+    if(remaining <= 0){
+      freezeFill.style.width = '0%';
+      unfreezeAll();
+      return;
+    }
+    freezeFill.style.width = Math.round((remaining/FREEZE_DURATION)*100) + '%';
+    freezeTimerRaf = requestAnimationFrame(freezeTick);
+  }
+
+  function unfreezeAll(){
+    isFrozen = false;
+    playArea.classList.remove('frozen');
+    shapes.forEach(function(s){ s.el.classList.remove('frozen-shape'); });
+    freezeBtn.disabled = false;
+    if(caughtCount < TOTAL_SHAPES){
+      say("They're moving again! Left-click or tap Freeze to stop them.");
+    }
+  }
+
+  /* ---------------- CATCH LOGIC ---------------- */
+  function catchShape(shapeObj){
+    if(shapeObj.caught) return;
+    shapeObj.caught = true;
+    caughtCount++;
+    score += 10;
+    scoreEl.textContent = score;
+    updateProgress();
+    bounceRobot();
+    soundCatch();
+
+    var tick = document.createElement('div');
+    tick.className = 'catch-tick';
+    tick.textContent = '✅';
+    tick.style.left = (shapeObj.x + shapeObj.size/2 - 17) + 'px';
+    tick.style.top = (shapeObj.y) + 'px';
+    playArea.appendChild(tick);
+    setTimeout(function(){ tick.remove(); }, 720);
+
+    shapeObj.el.classList.add('caught');
+    setTimeout(function(){ shapeObj.el.remove(); }, 260);
+
+    var praises = ["Gotcha!", "Nice catch!", "You got it!", "Pip says: caught!"];
+    say(praises[Math.floor(Math.random()*praises.length)] + " " + caughtCount + " of " + TOTAL_SHAPES + " caught.");
+
+    if(caughtCount >= TOTAL_SHAPES){
+      setTimeout(showWin, 500);
+    }
+  }
+
+  /* ---------------- INPUT HANDLING ---------------- */
+  playArea.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+  playArea.addEventListener('pointerdown', function(e){
+    var shapeEl = e.target.closest ? e.target.closest('.shape') : null;
+    var shapeObj = shapeEl ? shapes.find(function(s){ return s.el === shapeEl; }) : null;
+
+    if(e.pointerType === 'touch'){
+      if(shapeObj){
+        catchShape(shapeObj);
+      } else {
+        freezeAll();
+      }
+      return;
+    }
+
+    // mouse / pen
+    if(e.button === 0){
+      // left click anywhere = freeze all
+      freezeAll();
+    } else if(e.button === 2){
+      // right click a shape = catch it
+      if(shapeObj){ catchShape(shapeObj); }
+    }
+  });
+
+  freezeBtn.addEventListener('click', function(){ freezeAll(); });
+
+  function attachShapeEvents(shapeObj){
+    // handled globally via playArea pointerdown; nothing extra needed per-shape
+  }
+
+  /* ---------------- WIN + CONFETTI ---------------- */
+  function showWin(){
+    if(rafId) cancelAnimationFrame(rafId);
+    if(freezeTimerRaf) cancelAnimationFrame(freezeTimerRaf);
+    winMsg.textContent = "Pip is so proud. All " + TOTAL_SHAPES + " shapes caught! Score: " + score + " points.";
+    winScreen.classList.add('show');
+    soundWin();
+    launchConfetti();
+  }
+  function launchConfetti(){
+    var colors = ['#FF5A5F','#3FA7FF','#FFC93C','#4CD97B','#B57BFF'];
+    for(var i=0;i<60;i++){
+      (function(){
+        var p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = (Math.random()*100)+'vw';
+        p.style.background = colors[Math.floor(Math.random()*colors.length)];
+        p.style.transform = 'rotate('+Math.floor(Math.random()*360)+'deg)';
+        var duration = 2.2 + Math.random()*1.6;
+        var delay = Math.random()*0.6;
+        p.style.transition = 'transform '+duration+'s ease-in, top '+duration+'s ease-in, opacity 0.4s ease '+ (duration+delay-0.4) +'s';
+        document.body.appendChild(p);
+        requestAnimationFrame(function(){
+          setTimeout(function(){
+            p.style.top = (100+Math.random()*10)+'vh';
+            p.style.transform = 'rotate('+Math.floor(Math.random()*720)+'deg)';
+            p.style.opacity = '0';
+          }, delay*1000);
+        });
+        setTimeout(function(){ p.remove(); }, (duration+delay+0.6)*1000);
+      })();
+    }
+  }
+
+  document.getElementById('play-again').addEventListener('click', function(){
+    winScreen.classList.remove('show');
+    buildRound();
+  });
+  document.getElementById('reset-btn').addEventListener('click', function(){
+    if(rafId) cancelAnimationFrame(rafId);
+    if(freezeTimerRaf) cancelAnimationFrame(freezeTimerRaf);
+    buildRound();
+  });
+
+  window.addEventListener('resize', function(){
+    // keep shapes within bounds after resize
+    var rect = playArea.getBoundingClientRect();
+    shapes.forEach(function(s){
+      if(s.caught) return;
+      s.x = Math.min(s.x, Math.max(0,rect.width - s.size));
+      s.y = Math.min(s.y, Math.max(0,rect.height - s.size));
+    });
+  });
+
+  buildRound();
+})();
+</script>
+</body>
+</html>

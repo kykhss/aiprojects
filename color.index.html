@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Color Sort with Pip the Robot!</title>
+<style>
+  :root{
+    --red:#FF5A5F;
+    --red-dark:#D6383D;
+    --blue:#3FA7FF;
+    --blue-dark:#1E7FD6;
+    --yellow:#FFC93C;
+    --yellow-dark:#E0A400;
+    --green:#4CD97B;
+    --green-dark:#22B25A;
+    --ink:#2B2A4C;
+    --paper:#FFF8EC;
+    --card:#FFFFFF;
+    --shadow: 0 6px 0 rgba(43,42,76,0.18);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:'Baloo 2','Trebuchet MS','Segoe UI Rounded','Comic Sans MS',system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 10% 15%, #FFE9C7 0%, transparent 40%),
+      radial-gradient(circle at 90% 10%, #CFEFFF 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #E4FFE0 0%, transparent 40%),
+      var(--paper);
+    color:var(--ink);
+    overflow-x:hidden;
+    user-select:none;
+    touch-action:none;
+  }
+  #app{
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:14px 14px 24px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    width:100%;
+    max-width:900px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .title-wrap{display:flex; align-items:center; gap:10px;}
+  .title-wrap h1{
+    font-size:clamp(20px,4.5vw,32px);
+    margin:0;
+    letter-spacing:0.5px;
+    color:var(--ink);
+  }
+  .title-wrap h1 span.hi{color:var(--red-dark);}
+  .badge{
+    background:var(--card);
+    border-radius:16px;
+    padding:8px 14px;
+    box-shadow:var(--shadow);
+    font-weight:700;
+    font-size:clamp(14px,3vw,18px);
+    display:flex; align-items:center; gap:6px;
+    white-space:nowrap;
+  }
+  .badge .star{color:var(--yellow-dark);}
+
+  /* ---------- ROBOT + SPEECH ---------- */
+  .robot-row{
+    width:100%;
+    max-width:900px;
+    display:flex;
+    align-items:flex-end;
+    gap:14px;
+    margin:6px 0 10px;
+  }
+  #robot{
+    width:70px; height:70px;
+    flex:0 0 auto;
+    filter:drop-shadow(0 4px 0 rgba(43,42,76,0.15));
+    transition:transform .25s ease;
+  }
+  #robot.bounce{animation:bounce .5s ease;}
+  @keyframes bounce{
+    0%{transform:translateY(0) rotate(0);}
+    30%{transform:translateY(-10px) rotate(-4deg);}
+    60%{transform:translateY(0) rotate(4deg);}
+    100%{transform:translateY(0) rotate(0);}
+  }
+  #speech{
+    position:relative;
+    background:var(--card);
+    border-radius:18px;
+    padding:10px 16px;
+    box-shadow:var(--shadow);
+    font-size:clamp(14px,3.2vw,18px);
+    font-weight:700;
+    min-height:20px;
+    flex:1 1 auto;
+    max-width:640px;
+    transition:transform .15s ease;
+  }
+  #speech:before{
+    content:"";
+    position:absolute;
+    left:-10px; bottom:14px;
+    border:10px solid transparent;
+    border-right-color:var(--card);
+  }
+  #speech.pulse{animation:pulse .3s ease;}
+  @keyframes pulse{ 0%{transform:scale(1);} 50%{transform:scale(1.04);} 100%{transform:scale(1);} }
+
+  /* ---------- TRAY (items to sort) ---------- */
+  #tray{
+    width:100%;
+    max-width:900px;
+    background:rgba(255,255,255,0.55);
+    border:3px dashed #D9D2C5;
+    border-radius:22px;
+    min-height:150px;
+    position:relative;
+    padding:14px;
+    display:flex;
+    flex-wrap:wrap;
+    align-content:flex-start;
+    gap:12px;
+    justify-content:center;
+  }
+  .drop{
+    width:56px; height:56px;
+    border-radius:50%;
+    box-shadow: inset 0 -6px 0 rgba(0,0,0,0.15), 0 4px 0 rgba(43,42,76,0.15);
+    cursor:grab;
+    touch-action:none;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .12s ease, opacity .25s ease;
+  }
+  .drop:active{cursor:grabbing;}
+  .drop.dragging{
+    position:fixed;
+    z-index:999;
+    transform:scale(1.15) rotate(-4deg);
+    box-shadow: inset 0 -6px 0 rgba(0,0,0,0.15), 0 10px 18px rgba(43,42,76,0.35);
+    pointer-events:none;
+  }
+  .drop.scanning{outline:3px solid #fff; animation:scan .5s ease;}
+  @keyframes scan{
+    0%{outline-color:rgba(255,255,255,0);}
+    50%{outline-color:rgba(255,255,255,0.9);}
+    100%{outline-color:rgba(255,255,255,0);}
+  }
+  .drop.wrong-shake{animation:shake .4s ease;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-8px);}
+    75%{transform:translateX(8px);}
+  }
+  .drop.gone{opacity:0; transform:scale(0.2);}
+
+  .c-red{background:radial-gradient(circle at 30% 28%, #FF9A9E, var(--red) 70%);}
+  .c-blue{background:radial-gradient(circle at 30% 28%, #A7DBFF, var(--blue) 70%);}
+  .c-yellow{background:radial-gradient(circle at 30% 28%, #FFE58A, var(--yellow) 70%);}
+  .c-green{background:radial-gradient(circle at 30% 28%, #A9F2C0, var(--green) 70%);}
+
+  /* ---------- PROGRESS ---------- */
+  #progress-wrap{
+    width:100%; max-width:900px;
+    margin:12px 0 4px;
+  }
+  #progress-bar{
+    background:#EFE7D8;
+    border-radius:20px;
+    height:16px;
+    overflow:hidden;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,0.12);
+  }
+  #progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--green), var(--blue));
+    border-radius:20px;
+    transition:width .35s ease;
+  }
+
+  /* ---------- BINS ---------- */
+  #bins{
+    width:100%; max-width:900px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-top:14px;
+  }
+  .bin{
+    border-radius:20px 20px 14px 14px;
+    padding:14px 8px 16px;
+    text-align:center;
+    color:#fff;
+    font-weight:800;
+    font-size:clamp(13px,3vw,18px);
+    box-shadow:var(--shadow);
+    position:relative;
+    min-height:96px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+    gap:6px;
+    transition:transform .15s ease, box-shadow .15s ease;
+    border:4px solid rgba(255,255,255,0.4);
+  }
+  .bin .lid{
+    position:absolute; top:-10px; left:8%; width:84%; height:14px;
+    border-radius:10px;
+    background:rgba(255,255,255,0.35);
+  }
+  .bin.b-red{background:linear-gradient(180deg, var(--red), var(--red-dark));}
+  .bin.b-blue{background:linear-gradient(180deg, var(--blue), var(--blue-dark));}
+  .bin.b-yellow{background:linear-gradient(180deg, var(--yellow), var(--yellow-dark));}
+  .bin.b-green{background:linear-gradient(180deg, var(--green), var(--green-dark));}
+  .bin.hover{transform:scale(1.06) translateY(-4px); box-shadow:0 12px 20px rgba(43,42,76,0.3);}
+  .bin .icon{font-size:clamp(20px,5vw,30px);}
+  .bin .count{
+    background:rgba(255,255,255,0.35);
+    border-radius:12px;
+    padding:2px 10px;
+    font-size:clamp(11px,2.6vw,14px);
+  }
+
+  /* ---------- RESET BUTTON ---------- */
+  #reset-btn{
+    margin-top:18px;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:16px;
+    padding:10px 22px;
+    font-size:16px;
+    font-weight:700;
+    font-family:inherit;
+    box-shadow:0 5px 0 #16152b;
+    cursor:pointer;
+  }
+  #reset-btn:active{transform:translateY(3px); box-shadow:0 2px 0 #16152b;}
+
+  /* ---------- WIN SCREEN ---------- */
+  #win-screen{
+    position:fixed; inset:0;
+    background:rgba(43,42,76,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:1000;
+    opacity:0; pointer-events:none;
+    transition:opacity .3s ease;
+  }
+  #win-screen.show{opacity:1; pointer-events:auto;}
+  #win-card{
+    background:var(--card);
+    border-radius:28px;
+    padding:34px 30px;
+    text-align:center;
+    max-width:420px;
+    width:88%;
+    box-shadow:0 20px 40px rgba(0,0,0,0.3);
+    transform:translateY(30px) scale(0.9);
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  #win-screen.show #win-card{transform:translateY(0) scale(1);}
+  #win-card .stars{font-size:44px; letter-spacing:6px; margin-bottom:6px;}
+  #win-card h2{margin:6px 0; font-size:clamp(22px,6vw,30px); color:var(--ink);}
+  #win-card p{font-size:16px; color:#5a5878; margin:6px 0 18px;}
+  #play-again{
+    background:var(--green-dark);
+    color:#fff;
+    border:none;
+    border-radius:16px;
+    padding:12px 26px;
+    font-size:18px;
+    font-weight:800;
+    font-family:inherit;
+    box-shadow:0 5px 0 #187a3f;
+    cursor:pointer;
+  }
+  #play-again:active{transform:translateY(3px); box-shadow:0 2px 0 #187a3f;}
+
+  .confetti-piece{
+    position:fixed;
+    top:-20px;
+    width:10px; height:14px;
+    z-index:1001;
+    opacity:0.95;
+    pointer-events:none;
+  }
+
+  @media (max-width:520px){
+    #bins{gap:8px;}
+    .drop{width:48px; height:48px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="title-wrap">
+      <h1><span class="hi">Color</span> Sort!</h1>
+    </div>
+    <div class="badge"><span class="star">⭐</span> <span id="score">0</span></div>
+  </header>
+
+  <div class="robot-row">
+    <svg id="robot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="38" width="40" height="36" rx="10" fill="#B9C4D0"/>
+      <rect x="38" y="18" width="24" height="22" rx="8" fill="#DCE3EA"/>
+      <circle cx="46" cy="28" r="4" fill="#2B2A4C"/>
+      <circle cx="58" cy="28" r="4" fill="#2B2A4C"/>
+      <rect x="47" y="8" width="6" height="10" rx="3" fill="#B9C4D0"/>
+      <circle cx="50" cy="6" r="5" fill="#FF5A5F"/>
+      <rect x="16" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="70" y="44" width="14" height="10" rx="5" fill="#DCE3EA"/>
+      <rect x="40" y="52" width="20" height="8" rx="4" fill="#3FA7FF"/>
+    </svg>
+    <div id="speech">Hi! I'm Pip. Drag each color ball into the matching bin — I'll check your work!</div>
+  </div>
+
+  <div id="tray"></div>
+
+  <div id="progress-wrap">
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+  </div>
+
+  <div id="bins">
+    <div class="bin b-red" data-color="red"><div class="lid"></div><div class="icon">🔴</div>Red<div class="count">0/0</div></div>
+    <div class="bin b-blue" data-color="blue"><div class="lid"></div><div class="icon">🔵</div>Blue<div class="count">0/0</div></div>
+    <div class="bin b-yellow" data-color="yellow"><div class="lid"></div><div class="icon">🟡</div>Yellow<div class="count">0/0</div></div>
+    <div class="bin b-green" data-color="green"><div class="lid"></div><div class="icon">🟢</div>Green<div class="count">0/0</div></div>
+  </div>
+
+  <button id="reset-btn">🔄 New Round</button>
+</div>
+
+<div id="win-screen">
+  <div id="win-card">
+    <div class="stars">⭐⭐⭐</div>
+    <h2>You did it!</h2>
+    <p id="win-msg">Pip sorted every color with you. Great job!</p>
+    <button id="play-again">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var COLORS = ["red","blue","yellow","green"];
+  var ITEMS_PER_ROUND = 12; // 3 of each color -> medium round
+  var score = 0;
+
+  var tray = document.getElementById('tray');
+  var bins = Array.prototype.slice.call(document.querySelectorAll('.bin'));
+  var speech = document.getElementById('speech');
+  var robot = document.getElementById('robot');
+  var scoreEl = document.getElementById('score');
+  var progressFill = document.getElementById('progress-fill');
+  var winScreen = document.getElementById('win-screen');
+  var winMsg = document.getElementById('win-msg');
+
+  var totalItems = 0;
+  var sortedCount = 0;
+  var binCounts = {red:0, blue:0, yellow:0, green:0};
+  var binTotals = {red:0, blue:0, yellow:0, green:0};
+
+  /* ---------------- SOUND (Web Audio, no files needed) ---------------- */
+  var AudioCtx = window.AudioContext || window.webkitAudioContext;
+  var actx = null;
+  function ctx(){
+    if(!actx){ actx = new AudioCtx(); }
+    return actx;
+  }
+  function beep(freq, start, dur, type, vol){
+    try{
+      var c = ctx();
+      var o = c.createOscillator();
+      var g = c.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.value = vol || 0.15;
+      o.connect(g); g.connect(c.destination);
+      var t = c.currentTime + start;
+      o.start(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.stop(t + dur + 0.02);
+    }catch(e){ /* audio not available, ignore */ }
+  }
+  function soundCorrect(){ beep(880,0,0.12,'triangle',0.16); beep(1320,0.08,0.16,'triangle',0.14); }
+  function soundWrong(){ beep(220,0,0.18,'sawtooth',0.10); }
+  function soundWin(){
+    var notes=[523,659,784,1047];
+    notes.forEach(function(f,i){ beep(f, i*0.14, 0.22, 'triangle', 0.16); });
+  }
+
+  /* ---------------- SPEECH HELPERS ---------------- */
+  function say(text){
+    speech.textContent = text;
+    speech.classList.remove('pulse'); void speech.offsetWidth; speech.classList.add('pulse');
+  }
+  function bounceRobot(){
+    robot.classList.remove('bounce'); void robot.offsetWidth; robot.classList.add('bounce');
+  }
+
+  /* ---------------- BUILD ROUND ---------------- */
+  function buildRound(){
+    tray.innerHTML = '';
+    score = 0; scoreEl.textContent = score;
+    sortedCount = 0;
+    binCounts = {red:0, blue:0, yellow:0, green:0};
+    binTotals = {red:0, blue:0, yellow:0, green:0};
+
+    var pool = [];
+    var each = Math.floor(ITEMS_PER_ROUND / COLORS.length);
+    COLORS.forEach(function(c){
+      for(var i=0;i<each;i++){ pool.push(c); binTotals[c]++; }
+    });
+    // shuffle
+    for(var i=pool.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp = pool[i]; pool[i]=pool[j]; pool[j]=tmp;
+    }
+    totalItems = pool.length;
+
+    pool.forEach(function(color, idx){
+      var el = document.createElement('div');
+      el.className = 'drop c-' + color;
+      el.dataset.color = color;
+      el.id = 'item-' + idx;
+      tray.appendChild(el);
+      attachDrag(el);
+    });
+
+    updateBinLabels();
+    updateProgress();
+    say("Hi! I'm Pip. Drag each color ball into the matching bin — I'll check your work!");
+  }
+
+  function updateBinLabels(){
+    bins.forEach(function(bin){
+      var c = bin.dataset.color;
+      var countEl = bin.querySelector('.count');
+      countEl.textContent = binCounts[c] + '/' + binTotals[c];
+    });
+  }
+  function updateProgress(){
+    var pct = totalItems ? Math.round((sortedCount/totalItems)*100) : 0;
+    progressFill.style.width = pct + '%';
+  }
+
+  /* ---------------- DRAG & DROP (pointer events: mouse + touch) ---------------- */
+  function attachDrag(el){
+    var offsetX=0, offsetY=0, startLeft=0, startTop=0, dragging=false;
+
+    el.addEventListener('pointerdown', function(e){
+      if(el.classList.contains('gone')) return;
+      dragging = true;
+      var rect = el.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      el.classList.add('dragging');
+      el.style.width = rect.width+'px';
+      el.style.height = rect.height+'px';
+      el.style.left = rect.left+'px';
+      el.style.top = rect.top+'px';
+      try{ el.setPointerCapture(e.pointerId); }catch(err){}
+      highlightNoBin();
+    });
+
+    el.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      el.style.left = (e.clientX - offsetX) + 'px';
+      el.style.top = (e.clientY - offsetY) + 'px';
+      hoverCheck(e.clientX, e.clientY);
+    });
+
+    function finishDrag(e){
+      if(!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      clearBinHover();
+      var target = binUnderPoint(e.clientX, e.clientY);
+      if(target){
+        handleDrop(el, target);
+      } else {
+        // snap back into tray flow
+        el.style.position='';
+        el.style.left=''; el.style.top='';
+        el.style.width=''; el.style.height='';
+      }
+    }
+
+    el.addEventListener('pointerup', finishDrag);
+    el.addEventListener('pointercancel', finishDrag);
+  }
+
+  function binUnderPoint(x,y){
+    for(var i=0;i<bins.length;i++){
+      var r = bins[i].getBoundingClientRect();
+      if(x>=r.left && x<=r.right && y>=r.top && y<=r.bottom){
+        return bins[i];
+      }
+    }
+    return null;
+  }
+  function hoverCheck(x,y){
+    var b = binUnderPoint(x,y);
+    bins.forEach(function(bin){ bin.classList.toggle('hover', bin===b); });
+  }
+  function clearBinHover(){
+    bins.forEach(function(bin){ bin.classList.remove('hover'); });
+  }
+  function highlightNoBin(){
+    bins.forEach(function(bin){ bin.classList.remove('hover'); });
+  }
+
+  var messagesCorrect = [
+    "Yes! That's {c}, great sorting!",
+    "Pip's scan says: {c} — correct!",
+    "Nice! My sensors confirm {c}!",
+    "Sorted perfectly into {c}!"
+  ];
+  var messagesWrong = [
+    "Hmm, my scan shows that ball isn't {c}. Try another bin!",
+    "Not quite — that one belongs somewhere else!",
+    "Oops! Pip thinks that's a different color. Try again!"
+  ];
+
+  function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+  function handleDrop(el, bin){
+    var itemColor = el.dataset.color;
+    var binColor = bin.dataset.color;
+
+    // "AI scanning" visual pulse before verdict
+    el.classList.add('scanning');
+    say("Scanning… 🔎");
+
+    setTimeout(function(){
+      el.classList.remove('scanning');
+      if(itemColor === binColor){
+        // correct
+        el.classList.add('gone');
+        setTimeout(function(){ el.remove(); }, 260);
+        binCounts[binColor]++;
+        sortedCount++;
+        score += 10;
+        scoreEl.textContent = score;
+        updateBinLabels();
+        updateProgress();
+        bounceRobot();
+        soundCorrect();
+        var msg = messagesCorrect[Math.floor(Math.random()*messagesCorrect.length)].replace('{c}', cap(binColor));
+        say(msg);
+        if(sortedCount >= totalItems){
+          setTimeout(showWin, 500);
+        }
+      } else {
+        // wrong: snap back to tray
+        el.style.position='';
+        el.style.left=''; el.style.top='';
+        el.style.width=''; el.style.height='';
+        el.classList.add('wrong-shake');
+        setTimeout(function(){ el.classList.remove('wrong-shake'); }, 400);
+        soundWrong();
+        var wmsg = messagesWrong[Math.floor(Math.random()*messagesWrong.length)].replace('{c}', cap(binColor));
+        say(wmsg);
+      }
+    }, 450);
+  }
+
+  /* ---------------- WIN SCREEN + CONFETTI ---------------- */
+  function showWin(){
+    winMsg.textContent = "Pip sorted every color with you! Score: " + score + " points.";
+    winScreen.classList.add('show');
+    soundWin();
+    launchConfetti();
+  }
+  function launchConfetti(){
+    var colors = ['#FF5A5F','#3FA7FF','#FFC93C','#4CD97B','#B57BFF'];
+    for(var i=0;i<60;i++){
+      (function(){
+        var p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = (Math.random()*100)+'vw';
+        p.style.background = colors[Math.floor(Math.random()*colors.length)];
+        p.style.transform = 'rotate('+Math.floor(Math.random()*360)+'deg)';
+        var duration = 2.2 + Math.random()*1.6;
+        var delay = Math.random()*0.6;
+        p.style.transition = 'transform '+duration+'s ease-in, top '+duration+'s ease-in, opacity 0.4s ease '+ (duration+delay-0.4) +'s';
+        document.body.appendChild(p);
+        requestAnimationFrame(function(){
+          setTimeout(function(){
+            p.style.top = (100+Math.random()*10)+'vh';
+            p.style.transform = 'rotate('+Math.floor(Math.random()*720)+'deg)';
+            p.style.opacity = '0';
+          }, delay*1000);
+        });
+        setTimeout(function(){ p.remove(); }, (duration+delay+0.6)*1000);
+      })();
+    }
+  }
+
+  document.getElementById('play-again').addEventListener('click', function(){
+    winScreen.classList.remove('show');
+    buildRound();
+  });
+  document.getElementById('reset-btn').addEventListener('click', buildRound);
+
+  buildRound();
+})();
+</script>
+</body>
+</html>

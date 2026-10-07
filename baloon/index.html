@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SkyKeys - Balloon Typing Arcade</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+    .font-display {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Ambient Twilight/Dawn Gradient Sky */
+    .arcade-sky {
+      background: linear-gradient(180deg, #090b1c 0%, #151a3a 22%, #2d1d4d 46%, #4a225b 72%, #792e62 88%, #c2576b 100%);
+    }
+
+    /* Ambient Mist & Clouds */
+    .mist-layer {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 100%, rgba(244, 114, 182, 0.18) 0%, rgba(99, 102, 241, 0.08) 50%, transparent 80%);
+      pointer-events: none;
+    }
+
+    /* Cloud Silhouettes */
+    .cloud-svg {
+      position: absolute;
+      fill: rgba(255, 255, 255, 0.08);
+      filter: blur(2px);
+      pointer-events: none;
+      animation: drift linear infinite;
+    }
+    @keyframes drift {
+      from { transform: translateX(-350px); }
+      to { transform: translateX(105vw); }
+    }
+
+    /* Glassmorphism Classes */
+    .glass-panel {
+      background: rgba(18, 22, 46, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.37);
+    }
+    .glass-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+    }
+
+    .balloon-container {
+      position: absolute;
+      transform: translate(-50%, 0);
+      cursor: pointer;
+      will-change: transform;
+      filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.35));
+      transition: filter 0.15s ease;
+    }
+    .balloon-container:hover {
+      filter: drop-shadow(0 18px 28px rgba(255, 255, 255, 0.35));
+    }
+
+    .balloon-sway {
+      animation: swayAir 3s ease-in-out infinite alternate;
+      transform-origin: bottom center;
+    }
+    @keyframes swayAir {
+      0% { transform: rotate(-5deg); }
+      100% { transform: rotate(5deg); }
+    }
+
+    .balloon-ribbon {
+      animation: ribbonWave 2.4s ease-in-out infinite alternate;
+      transform-origin: top center;
+    }
+    @keyframes ribbonWave {
+      0% { transform: rotate(-8deg) scaleX(0.9); }
+      100% { transform: rotate(8deg) scaleX(1.1); }
+    }
+
+    .key-cap {
+      position: relative;
+      background: linear-gradient(180deg, #1e2640 0%, #111628 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 0 #080b15, 0 6px 12px rgba(0, 0, 0, 0.4);
+      transition: all 0.07s cubic-bezier(0.2, 0, 0, 1);
+    }
+    .key-cap:active, .key-cap.is-pressed {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #080b15, 0 2px 4px rgba(0, 0, 0, 0.3);
+      filter: brightness(1.35);
+    }
+
+    /* Active Glowing Target Keys */
+    .key-target {
+      border: 1px solid rgba(250, 204, 21, 0.9) !important;
+      box-shadow: 0 0 16px rgba(250, 204, 21, 0.5), 0 4px 0 #080b15 !important;
+      background: linear-gradient(180deg, #2a2c47 0%, #1f1b3c 100%) !important;
+      animation: targetPulse 1.4s ease-in-out infinite alternate;
+    }
+    @keyframes targetPulse {
+      0% { box-shadow: 0 0 10px rgba(250, 204, 21, 0.4), 0 4px 0 #080b15; }
+      100% { box-shadow: 0 0 22px rgba(250, 204, 21, 0.85), 0 4px 0 #080b15; }
+    }
+
+    /* Tactile Home Row Bumps (F and J) */
+    .home-bump::after {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      width: 8px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 2px;
+    }
+
+    /* Juice screen shakes */
+    .screen-kick {
+      animation: kick 0.18s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+    @keyframes kick {
+      10%, 90% { transform: translate3d(-1px, 1px, 0); }
+      20%, 80% { transform: translate3d(2px, -1px, 0); }
+      30%, 50%, 70% { transform: translate3d(-2px, 2px, 0); }
+      40%, 60% { transform: translate3d(2px, -2px, 0); }
+    }
+  </style>
+</head>
+
+<body class="arcade-sky h-screen w-screen relative overflow-hidden flex flex-col justify-between text-white">
+
+  <div class="mist-layer"></div>
+
+  <!-- Animated SVG Clouds in Background -->
+  <svg class="cloud-svg" style="width: 280px; height: 90px; top: 10%; animation-duration: 65s; animation-delay: -10s;" viewBox="0 0 100 35">
+    <path d="M10,25 Q15,10 30,15 Q40,5 60,10 Q75,2 85,15 Q95,20 90,30 Q60,35 10,25 Z" />
+  </svg>
+  <svg class="cloud-svg" style="width: 380px; height: 120px; top: 32%; animation-duration: 90s; animation-delay: -45s;" viewBox="0 0 100 35">
+    <path d="M10,25 Q15,10 30,15 Q40,5 60,10 Q75,2 85,15 Q95,20 90,30 Q60,35 10,25 Z" />
+  </svg>
+  <svg class="cloud-svg" style="width: 320px; height: 100px; top: 58%; animation-duration: 75s; animation-delay: -25s;" viewBox="0 0 100 35">
+    <path d="M10,25 Q15,10 30,15 Q40,5 60,10 Q75,2 85,15 Q95,20 90,30 Q60,35 10,25 Z" />
+  </svg>
+
+  <!-- Canvas for particle bursts & shockwaves -->
+  <canvas id="fx-canvas" class="absolute inset-0 pointer-events-none z-20"></canvas>
+
+  <header class="relative z-30 w-full px-4 sm:px-8 pt-4 pb-2">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-fuchsia-600 via-pink-500 to-amber-400 p-[1.5px] shadow-lg shadow-pink-500/30 flex items-center justify-center">
+          <div class="w-full h-full bg-[#111428] rounded-[14px] flex items-center justify-center text-2xl">
+            🎈
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-display font-black text-xl sm:text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-300 to-indigo-200">
+              SKYKEYS
+            </h1>
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/40 text-pink-300">
+              Arcade
+            </span>
+          </div>
+          <p class="text-xs font-semibold text-pink-200/60 hidden sm:block">Pop floating letter balloons before they escape!</p>
+        </div>
+      </div>
+
+      <!-- Stats Pill Counter -->
+      <div class="flex items-center gap-2 sm:gap-4 glass-panel px-4 py-2 rounded-2xl border border-white/10 shadow-xl">
+        
+        <!-- Target Goal -->
+        <div class="flex flex-col items-center min-w-[58px]">
+          <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400">Target</span>
+          <div class="flex items-baseline gap-0.5">
+            <span id="hud-popped" class="font-display font-black text-xl text-amber-400">0</span>
+            <span class="text-xs font-bold text-slate-400">/15</span>
+          </div>
+        </div>
+
+        <div class="h-7 w-px bg-white/10"></div>
+
+        <!-- Combo Streak -->
+        <div class="flex flex-col items-center min-w-[55px]">
+          <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400">Combo</span>
+          <span id="hud-combo" class="font-display font-black text-xl text-pink-400">0x</span>
+        </div>
+
+        <div class="h-7 w-px bg-white/10"></div>
+
+        <!-- Accuracy -->
+        <div class="flex flex-col items-center min-w-[55px]">
+          <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400">Accuracy</span>
+          <span id="hud-accuracy" class="font-display font-black text-xl text-emerald-400">100%</span>
+        </div>
+
+        <!-- Controls (Sound, Difficulty, Keyboard toggle) -->
+        <div class="flex items-center gap-1.5 ml-1 sm:ml-2">
+          <button id="sound-btn" class="glass-pill p-2 sm:p-2.5 rounded-xl text-slate-200 hover:text-white hover:bg-white/15 active:scale-95 transition" title="Mute/Unmute Audio">
+            🔊
+          </button>
+          <button id="diff-btn" class="glass-pill px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-300 hover:bg-white/15 active:scale-95 transition" title="Adjust Speed">
+            Normal
+          </button>
+          <button id="kbd-toggle-btn" class="glass-pill p-2 sm:p-2.5 rounded-xl text-slate-200 hover:text-white hover:bg-white/15 active:scale-95 transition" title="Toggle Virtual Keyboard">
+            ⌨️
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Target Progress Bar -->
+    <div class="max-w-6xl mx-auto mt-2.5">
+      <div class="h-2 w-full bg-slate-900/60 rounded-full overflow-hidden p-0.5 border border-white/10 backdrop-blur-md">
+        <div id="progress-gauge" class="h-full bg-gradient-to-r from-amber-400 via-pink-500 to-indigo-500 rounded-full w-0 transition-all duration-300 shadow-[0_0_12px_rgba(236,72,153,0.7)]"></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="game-stage" class="relative z-10 flex-1 w-full overflow-hidden">
+    
+    <!-- Tutorial Floating Helper -->
+    <div id="start-banner" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4 transition-opacity duration-700">
+      <div class="glass-panel px-6 py-4 rounded-3xl border border-white/20 shadow-2xl max-w-sm">
+        <div class="text-4xl animate-bounce mb-1">🎈</div>
+        <h2 class="font-display font-extrabold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-300 to-white">
+          Ready to Pop?
+        </h2>
+        <p class="text-slate-300 text-xs sm:text-sm mt-1 font-medium">
+          Type the letter on each balloon or tap it before it reaches the top of the sky!
+        </p>
+      </div>
+    </div>
+
+  </main>
+
+  <footer id="keyboard-container" class="relative z-30 w-full px-2 sm:px-6 pb-3 pt-1 transition-all duration-300">
+    <div class="max-w-3xl mx-auto glass-panel p-2 sm:p-3 rounded-2xl sm:rounded-3xl border border-white/15 shadow-2xl">
+      <div class="flex items-center justify-between text-[11px] text-slate-300 font-semibold px-2 mb-1.5">
+        <span class="flex items-center gap-1.5">
+          <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          Illuminated keys represent balloons in flight
+        </span>
+        <span class="text-pink-300/80 hidden sm:inline">Tactile Home-Row Keys: F & J</span>
+      </div>
+
+      <!-- Key Rows -->
+      <div class="flex flex-col gap-1.5 items-center w-full">
+        <div id="row-1" class="flex gap-1 sm:gap-1.5 justify-center w-full"></div>
+        <div id="row-2" class="flex gap-1 sm:gap-1.5 justify-center w-full"></div>
+        <div id="row-3" class="flex gap-1 sm:gap-1.5 justify-center w-full"></div>
+      </div>
+    </div>
+  </footer>
+
+  <div id="victory-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xl opacity-0 pointer-events-none transition-all duration-500">
+    <div id="victory-card" class="glass-panel p-6 sm:p-8 rounded-3xl border-2 border-amber-400/40 max-w-md w-11/12 shadow-[0_0_60px_rgba(245,158,11,0.25)] text-center transform scale-90 transition-all duration-500 relative overflow-hidden">
+      
+      <!-- Subtle ambient radial lights -->
+      <div class="absolute -top-16 -right-16 w-36 h-36 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-16 -left-16 w-36 h-36 bg-pink-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Trophy badge -->
+      <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shadow-xl shadow-amber-500/40 mb-3 animate-bounce">
+        <div class="w-full h-full bg-[#12162e] rounded-[22px] flex items-center justify-center text-4xl">
+          🏆
+        </div>
+      </div>
+
+      <h2 class="font-display font-black text-3xl sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-200 to-indigo-100">
+        MISSION ACCOMPLISHED!
+      </h2>
+      <p class="text-xs sm:text-sm text-pink-200/80 font-bold mt-1 mb-5">
+        You popped all 15 balloons with lightning speed!
+      </p>
+
+      <!-- Arcade Stats Grid -->
+      <div class="grid grid-cols-2 gap-2.5 mb-6 text-left">
+        
+        <div class="glass-pill p-3 rounded-2xl border border-white/10">
+          <span class="text-[10px] uppercase font-extrabold text-slate-400">Total Popped</span>
+          <div class="font-display font-black text-2xl text-amber-300">15 / 15</div>
+        </div>
+
+        <div class="glass-pill p-3 rounded-2xl border border-white/10">
+          <span class="text-[10px] uppercase font-extrabold text-slate-400">Accuracy</span>
+          <div id="modal-accuracy" class="font-display font-black text-2xl text-emerald-400">100%</div>
+        </div>
+
+        <div class="glass-pill p-3 rounded-2xl border border-white/10">
+          <span class="text-[10px] uppercase font-extrabold text-slate-400">Max Combo</span>
+          <div id="modal-combo" class="font-display font-black text-2xl text-pink-400">15x 🔥</div>
+        </div>
+
+        <div class="glass-pill p-3 rounded-2xl border border-white/10">
+          <span class="text-[10px] uppercase font-extrabold text-slate-400">Speed (CPM)</span>
+          <div id="modal-cpm" class="font-display font-black text-2xl text-cyan-400">84</div>
+        </div>
+
+      </div>
+
+      <!-- Play Again CTA -->
+      <button id="restart-btn" class="w-full py-4 rounded-2xl font-display font-black text-lg uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-400 via-pink-400 to-cyan-400 hover:brightness-110 active:scale-98 transition shadow-[0_0_24px_rgba(244,114,182,0.4)] cursor-pointer">
+        Play Next Wave 🚀
+      </button>
+
+    </div>
+  </div>
+
+  <script>
+    class RetroSoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.isMuted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playPop(combo = 1) {
+        if (this.isMuted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        // Pitch escalates slightly with higher streak combos
+        const basePitch = Math.min(650, 360 + (combo * 24));
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(basePitch, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+
+        gain.gain.setValueAtTime(0.45, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.09);
+
+        // White noise crisp pop transient
+        const bufferSize = this.ctx.sampleRate * 0.025;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.3, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.025);
+
+        noise.connect(noiseGain);
+        noiseGain.connect(this.ctx.destination);
+        noise.start(now);
+        noise.stop(now + 0.03);
+      }
+
+      playMiss() {
+        if (this.isMuted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(90, now + 0.16);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.17);
+      }
+
+      playVictory() {
+        if (this.isMuted) return;
+        this.init();
+        const chord = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+        chord.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const noteTime = this.ctx.currentTime + (idx * 0.08);
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, noteTime);
+
+          gain.gain.setValueAtTime(0, noteTime);
+          gain.gain.linearRampToValueAtTime(0.22, noteTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.7);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(noteTime);
+          osc.stop(noteTime + 0.75);
+        });
+      }
+    }
+
+    const sound = new RetroSoundEngine();
+
+    const BALLOON_STYLES = [
+      {
+        id: 'crimson',
+        gradStart: '#ff4d6d',
+        gradEnd: '#c9184a',
+        glow: 'rgba(255, 77, 109, 0.45)',
+        knot: '#a0123a',
+        string: 'rgba(255, 200, 221, 0.65)'
+      },
+      {
+        id: 'violet',
+        gradStart: '#a855f7',
+        gradEnd: '#6b21a8',
+        glow: 'rgba(168, 85, 247, 0.45)',
+        knot: '#581c87',
+        string: 'rgba(233, 213, 255, 0.65)'
+      },
+      {
+        id: 'cyan',
+        gradStart: '#06b6d4',
+        gradEnd: '#0e7490',
+        glow: 'rgba(6, 182, 212, 0.45)',
+        knot: '#155e75',
+        string: 'rgba(207, 250, 254, 0.65)'
+      },
+      {
+        id: 'amber',
+        gradStart: '#f59e0b',
+        gradEnd: '#b45309',
+        glow: 'rgba(245, 158, 11, 0.45)',
+        knot: '#92400e',
+        string: 'rgba(254, 243, 199, 0.65)'
+      },
+      {
+        id: 'emerald',
+        gradStart: '#10b981',
+        gradEnd: '#047857',
+        glow: 'rgba(16, 185, 129, 0.45)',
+        knot: '#065f46',
+        string: 'rgba(209, 250, 229, 0.65)'
+      },
+      {
+        id: 'pink',
+        gradStart: '#ec4899',
+        gradEnd: '#9d174d',
+        glow: 'rgba(236, 72, 153, 0.45)',
+        knot: '#831843',
+        string: 'rgba(252, 231, 243, 0.65)'
+      }
+    ];
+
+    const KEYBOARD_ROWS = [
+      ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+      ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+      ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
+    ];
+
+    const canvas = document.getElementById('fx-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let shockwaves = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 8;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.size = 3 + Math.random() * 6;
+        this.alpha = 1;
+        this.decay = 0.02 + Math.random() * 0.03;
+        this.gravity = 0.15;
+        this.rotation = Math.random() * 360;
+        this.vRot = (Math.random() - 0.5) * 15;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.alpha -= this.decay;
+        this.rotation += this.vRot;
+      }
+      draw(c) {
+        c.save();
+        c.translate(this.x, this.y);
+        c.rotate((this.rotation * Math.PI) / 180);
+        c.globalAlpha = Math.max(0, this.alpha);
+        c.fillStyle = this.color;
+        c.fillRect(-this.size / 2, -this.size / 2, this.size, this.size * 1.4);
+        c.restore();
+      }
+    }
+
+    class Shockwave {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.radius = 8;
+        this.maxRadius = 60 + Math.random() * 20;
+        this.alpha = 0.9;
+        this.growth = 3.5;
+      }
+      update() {
+        this.radius += this.growth;
+        this.alpha -= 0.045;
+      }
+      draw(c) {
+        c.save();
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.strokeStyle = this.color;
+        c.lineWidth = 3;
+        c.globalAlpha = Math.max(0, this.alpha);
+        c.stroke();
+        c.restore();
+      }
+    }
+
+    function spawnBurst(x, y, color) {
+      for (let i = 0; i < 24; i++) {
+        particles.push(new Particle(x, y, color));
+      }
+      shockwaves.push(new Shockwave(x, y, color));
+    }
+
+    function renderFX() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+        const sw = shockwaves[i];
+        sw.update();
+        sw.draw(ctx);
+        if (sw.alpha <= 0) shockwaves.splice(i, 1);
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.update();
+        p.draw(ctx);
+        if (p.alpha <= 0) particles.splice(i, 1);
+      }
+
+      requestAnimationFrame(renderFX);
+    }
+    renderFX();
+
+    const DIFFICULTIES = [
+      { name: 'Relaxed', speed: 1.0, spawnDelay: 2100 },
+      { name: 'Normal', speed: 1.45, spawnDelay: 1700 },
+      { name: 'Arcade', speed: 2.1, spawnDelay: 1250 }
+    ];
+    let diffIndex = 1;
+
+    const state = {
+      targetGoal: 15,
+      poppedCount: 0,
+      totalKeystrokes: 0,
+      correctKeystrokes: 0,
+      currentCombo: 0,
+      maxCombo: 0,
+      startTime: null,
+      balloons: [],
+      spawnTimer: null,
+      animFrame: null,
+      isGameOver: false,
+    };
+
+    const dom = {
+      stage: document.getElementById('game-stage'),
+      popped: document.getElementById('hud-popped'),
+      combo: document.getElementById('hud-combo'),
+      accuracy: document.getElementById('hud-accuracy'),
+      gauge: document.getElementById('progress-gauge'),
+      soundBtn: document.getElementById('sound-btn'),
+      diffBtn: document.getElementById('diff-btn'),
+      kbdToggleBtn: document.getElementById('kbd-toggle-btn'),
+      kbdContainer: document.getElementById('keyboard-container'),
+      startBanner: document.getElementById('start-banner'),
+      victoryModal: document.getElementById('victory-modal'),
+      victoryCard: document.getElementById('victory-card'),
+      modalAccuracy: document.getElementById('modal-accuracy'),
+      modalCombo: document.getElementById('modal-combo'),
+      modalCpm: document.getElementById('modal-cpm'),
+      restartBtn: document.getElementById('restart-btn'),
+    };
+
+    function buildKeyboard() {
+      KEYBOARD_ROWS.forEach((row, rIdx) => {
+        const rowEl = document.getElementById(`row-${rIdx + 1}`);
+        rowEl.innerHTML = '';
+        row.forEach(letter => {
+          const btn = document.createElement('button');
+          btn.id = `key-${letter}`;
+          const isHomeKey = letter === 'F' || letter === 'J';
+          btn.className = `key-cap w-7 h-10 sm:w-11 sm:h-12 rounded-xl text-white font-display font-extrabold text-sm sm:text-base flex items-center justify-center relative cursor-pointer active:scale-95 ${isHomeKey ? 'home-bump' : ''}`;
+          btn.innerHTML = `<span>${letter}</span>`;
+          
+          btn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            sound.init();
+            handleKeystroke(letter);
+          });
+
+          rowEl.appendChild(btn);
+        });
+      });
+    }
+
+    function updateKeyboardHighlights() {
+      const activeLetters = new Set(state.balloons.map(b => b.letter));
+      KEYBOARD_ROWS.flat().forEach(char => {
+        const el = document.getElementById(`key-${char}`);
+        if (!el) return;
+        if (activeLetters.has(char)) {
+          el.classList.add('key-target');
+        } else {
+          el.classList.remove('key-target');
+        }
+      });
+    }
+
+    function animateKeyCap(char, isSuccess) {
+      const el = document.getElementById(`key-${char}`);
+      if (!el) return;
+      el.classList.add('is-pressed');
+      const prevBorder = el.style.borderColor;
+      el.style.borderColor = isSuccess ? '#10b981' : '#f43f5e';
+      setTimeout(() => {
+        el.classList.remove('is-pressed');
+        el.style.borderColor = prevBorder;
+      }, 120);
+    }
+
+    function createBalloonElement(letter, style) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'balloon-container';
+
+      wrapper.innerHTML = `
+        <div class="balloon-sway">
+          <!-- 3D Glossy Vector Balloon -->
+          <svg width="86" height="106" viewBox="0 0 86 106" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="grad-${style.id}-${letter}" cx="35%" cy="30%" r="65%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/>
+                <stop offset="25%" stop-color="${style.gradStart}"/>
+                <stop offset="85%" stop-color="${style.gradEnd}"/>
+                <stop offset="100%" stop-color="${style.knot}"/>
+              </radialGradient>
+              <linearGradient id="glare-${style.id}" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Balloon Main Body with 3D Spherical Radial Fill -->
+            <path d="M43 2C19.25 2 0 20.8 0 44C0 67.2 19.25 86 43 86C66.75 86 86 67.2 86 44C86 20.8 66.75 2 43 2Z" fill="url(#grad-${style.id}-${letter})"/>
+            
+            <!-- Secondary Specular Highlight Curve -->
+            <ellipse cx="28" cy="24" rx="14" ry="8" transform="rotate(-35 28 24)" fill="url(#glare-${style.id})"/>
+            <circle cx="20" cy="38" r="3.5" fill="#ffffff" fill-opacity="0.5"/>
+
+            <!-- Tied Knot -->
+            <path d="M37 84L49 84L46 91L40 91Z" fill="${style.knot}"/>
+
+            <!-- Animated Ribbon -->
+            <g class="balloon-ribbon">
+              <path d="M43 91C43 95 38 98 44 103C48 106 41 109 43 115" stroke="${style.string}" stroke-width="2" stroke-linecap="round" fill="none"/>
+            </g>
+
+            <!-- Letter Display -->
+            <text x="43" y="55" text-anchor="middle" dominant-baseline="middle" 
+                  fill="#ffffff" font-family="'Outfit', sans-serif" font-weight="900" 
+                  font-size="34" style="text-shadow: 0 3px 6px rgba(0,0,0,0.45); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+              ${letter}
+            </text>
+          </svg>
+        </div>
+      `;
+
+      return wrapper;
+    }
+
+    function spawnBalloon() {
+      if (state.isGameOver || state.balloons.length >= 6) return;
+
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const existing = state.balloons.map(b => b.letter);
+      const candidates = letters.split('').filter(ch => !existing.includes(ch));
+      const pool = candidates.length > 0 ? candidates : letters.split('');
+      const letter = pool[Math.floor(Math.random() * pool.length)];
+
+      const style = BALLOON_STYLES[Math.floor(Math.random() * BALLOON_STYLES.length)];
+      const stageW = dom.stage.clientWidth || window.innerWidth;
+      const margin = 60;
+      const x = margin + Math.random() * (stageW - margin * 2);
+      const startY = dom.stage.clientHeight + 30;
+
+      const element = createBalloonElement(letter, style);
+      element.style.left = `${x}px`;
+      element.style.top = `${startY}px`;
+
+      element.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        handleKeystroke(letter);
+      });
+
+      dom.stage.appendChild(element);
+
+      const speedFactor = DIFFICULTIES[diffIndex].speed;
+      const balloonObj = {
+        letter,
+        x,
+        baseX: x,
+        y: startY,
+        color: style.gradStart,
+        speed: (speedFactor + Math.random() * 0.5),
+        wobbleFreq: 0.03 + Math.random() * 0.02,
+        wobbleAmp: 16 + Math.random() * 12,
+        phase: Math.random() * 100,
+        element
+      };
+
+      state.balloons.push(balloonObj);
+      updateKeyboardHighlights();
+
+      if (dom.startBanner) {
+        dom.startBanner.style.opacity = '0';
+      }
+    }
+
+    function gameLoop() {
+      if (state.isGameOver) return;
+
+      for (let i = state.balloons.length - 1; i >= 0; i--) {
+        const b = state.balloons[i];
+        b.y -= b.speed;
+        b.phase += b.wobbleFreq;
+        b.x = b.baseX + Math.sin(b.phase) * b.wobbleAmp;
+
+        b.element.style.transform = `translate3d(${b.x - b.baseX}px, 0, 0)`;
+        b.element.style.top = `${b.y}px`;
+
+        // If escaped beyond top screen
+        if (b.y < -130) {
+          b.element.remove();
+          state.balloons.splice(i, 1);
+          // Combo reset on balloon escape
+          if (state.currentCombo > 0) {
+            state.currentCombo = 0;
+            updateHUD();
+          }
+          updateKeyboardHighlights();
+        }
+      }
+
+      state.animFrame = requestAnimationFrame(gameLoop);
+    }
+
+    function handleKeystroke(char) {
+      if (state.isGameOver) return;
+
+      if (!state.startTime) {
+        state.startTime = Date.now();
+      }
+
+      const key = char.toUpperCase();
+      state.totalKeystrokes++;
+
+      // Filter matching balloons in sky
+      const matchingIndices = [];
+      state.balloons.forEach((b, index) => {
+        if (b.letter === key) matchingIndices.push(index);
+      });
+
+      if (matchingIndices.length > 0) {
+        // Pop balloon that is closest to escaping (lowest y)
+        matchingIndices.sort((a, b) => state.balloons[a].y - state.balloons[b].y);
+        const targetIndex = matchingIndices[0];
+        const balloon = state.balloons[targetIndex];
+
+        // Trigger effects
+        state.currentCombo++;
+        if (state.currentCombo > state.maxCombo) {
+          state.maxCombo = state.currentCombo;
+        }
+        state.correctKeystrokes++;
+        state.poppedCount++;
+
+        sound.playPop(state.currentCombo);
+
+        const rect = balloon.element.getBoundingClientRect();
+        spawnBurst(rect.left + rect.width / 2, rect.top + 45, balloon.color);
+
+        balloon.element.remove();
+        state.balloons.splice(targetIndex, 1);
+
+        animateKeyCap(key, true);
+        updateHUD();
+        updateKeyboardHighlights();
+
+        // Check 15-balloon victory trigger
+        if (state.poppedCount >= state.targetGoal) {
+          triggerVictory();
+        }
+      } else {
+        // Keystroke miss
+        sound.playMiss();
+        state.currentCombo = 0;
+        animateKeyCap(key, false);
+
+        // Screen Kick Shake juice
+        document.body.classList.add('screen-kick');
+        setTimeout(() => document.body.classList.remove('screen-kick'), 200);
+
+        updateHUD();
+      }
+    }
+
+    function updateHUD() {
+      dom.popped.textContent = state.poppedCount;
+      dom.combo.textContent = `${state.currentCombo}x`;
+      
+      const accuracy = state.totalKeystrokes === 0 
+        ? 100 
+        : Math.max(0, Math.round((state.correctKeystrokes / state.totalKeystrokes) * 100));
+      dom.accuracy.textContent = `${accuracy}%`;
+
+      const progress = Math.min(100, (state.poppedCount / state.targetGoal) * 100);
+      dom.gauge.style.width = `${progress}%`;
+    }
+
+    function triggerVictory() {
+      state.isGameOver = true;
+      clearInterval(state.spawnTimer);
+      cancelAnimationFrame(state.animFrame);
+
+      state.balloons.forEach(b => b.element.remove());
+      state.balloons = [];
+      updateKeyboardHighlights();
+
+      sound.playVictory();
+
+      // Confetti burst
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      setTimeout(() => {
+        confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0.05, y: 0.7 } });
+        confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 0.95, y: 0.7 } });
+      }, 250);
+
+      // Calculations
+      const elapsedSec = Math.max(1, (Date.now() - state.startTime) / 1000);
+      const cpm = Math.round((state.correctKeystrokes / elapsedSec) * 60);
+      const accuracy = Math.round((state.correctKeystrokes / state.totalKeystrokes) * 100);
+
+      dom.modalAccuracy.textContent = `${accuracy}%`;
+      dom.modalCombo.textContent = `${state.maxCombo}x 🔥`;
+      dom.modalCpm.textContent = cpm;
+
+      // Unhide Modal
+      dom.victoryModal.classList.remove('opacity-0', 'pointer-events-none');
+      dom.victoryCard.classList.remove('scale-90');
+      dom.victoryCard.classList.add('scale-100');
+    }
+
+    function startNewGame() {
+      if (state.spawnTimer) clearInterval(state.spawnTimer);
+      if (state.animFrame) cancelAnimationFrame(state.animFrame);
+
+      state.balloons.forEach(b => b.element.remove());
+      state.balloons = [];
+
+      state.poppedCount = 0;
+      state.totalKeystrokes = 0;
+      state.correctKeystrokes = 0;
+      state.currentCombo = 0;
+      state.maxCombo = 0;
+      state.startTime = null;
+      state.isGameOver = false;
+
+      dom.victoryModal.classList.add('opacity-0', 'pointer-events-none');
+      dom.victoryCard.classList.remove('scale-100');
+      dom.victoryCard.classList.add('scale-90');
+
+      if (dom.startBanner) dom.startBanner.style.opacity = '1';
+
+      updateHUD();
+      updateKeyboardHighlights();
+
+      // Initial spawns
+      spawnBalloon();
+      setTimeout(spawnBalloon, 700);
+
+      const delay = DIFFICULTIES[diffIndex].spawnDelay;
+      state.spawnTimer = setInterval(() => {
+        if (!state.isGameOver && state.balloons.length < 5) {
+          spawnBalloon();
+        }
+      }, delay);
+
+      gameLoop();
+    }
+
+    // Physical Keyboard Listener
+    window.addEventListener('keydown', (e) => {
+      if (e.key && e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+        e.preventDefault();
+        sound.init();
+        handleKeystroke(e.key);
+      }
+    });
+
+    // Sound Toggle
+    dom.soundBtn.addEventListener('click', () => {
+      sound.isMuted = !sound.isMuted;
+      dom.soundBtn.textContent = sound.isMuted ? '🔇' : '🔊';
+    });
+
+    // Difficulty Toggle
+    dom.diffBtn.addEventListener('click', () => {
+      diffIndex = (diffIndex + 1) % DIFFICULTIES.length;
+      dom.diffBtn.textContent = DIFFICULTIES[diffIndex].name;
+      startNewGame();
+    });
+
+    // Virtual Keyboard Collapse Toggle
+    dom.kbdToggleBtn.addEventListener('click', () => {
+      dom.kbdContainer.classList.toggle('hidden');
+    });
+
+    // Victory Restart CTA
+    dom.restartBtn.addEventListener('click', () => {
+      sound.init();
+      startNewGame();
+    });
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', () => {
+      buildKeyboard();
+      startNewGame();
+    });
+  </script>
+</body>
+</html>

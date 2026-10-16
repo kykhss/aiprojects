@@ -90,19 +90,23 @@
     </div>
 
     <!-- Segmented Tab Navigation -->
-    <div class="max-w-4xl mx-auto px-4 pt-1 pb-2">
-      <nav class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl">
-        <button onclick="switchTab('log')" id="tabBtn-log" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-          <span>Log Entry</span>
+    <div class="max-w-5xl mx-auto px-4 pt-1 pb-2">
+      <nav class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl">
+        <button onclick="switchTab('log')" id="tabBtn-log" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          <span class="truncate">Log Entry</span>
         </button>
-        <button onclick="switchTab('report')" id="tabBtn-report" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-          <span>Class & Day Reports</span>
+        <button onclick="switchTab('report')" id="tabBtn-report" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          <span class="truncate">Reports</span>
         </button>
-        <button onclick="switchTab('setup')" id="tabBtn-setup" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          <span>Sheet URL & API</span>
+        <button onclick="switchTab('matrix')" id="tabBtn-matrix" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          <span class="truncate">Classroom Matrix</span>
+        </button>
+        <button onclick="switchTab('setup')" id="tabBtn-setup" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span class="truncate">Setup</span>
         </button>
       </nav>
     </div>
@@ -112,11 +116,7 @@
   <div id="toastContainer" class="fixed top-20 right-4 left-4 sm:left-auto sm:w-96 z-50 pointer-events-none flex flex-col space-y-2"></div>
 
   <!-- Main Container -->
-  <main class="max-w-4xl mx-auto px-4 py-5 flex-1 w-full">
-
-    <!-- ========================================== -->
-    <!-- TAB 1: LOG ENTRY FORM                      -->
-    <!-- ========================================== -->
+  <main class="max-w-5xl mx-auto px-4 py-5 flex-1 w-full">
     <section id="view-log" class="tab-content transition-opacity duration-300">
       <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-5 sm:p-7 card-shadow">
         
@@ -432,7 +432,205 @@
     </section>
 
     <!-- ========================================== -->
-    <!-- TAB 3: GOOGLE SHEETS SETUP & GUIDE         -->
+    <!-- TAB 3: ALL CLASSROOMS SUMMARY MATRIX       -->
+    <!-- ========================================== -->
+    <section id="view-matrix" class="tab-content hidden transition-opacity duration-300">
+      
+      <!-- Filter Bar & Actions for Matrix -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-4 sm:p-6 mb-5 card-shadow no-print">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-xl font-bold text-slate-900 tracking-tight">Class & Division Master Matrix</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                44 Classrooms
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Every official class & division combination with dedicated days count & session hours</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="fetchSheetData()" title="Reload live from Google Sheet" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-xl border border-slate-200 transition flex items-center space-x-1 text-xs font-semibold">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              <span>Sync</span>
+            </button>
+            <button onclick="exportMatrixCSV()" class="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <span>Export CSV</span>
+            </button>
+            <button onclick="window.print()" class="px-3 py-2 text-xs font-semibold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-xl transition flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+              <span>Print Table</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Activity Status Filter -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Status Filter</label>
+            <select id="matrixFilterStatus" onchange="renderMatrixTable()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500">
+              <option value="ALL">All Classrooms (44 Total)</option>
+              <option value="ACTIVE">Only Active (> 0 Days)</option>
+              <option value="ZERO">Zero Sessions (Pending)</option>
+            </select>
+          </div>
+
+          <!-- Section Level Filter -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Section Group</label>
+            <select id="matrixFilterSection" onchange="renderMatrixTable()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500">
+              <option value="ALL">Entire School (All Sections)</option>
+              <option value="PRE_PRIMARY">Pre-Primary (LKG, UKG)</option>
+              <option value="LOWER_PRIMARY">Lower Primary (Classes 1 - 3)</option>
+              <option value="UPPER_PRIMARY">Upper Primary (Classes 4 - 7)</option>
+              <option value="HIGH_SCHOOL">High School (Classes 8 - 10)</option>
+              <option value="HSS">Higher Secondary (Classes 11 - 12)</option>
+            </select>
+          </div>
+
+          <!-- Search Query -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Search Classroom / Division</label>
+            <input type="text" id="matrixFilterSearch" oninput="renderMatrixTable()" placeholder="e.g. 10, 11-C, UKG, A..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500" />
+          </div>
+
+          <!-- Date Window -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Date Window</label>
+            <select id="matrixFilterPeriod" onchange="onMatrixPeriodChange()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500">
+              <option value="ALL" selected>All Time</option>
+              <option value="THIS_MONTH">This Month</option>
+              <option value="THIS_WEEK">This Week</option>
+              <option value="CUSTOM">Custom Range</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Custom Date Range Row for Matrix -->
+        <div id="matrixCustomDateRangeRow" class="hidden grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-100">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">From Date</label>
+            <input type="date" id="matrixStartDate" onchange="renderMatrixTable()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">To Date</label>
+            <input type="date" id="matrixEndDate" onchange="renderMatrixTable()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Matrix Summary KPI Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-sm">
+          <span class="block text-[10px] uppercase font-bold text-slate-500">Classrooms Listed</span>
+          <span id="matrixStatRoomsCount" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">0 / 44</span>
+          <span id="matrixStatActivePercent" class="text-[11px] text-brand-600 font-semibold block">0% active</span>
+        </div>
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-sm">
+          <span class="block text-[10px] uppercase font-bold text-slate-500">Cumulative Class Days</span>
+          <span id="matrixStatTotalDays" class="text-xl sm:text-2xl font-black text-indigo-600 mt-0.5">0</span>
+          <span class="text-[11px] text-slate-400 font-medium block">Sum of division days</span>
+        </div>
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-sm">
+          <span class="block text-[10px] uppercase font-bold text-slate-500">Cumulative Hours</span>
+          <span id="matrixStatTotalHours" class="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5">0.0</span>
+          <span class="text-[11px] text-slate-400 font-medium block">Total hours logged</span>
+        </div>
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-sm">
+          <span class="block text-[10px] uppercase font-bold text-slate-500">Total Sessions</span>
+          <span id="matrixStatTotalSessions" class="text-xl sm:text-2xl font-black text-purple-600 mt-0.5">0</span>
+          <span class="text-[11px] text-slate-400 font-medium block">Individual class entries</span>
+        </div>
+      </div>
+
+      <!-- Master Matrix Table Card -->
+      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden card-shadow">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-100/90 text-slate-700 text-[11px] uppercase tracking-wider font-bold border-b border-slate-200 select-none">
+                <th class="py-3 px-4">Class</th>
+                <th class="py-3 px-3 text-center">Division</th>
+                <th class="py-3 px-3 text-right">Teaching Days</th>
+                <th class="py-3 px-3 text-right">Total Hours</th>
+                <th class="py-3 px-3 text-right">Sessions</th>
+                <th class="py-3 px-3 text-right">Avg Hrs/Day</th>
+                <th class="py-3 px-4 text-center">Status</th>
+                <th class="py-3 px-4 text-center no-print">Action</th>
+              </tr>
+            </thead>
+            <tbody id="matrixTableBody" class="divide-y divide-slate-100">
+              <!-- Rendered dynamically -->
+            </tbody>
+            <tfoot class="bg-slate-50/90 font-bold text-slate-900 border-t-2 border-slate-200 text-xs sm:text-sm">
+              <tr id="matrixTableFoot">
+                <!-- Summary row dynamically updated -->
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Classroom Drilldown Modal / Drawer -->
+    <div id="classroomDetailModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+      <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- Modal Header -->
+        <div class="p-4 sm:p-5 bg-gradient-to-r from-slate-50 to-indigo-50/40 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div id="modalClassroomBadge" class="w-12 h-12 rounded-2xl bg-brand-600 text-white font-extrabold flex flex-col items-center justify-center shadow-md shadow-brand-500/20">
+              <span class="text-[9px] uppercase leading-none opacity-80">Class</span>
+              <span id="modalBadgeText" class="text-sm font-black leading-none mt-0.5">10-A</span>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 id="modalClassroomTitle" class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Class 10 - Division A</h3>
+                <span id="modalActiveStatusBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Active</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Individual session log records and topics taught</p>
+            </div>
+          </div>
+          <button onclick="closeClassroomModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        <!-- Modal Quick Stats Bar -->
+        <div class="grid grid-cols-3 gap-2 px-4 sm:px-6 py-3 bg-slate-50/80 border-b border-slate-200/80 text-center text-xs">
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Distinct Days</span>
+            <span id="modalStatDays" class="text-base font-extrabold text-slate-900">0</span>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Total Hours</span>
+            <span id="modalStatHours" class="text-base font-extrabold text-emerald-600">0.0</span>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Total Sessions</span>
+            <span id="modalStatSessions" class="text-base font-extrabold text-indigo-600">0</span>
+          </div>
+        </div>
+
+        <!-- Modal Scrollable Content -->
+        <div class="p-4 sm:p-6 overflow-y-auto space-y-3 flex-1 bg-slate-50/40" id="modalSessionsList">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex items-center justify-end">
+          <button onclick="closeClassroomModal()" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: GOOGLE SHEETS SETUP & GUIDE         -->
     <!-- ========================================== -->
     <section id="view-setup" class="tab-content hidden transition-opacity duration-300">
       <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-5 sm:p-7 card-shadow">
@@ -541,16 +739,20 @@ function doPost(e) {
   </main>
 
   <!-- Mobile Bottom Nav -->
-  <nav class="sm:hidden sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around py-2 px-3 no-print">
-    <button onclick="switchTab('log')" id="mNav-log" class="flex flex-col items-center text-brand-600 font-semibold text-[11px] p-1">
+  <nav class="sm:hidden sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around py-2 px-2 no-print">
+    <button onclick="switchTab('log')" id="mNav-log" class="flex flex-col items-center text-brand-600 font-semibold text-[10px] p-1 flex-1">
       <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
       <span>Log</span>
     </button>
-    <button onclick="switchTab('report')" id="mNav-report" class="flex flex-col items-center text-slate-500 font-medium text-[11px] p-1">
+    <button onclick="switchTab('report')" id="mNav-report" class="flex flex-col items-center text-slate-500 font-medium text-[10px] p-1 flex-1">
       <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
       <span>Reports</span>
     </button>
-    <button onclick="switchTab('setup')" id="mNav-setup" class="flex flex-col items-center text-slate-500 font-medium text-[11px] p-1">
+    <button onclick="switchTab('matrix')" id="mNav-matrix" class="flex flex-col items-center text-slate-500 font-medium text-[10px] p-1 flex-1">
+      <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+      <span>Matrix</span>
+    </button>
+    <button onclick="switchTab('setup')" id="mNav-setup" class="flex flex-col items-center text-slate-500 font-medium text-[10px] p-1 flex-1">
       <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
       <span>Settings</span>
     </button>
@@ -565,10 +767,11 @@ function doPost(e) {
 
     /**
      * Strict Academic Class & Division Hierarchy:
-     * - LKG, UKG, 1, 2, 3: Divs A, B, C, D, E
-     * - 4, 6, 8, 9, 10: Divs A, B, C
-     * - 5, 7: Divs A, B
-     * - 11, 12: Divs C, H
+     * - LKG, UKG, 1, 2, 3: Divs A, B, C, D, E (5 * 5 = 25 classrooms)
+     * - 4, 6, 8, 9, 10: Divs A, B, C (5 * 3 = 15 classrooms)
+     * - 5, 7: Divs A, B (2 * 2 = 4 classrooms)
+     * - 11, 12: Divs C, H (2 * 2 = 4 classrooms)
+     * Total = 44 classrooms
      */
     const CLASS_DIVISIONS_MAP = {
       'LKG': ['A', 'B', 'C', 'D', 'E'],
@@ -589,12 +792,28 @@ function doPost(e) {
 
     const CLASS_SORT_ORDER = ['LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 
+    // Generate comprehensive list of all 44 classrooms
+    const ALL_MASTER_CLASSROOMS = [];
+    CLASS_SORT_ORDER.forEach(cls => {
+      (CLASS_DIVISIONS_MAP[cls] || []).forEach(div => {
+        ALL_MASTER_CLASSROOMS.push({ className: cls, division: div, key: `${cls}-${div}` });
+      });
+    });
+
     // Category grouping definitions for broad report filtering
     const SECTION_GROUPS = {
       'GROUP_LOWER': ['LKG', 'UKG', '1', '2', '3', '4'],
       'GROUP_UPPER': ['5', '6', '7'],
       'GROUP_HIGH':  ['8', '9', '10'],
       'GROUP_HSS':   ['11', '12']
+    };
+
+    const MATRIX_SECTION_MAP = {
+      'PRE_PRIMARY':   ['LKG', 'UKG'],
+      'LOWER_PRIMARY': ['1', '2', '3'],
+      'UPPER_PRIMARY': ['4', '5', '6', '7'],
+      'HIGH_SCHOOL':   ['8', '9', '10'],
+      'HSS':           ['11', '12']
     };
 
     // Realistic fallback mock records for offline initialization
@@ -618,6 +837,7 @@ function doPost(e) {
     let scriptUrl = localStorage.getItem('edulog_script_url') || DEFAULT_SCRIPT_URL;
     let reportViewMode = 'class'; // 'class' or 'day'
     let expandedClasses = new Set(); // holds classes that are expanded in class-wise view
+    let currentMatrixData = []; // cached filtered matrix rows for CSV export
 
     // App Initialization
     window.addEventListener('DOMContentLoaded', () => {
@@ -651,22 +871,25 @@ function doPost(e) {
      */
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`view-${tabId}`).classList.remove('hidden');
+      const activeSection = document.getElementById(`view-${tabId}`);
+      if (activeSection) activeSection.classList.remove('hidden');
 
-      ['log', 'report', 'setup'].forEach(t => {
+      ['log', 'report', 'matrix', 'setup'].forEach(t => {
         const dBtn = document.getElementById(`tabBtn-${t}`);
         const mBtn = document.getElementById(`mNav-${t}`);
         if (t === tabId) {
-          dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm";
-          if (mBtn) mBtn.className = "flex flex-col items-center text-brand-600 font-semibold text-[11px] p-1";
+          if (dBtn) dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm";
+          if (mBtn) mBtn.className = "flex flex-col items-center text-brand-600 font-semibold text-[10px] p-1 flex-1";
         } else {
-          dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900";
-          if (mBtn) mBtn.className = "flex flex-col items-center text-slate-500 font-medium text-[11px] p-1";
+          if (dBtn) dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900";
+          if (mBtn) mBtn.className = "flex flex-col items-center text-slate-500 font-medium text-[10px] p-1 flex-1";
         }
       });
 
       if (tabId === 'report') {
         renderReports();
+      } else if (tabId === 'matrix') {
+        renderMatrixTable();
       }
     }
 
@@ -784,7 +1007,7 @@ function doPost(e) {
     }
 
     /**
-     * Period select handler
+     * Period select handler in Report Tab
      */
     function onPeriodChange() {
       const period = document.getElementById('filterPeriod').value;
@@ -797,6 +1020,22 @@ function doPost(e) {
         customRow.classList.remove('grid');
       }
       renderReports();
+    }
+
+    /**
+     * Period select handler in Classroom Matrix Tab
+     */
+    function onMatrixPeriodChange() {
+      const period = document.getElementById('matrixFilterPeriod').value;
+      const customRow = document.getElementById('matrixCustomDateRangeRow');
+      if (period === 'CUSTOM') {
+        customRow.classList.remove('hidden');
+        customRow.classList.add('grid');
+      } else {
+        customRow.classList.add('hidden');
+        customRow.classList.remove('grid');
+      }
+      renderMatrixTable();
     }
 
     /**
@@ -870,6 +1109,7 @@ function doPost(e) {
     async function fetchSheetData() {
       if (!scriptUrl) {
         renderReports();
+        renderMatrixTable();
         return;
       }
 
@@ -891,6 +1131,7 @@ function doPost(e) {
         showToast('Using cached entries. (Submissions still sync to sheet)', 'warning');
       } finally {
         renderReports();
+        renderMatrixTable();
       }
     }
 
@@ -904,6 +1145,7 @@ function doPost(e) {
       const searchQuery = document.getElementById('filterSearch').value.toLowerCase().trim();
 
       const container = document.getElementById('reportFeedContainer');
+      if (!container) return;
 
       const now = new Date();
       const currentYear = now.getFullYear();
@@ -985,7 +1227,6 @@ function doPost(e) {
       // VIEW MODE 1: CLASS-WISE DRILLDOWN
       // ==========================================
       if (reportViewMode === 'class') {
-        // Group by Class
         const classMap = {};
 
         filtered.forEach(item => {
@@ -1005,7 +1246,6 @@ function doPost(e) {
           classMap[cls].divisionsCovered.add(item.division);
         });
 
-        // Sort classes according to school hierarchy order
         const sortedClasses = Object.keys(classMap).sort((a, b) => {
           const indexA = CLASS_SORT_ORDER.indexOf(a);
           const indexB = CLASS_SORT_ORDER.indexOf(b);
@@ -1020,7 +1260,6 @@ function doPost(e) {
           const avgHoursPerDay = distinctDaysCount > 0 ? (cData.totalHours / distinctDaysCount).toFixed(1) : '0';
           const divisionsArray = Array.from(cData.divisionsCovered).sort();
 
-          // Group this class's sessions into day-by-day containers for drill-down
           const dayContainers = {};
           cData.sessions.forEach(sess => {
             const d = sess.date || 'Undated';
@@ -1081,7 +1320,7 @@ function doPost(e) {
 
           return `
             <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden transition-all hover:shadow-md card-shadow">
-              <!-- Class Header Card (Clickable to Expand) -->
+              <!-- Class Header Card -->
               <div onclick="toggleClassExpand('${clsName}')" class="p-4 sm:p-5 cursor-pointer bg-white hover:bg-slate-50/60 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 
                 <div class="flex items-center space-x-3.5">
@@ -1123,7 +1362,7 @@ function doPost(e) {
 
               </div>
 
-              <!-- Drill-down Details (Day by Day Containers for this Class) -->
+              <!-- Drill-down Details -->
               ${isExpanded ? `
                 <div class="p-4 sm:p-5 bg-slate-50/50 border-t border-slate-200 transition-all">
                   <div class="flex items-center justify-between mb-3 px-1">
@@ -1218,6 +1457,367 @@ function doPost(e) {
     }
 
     /**
+     * ==========================================
+     * CLASS & DIVISION MASTER MATRIX ENGINE
+     * ==========================================
+     */
+    function renderMatrixTable() {
+      const statusFilter = document.getElementById('matrixFilterStatus').value;
+      const sectionFilter = document.getElementById('matrixFilterSection').value;
+      const periodFilter = document.getElementById('matrixFilterPeriod').value;
+      const searchQuery = (document.getElementById('matrixFilterSearch').value || '').toLowerCase().trim();
+
+      const tbody = document.getElementById('matrixTableBody');
+      const tfoot = document.getElementById('matrixTableFoot');
+      if (!tbody) return;
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const dayOfWeek = now.getDay();
+      const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const startOfWeek = new Date(now.setDate(diffToMonday));
+      startOfWeek.setHours(0,0,0,0);
+
+      // Filter raw log entries by date window first
+      const dateFilteredLogs = currentLogs.filter(entry => {
+        if (!entry.date) return true;
+        const entryDate = new Date(entry.date + 'T00:00:00');
+        if (periodFilter === 'THIS_MONTH') {
+          if (entryDate.getFullYear() !== currentYear || entryDate.getMonth() !== currentMonth) return false;
+        } else if (periodFilter === 'THIS_WEEK') {
+          if (entryDate < startOfWeek) return false;
+        } else if (periodFilter === 'CUSTOM') {
+          const startVal = document.getElementById('matrixStartDate').value;
+          const endVal = document.getElementById('matrixEndDate').value;
+          if (startVal && entryDate < new Date(startVal + 'T00:00:00')) return false;
+          if (endVal && entryDate > new Date(endVal + 'T23:59:59')) return false;
+        }
+        return true;
+      });
+
+      // Build stats per class-division key: "ClassName-Division"
+      const sessionMap = {};
+      dateFilteredLogs.forEach(entry => {
+        const key = `${entry.className}-${entry.division}`;
+        if (!sessionMap[key]) {
+          sessionMap[key] = {
+            totalHours: 0,
+            sessions: [],
+            datesSet: new Set()
+          };
+        }
+        sessionMap[key].sessions.push(entry);
+        sessionMap[key].totalHours += Number(entry.hours) || 0;
+        if (entry.date) sessionMap[key].datesSet.add(entry.date);
+      });
+
+      // Map across all 44 predefined classrooms
+      let compiledMatrix = ALL_MASTER_CLASSROOMS.map(room => {
+        const key = `${room.className}-${room.division}`;
+        const record = sessionMap[key] || { totalHours: 0, sessions: [], datesSet: new Set() };
+        const daysCount = record.datesSet.size;
+        const totalHours = record.totalHours;
+        const sessionsCount = record.sessions.length;
+        const avgHours = daysCount > 0 ? (totalHours / daysCount).toFixed(1) : '0.0';
+
+        return {
+          className: room.className,
+          division: room.division,
+          key: key,
+          daysCount: daysCount,
+          totalHours: totalHours,
+          sessionsCount: sessionsCount,
+          avgHours: avgHours,
+          sessions: record.sessions,
+          isActive: daysCount > 0
+        };
+      });
+
+      // Filter by section group
+      if (sectionFilter !== 'ALL' && MATRIX_SECTION_MAP[sectionFilter]) {
+        const allowedClasses = MATRIX_SECTION_MAP[sectionFilter];
+        compiledMatrix = compiledMatrix.filter(item => allowedClasses.includes(item.className));
+      }
+
+      // Filter by status (active vs zero)
+      if (statusFilter === 'ACTIVE') {
+        compiledMatrix = compiledMatrix.filter(item => item.isActive);
+      } else if (statusFilter === 'ZERO') {
+        compiledMatrix = compiledMatrix.filter(item => !item.isActive);
+      }
+
+      // Filter by search query
+      if (searchQuery) {
+        compiledMatrix = compiledMatrix.filter(item => {
+          const matchCls = item.className.toLowerCase().includes(searchQuery);
+          const matchDiv = item.division.toLowerCase().includes(searchQuery);
+          const matchKey = item.key.toLowerCase().includes(searchQuery);
+          return matchCls || matchDiv || matchKey;
+        });
+      }
+
+      // Store in memory for CSV export
+      currentMatrixData = compiledMatrix;
+
+      // Calculate totals for KPI bar and Footer
+      const totalRoomsCount = compiledMatrix.length;
+      const activeRoomsCount = compiledMatrix.filter(r => r.isActive).length;
+      const activePercent = totalRoomsCount > 0 ? Math.round((activeRoomsCount / totalRoomsCount) * 100) : 0;
+      const cumulativeDays = compiledMatrix.reduce((sum, r) => sum + r.daysCount, 0);
+      const cumulativeHours = compiledMatrix.reduce((sum, r) => sum + r.totalHours, 0);
+      const cumulativeSessions = compiledMatrix.reduce((sum, r) => sum + r.sessionsCount, 0);
+
+      document.getElementById('matrixStatRoomsCount').textContent = `${totalRoomsCount} / 44`;
+      document.getElementById('matrixStatActivePercent').textContent = `${activePercent}% active (${activeRoomsCount} classrooms)`;
+      document.getElementById('matrixStatTotalDays').textContent = cumulativeDays;
+      document.getElementById('matrixStatTotalHours').textContent = cumulativeHours.toFixed(1);
+      document.getElementById('matrixStatTotalSessions').textContent = cumulativeSessions;
+
+      if (compiledMatrix.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center py-10 px-4 text-slate-500">
+              <div class="text-3xl mb-2">🔍</div>
+              <p class="font-bold text-slate-700">No Classrooms Match Filters</p>
+              <p class="text-xs text-slate-400 mt-0.5">Try resetting the status, section, or search filters above.</p>
+            </td>
+          </tr>
+        `;
+        tfoot.innerHTML = '';
+        return;
+      }
+
+      // Render table rows
+      tbody.innerHTML = compiledMatrix.map((item, idx) => {
+        const zebra = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40';
+        const statusBadge = item.isActive
+          ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>Active
+             </span>`
+          : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+               No Sessions
+             </span>`;
+
+        return `
+          <tr class="${zebra} hover:bg-indigo-50/50 transition-colors">
+            <!-- Class -->
+            <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
+              <div class="flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-lg bg-brand-50 text-brand-700 border border-brand-200 flex items-center justify-center text-xs font-black">
+                  ${item.className}
+                </span>
+                <span>Class ${item.className}</span>
+              </div>
+            </td>
+            
+            <!-- Division -->
+            <td class="py-3 px-3 text-center">
+              <span class="px-2 py-0.5 rounded-md font-bold text-xs bg-slate-100 text-slate-700 border border-slate-200">
+                Div ${item.division}
+              </span>
+            </td>
+
+            <!-- Distinct Days Count -->
+            <td class="py-3 px-3 text-right">
+              <span class="font-extrabold ${item.daysCount > 0 ? 'text-indigo-600 font-mono text-sm' : 'text-slate-400'}">
+                ${item.daysCount}
+              </span>
+            </td>
+
+            <!-- Total Hours -->
+            <td class="py-3 px-3 text-right">
+              <span class="font-extrabold ${item.totalHours > 0 ? 'text-emerald-700 font-mono text-sm' : 'text-slate-400'}">
+                ${item.totalHours.toFixed(1)}h
+              </span>
+            </td>
+
+            <!-- Total Sessions -->
+            <td class="py-3 px-3 text-right text-slate-600 font-mono font-semibold">
+              ${item.sessionsCount}
+            </td>
+
+            <!-- Average Hours / Day -->
+            <td class="py-3 px-3 text-right text-slate-600 font-mono">
+              ${item.avgHours}h
+            </td>
+
+            <!-- Status -->
+            <td class="py-3 px-4 text-center">
+              ${statusBadge}
+            </td>
+
+            <!-- Action -->
+            <td class="py-3 px-4 text-center no-print">
+              <button onclick="openClassroomModal('${item.className}', '${item.division}')" class="px-3 py-1 rounded-xl text-xs font-semibold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 transition active:scale-95 inline-flex items-center space-x-1">
+                <span>View</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Footer Summary Row
+      tfoot.innerHTML = `
+        <tr class="bg-slate-100/90 text-slate-900 border-t-2 border-slate-300">
+          <td class="py-3.5 px-4" colspan="2">
+            <span class="text-xs uppercase font-extrabold tracking-wider">Grand Total (${totalRoomsCount} Classrooms)</span>
+          </td>
+          <td class="py-3.5 px-3 text-right text-indigo-700 font-mono text-sm sm:text-base font-black">
+            ${cumulativeDays}
+          </td>
+          <td class="py-3.5 px-3 text-right text-emerald-700 font-mono text-sm sm:text-base font-black">
+            ${cumulativeHours.toFixed(1)}h
+          </td>
+          <td class="py-3.5 px-3 text-right text-purple-700 font-mono text-sm sm:text-base font-black">
+            ${cumulativeSessions}
+          </td>
+          <td class="py-3.5 px-3 text-right font-mono text-xs text-slate-600">
+            ${cumulativeDays > 0 ? (cumulativeHours / cumulativeDays).toFixed(1) + 'h' : '0.0h'}
+          </td>
+          <td class="py-3.5 px-4 text-center" colspan="2">
+            <span class="text-[11px] font-bold text-slate-600">${activeRoomsCount} active / ${totalRoomsCount - activeRoomsCount} pending</span>
+          </td>
+        </tr>
+      `;
+    }
+
+    /**
+     * Open Classroom Detail Modal
+     */
+    function openClassroomModal(className, division) {
+      const modal = document.getElementById('classroomDetailModal');
+      const badgeText = document.getElementById('modalBadgeText');
+      const title = document.getElementById('modalClassroomTitle');
+      const statusBadge = document.getElementById('modalActiveStatusBadge');
+      const listContainer = document.getElementById('modalSessionsList');
+
+      badgeText.textContent = `${className}-${division}`;
+      title.textContent = `Class ${className} - Division ${division}`;
+
+      // Filter entries specifically for this classroom
+      const sessions = currentLogs.filter(e => e.className === className && e.division === division);
+      
+      const distinctDays = new Set(sessions.map(s => s.date)).size;
+      const totalHours = sessions.reduce((sum, s) => sum + (Number(s.hours) || 0), 0);
+      const totalSessions = sessions.length;
+
+      document.getElementById('modalStatDays').textContent = distinctDays;
+      document.getElementById('modalStatHours').textContent = totalHours.toFixed(1) + 'h';
+      document.getElementById('modalStatSessions').textContent = totalSessions;
+
+      if (totalSessions > 0) {
+        statusBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+        statusBadge.textContent = 'Active Log';
+      } else {
+        statusBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500';
+        statusBadge.textContent = '0 Sessions';
+      }
+
+      if (sessions.length === 0) {
+        listContainer.innerHTML = `
+          <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-500">
+            <div class="text-3xl mb-2">📝</div>
+            <p class="font-bold text-slate-800">No Sessions Recorded</p>
+            <p class="text-xs text-slate-400 mt-1">There are no teaching hours recorded yet for Class ${className} (${division}).</p>
+          </div>
+        `;
+      } else {
+        // Group sessions by date
+        const dateGroups = {};
+        sessions.forEach(s => {
+          const d = s.date || 'Undated';
+          if (!dateGroups[d]) dateGroups[d] = [];
+          dateGroups[d].push(s);
+        });
+
+        const sortedDates = Object.keys(dateGroups).sort((a, b) => b.localeCompare(a));
+
+        listContainer.innerHTML = sortedDates.map(dKey => {
+          const dayItems = dateGroups[dKey];
+          const niceDate = formatNiceDate(dKey);
+          const dayHours = dayItems.reduce((acc, curr) => acc + (Number(curr.hours) || 0), 0);
+
+          const itemsHtml = dayItems.map(item => `
+            <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs space-y-1">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-800">
+                <span class="flex items-center space-x-1 text-emerald-700">
+                  <span>⏱️</span>
+                  <span>${item.hours} ${item.hours === 1 ? 'Hour' : 'Hours'}</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">ID: ${item.className}-${item.division}</span>
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed pt-0.5">
+                ${item.remarks ? escapeHtml(item.remarks) : '<span class="italic text-slate-400">No remarks entered</span>'}
+              </p>
+            </div>
+          `).join('');
+
+          return `
+            <div class="bg-white/70 rounded-2xl border border-slate-200 p-3.5 space-y-2">
+              <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/80">
+                <div class="flex items-center space-x-2">
+                  <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+                  <span class="text-xs font-bold text-slate-900">${niceDate}</span>
+                  <span class="text-[10px] text-slate-400">(${dKey})</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                  ${dayHours.toFixed(1)} hrs
+                </span>
+              </div>
+              <div class="space-y-1.5">
+                ${itemsHtml}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    /**
+     * Close Classroom Detail Modal
+     */
+    function closeClassroomModal() {
+      const modal = document.getElementById('classroomDetailModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    /**
+     * Export Classroom Matrix to CSV
+     */
+    function exportMatrixCSV() {
+      if (!currentMatrixData || currentMatrixData.length === 0) {
+        showToast('No classroom data available to export.', 'warning');
+        return;
+      }
+
+      const headers = ['Class', 'Division', 'Distinct Teaching Days', 'Total Hours', 'Total Sessions', 'Avg Hours Per Day', 'Status'];
+      const rows = currentMatrixData.map(item => [
+        `"${item.className}"`,
+        `"${item.division}"`,
+        item.daysCount,
+        item.totalHours.toFixed(1),
+        item.sessionsCount,
+        item.avgHours,
+        item.isActive ? '"Active"' : '"No Sessions"'
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `EduLog_Classroom_Matrix_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast('Classroom Matrix exported to CSV!', 'success');
+    }
+
+    /**
      * Reset form
      */
     function resetEntryForm() {
@@ -1265,6 +1865,7 @@ function doPost(e) {
         showToast('Connected. Ready for submissions.', 'info');
       } finally {
         renderReports();
+        renderMatrixTable();
       }
     }
 

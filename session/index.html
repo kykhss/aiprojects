@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>EduLog - School Session & Daily Attendance Tracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+            },
+            accent: {
+              50: '#ecfdf5',
+              500: '#10b981',
+              600: '#059669',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      body { background: white !important; color: black !important; }
+      .card-shadow { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-brand-100 selection:text-brand-700">
+
+  <!-- Top App Navigation -->
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm no-print">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-slate-900 leading-none">EduLog Pro</h1>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">School Session & Daily Register</p>
+        </div>
+      </div>
+      
+      <!-- Cloud Status / Sync Pill -->
+      <div class="flex items-center space-x-2">
+        <button id="syncStatusBtn" onclick="switchTab('setup')" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200">
+          <span id="syncIndicatorDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="syncStatusText" class="text-slate-600">Demo Mode</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Segmented Tab Navigation for Mobile & Desktop -->
+    <div class="max-w-4xl mx-auto px-4 pt-1 pb-2">
+      <nav class="grid grid-cols-3 gap-1 bg-slate-100/90 p-1 rounded-xl">
+        <button onclick="switchTab('log')" id="tabBtn-log" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          <span>Log Entry</span>
+        </button>
+        <button onclick="switchTab('report')" id="tabBtn-report" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          <span>Daily Reports</span>
+        </button>
+        <button onclick="switchTab('setup')" id="tabBtn-setup" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span>Sheets Setup</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Notification Banner / Toast Container -->
+  <div id="toastContainer" class="fixed top-20 right-4 left-4 sm:left-auto sm:w-96 z-50 pointer-events-none flex flex-col space-y-2"></div>
+
+  <!-- Main Container -->
+  <main class="max-w-4xl mx-auto px-4 py-5 flex-1 w-full">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: LOG SESSION FORM                    -->
+    <!-- ========================================== -->
+    <section id="view-log" class="tab-content transition-opacity duration-300">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-7 card-shadow">
+        
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Record Class Session</h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Select class & division according to academic policy</p>
+          </div>
+          <span class="px-2.5 py-1 bg-brand-50 text-brand-700 text-xs font-semibold rounded-lg border border-brand-100 flex items-center">
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-500 mr-1.5"></span>
+            Session Log
+          </span>
+        </div>
+
+        <form id="sessionForm" onsubmit="handleSessionSubmit(event)" class="space-y-5">
+          <!-- Row 1: Date & Class -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- Date Picker -->
+            <div>
+              <label for="logDate" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                Session Date <span class="text-rose-500">*</span>
+              </label>
+              <div class="relative">
+                <input type="date" id="logDate" required class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition" />
+              </div>
+            </div>
+
+            <!-- Class Picker -->
+            <div>
+              <label for="logClass" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                Class <span class="text-rose-500">*</span>
+              </label>
+              <select id="logClass" required onchange="onClassChangeLog()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition">
+                <option value="" disabled selected>-- Choose Class --</option>
+                <optgroup label="Pre-Primary">
+                  <option value="LKG">LKG</option>
+                  <option value="UKG">UKG</option>
+                </optgroup>
+                <optgroup label="Primary (1 - 4)">
+                  <option value="1">Class 1</option>
+                  <option value="2">Class 2</option>
+                  <option value="3">Class 3</option>
+                  <option value="4">Class 4</option>
+                </optgroup>
+                <optgroup label="Upper Primary (5 - 7)">
+                  <option value="5">Class 5</option>
+                  <option value="6">Class 6</option>
+                  <option value="7">Class 7</option>
+                </optgroup>
+                <optgroup label="High School (8 - 10)">
+                  <option value="8">Class 8</option>
+                  <option value="9">Class 9</option>
+                  <option value="10">Class 10</option>
+                </optgroup>
+                <optgroup label="Higher Secondary (11 - 12)">
+                  <option value="11">Class 11</option>
+                  <option value="12">Class 12</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 2: Division & Hours -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Dynamic Division -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="logDivision" class="text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Division <span class="text-rose-500">*</span>
+                </label>
+                <span id="divGuideBadge" class="text-[11px] text-brand-600 font-medium">Select class first</span>
+              </div>
+              <select id="logDivision" required disabled class="w-full bg-slate-100 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition disabled:opacity-60 disabled:cursor-not-allowed">
+                <option value="" selected disabled>Select class first</option>
+              </select>
+            </div>
+
+            <!-- Hours Input & Quick Pill increments -->
+            <div>
+              <label for="logHours" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                Hours / Periods <span class="text-rose-500">*</span>
+              </label>
+              <div class="flex space-x-2">
+                <input type="number" id="logHours" required min="0.25" max="12" step="0.25" placeholder="e.g. 1.5" class="w-1/2 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 p-3" />
+                <div class="w-1/2 grid grid-cols-4 gap-1">
+                  <button type="button" onclick="setQuickHours(0.5)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-2">0.5</button>
+                  <button type="button" onclick="setQuickHours(1.0)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-2">1.0</button>
+                  <button type="button" onclick="setQuickHours(1.5)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-2">1.5</button>
+                  <button type="button" onclick="setQuickHours(2.0)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-2">2.0</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: Remarks -->
+          <div>
+            <label for="logRemarks" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Remarks & Topics Taught
+            </label>
+            <textarea id="logRemarks" rows="3" placeholder="e.g., Chapter 4: Fractions practice questions, completed quiz 2, student attendance notes..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition"></textarea>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="pt-2 flex flex-col sm:flex-row items-center gap-3">
+            <button type="submit" id="submitBtn" class="w-full sm:w-auto flex-1 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md shadow-brand-500/25 transition-all flex items-center justify-center space-x-2 active:scale-[0.99]">
+              <span id="btnIcon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+              </span>
+              <span id="btnText">Save Session Log</span>
+            </button>
+
+            <button type="button" onclick="resetEntryForm()" class="w-full sm:w-auto px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold rounded-xl transition">
+              Clear
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+      <!-- Quick Tips Card -->
+      <div class="mt-4 bg-slate-100/70 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 flex items-start space-x-3">
+        <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <div>
+          <span class="font-bold text-slate-800">Dynamic Hierarchy Applied:</span> LKG–3 have divisions A–E; Class 4, 6, 8–10 have A–C; Class 5 & 7 have A & B; Class 11 & 12 have C & H. You can test saving in Demo Mode or attach your Google Sheet in settings.
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: REPORTS & DAY CONTAINERS            -->
+    <!-- ========================================== -->
+    <section id="view-report" class="tab-content hidden transition-opacity duration-300">
+      
+      <!-- Filter Bar -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-6 mb-5 card-shadow no-print">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Daily Teaching Register</h2>
+            <p class="text-xs text-slate-500">Day-by-day session groups and total active teaching days count</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="fetchSheetData()" title="Reload from Sheet" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg border border-slate-200 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+            <button onclick="exportCSV()" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <span>CSV</span>
+            </button>
+            <button onclick="window.print()" class="px-3 py-1.5 text-xs font-semibold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-lg transition flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+              <span>Print / PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Class Filter -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Class Filter</label>
+            <select id="filterClass" onchange="onClassFilterChange()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500">
+              <option value="ALL">All Classes (Whole School)</option>
+              <optgroup label="Section Level Aggregations">
+                <option value="GROUP_LOWER">Pre-Primary & Lower Primary (LKG - 4)</option>
+                <option value="GROUP_UPPER">Upper Primary (5 - 7)</option>
+                <option value="GROUP_HIGH">High School (8 - 10)</option>
+                <option value="GROUP_HSS">Higher Secondary (11 - 12)</option>
+              </optgroup>
+              <optgroup label="Individual Classes">
+                <option value="LKG">LKG</option>
+                <option value="UKG">UKG</option>
+                <option value="1">Class 1</option>
+                <option value="2">Class 2</option>
+                <option value="3">Class 3</option>
+                <option value="4">Class 4</option>
+                <option value="5">Class 5</option>
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10">Class 10</option>
+                <option value="11">Class 11</option>
+                <option value="12">Class 12</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- Division Filter (Adapts to Class) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Division Filter</label>
+            <select id="filterDivision" onchange="renderReports()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500">
+              <option value="ALL">All Divisions</option>
+              <option value="A">Division A</option>
+              <option value="B">Division B</option>
+              <option value="C">Division C</option>
+              <option value="D">Division D</option>
+              <option value="E">Division E</option>
+              <option value="H">Division H</option>
+            </select>
+          </div>
+
+          <!-- Date Quick Filter -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Time Period</label>
+            <select id="filterPeriod" onchange="onPeriodChange()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500">
+              <option value="ALL">All Time</option>
+              <option value="THIS_MONTH" selected>This Month</option>
+              <option value="THIS_WEEK">This Week</option>
+              <option value="CUSTOM">Custom Date Range</option>
+            </select>
+          </div>
+
+          <!-- Search Box -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Search Remarks / Topics</label>
+            <input type="text" id="filterSearch" oninput="renderReports()" placeholder="Type to filter..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500" />
+          </div>
+        </div>
+
+        <!-- Custom Date Range Row (Hidden by default) -->
+        <div id="customDateRangeRow" class="hidden grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-100">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Start Date</label>
+            <input type="date" id="filterStartDate" onchange="renderReports()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">End Date</label>
+            <input type="date" id="filterEndDate" onchange="renderReports()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2" />
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Metrics Cards Header -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <!-- Distinct Teaching Days -->
+        <div class="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 p-4 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-700">Total Teaching Days</span>
+            <span class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-bold">📅</span>
+          </div>
+          <div class="mt-2 flex items-baseline space-x-1">
+            <span id="statTotalDays" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+            <span class="text-xs text-slate-500 font-medium">active days</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Distinct days classes were held</p>
+        </div>
+
+        <!-- Total Hours -->
+        <div class="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 p-4 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">Total Hours</span>
+            <span class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">⏱️</span>
+          </div>
+          <div class="mt-2 flex items-baseline space-x-1">
+            <span id="statTotalHours" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+            <span class="text-xs text-slate-500 font-medium">hrs</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Total teaching duration</p>
+        </div>
+
+        <!-- Total Sessions -->
+        <div class="bg-gradient-to-br from-amber-50 to-white border border-amber-100 p-4 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-amber-700">Total Sessions</span>
+            <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">📚</span>
+          </div>
+          <div class="mt-2 flex items-baseline space-x-1">
+            <span id="statTotalSessions" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+            <span class="text-xs text-slate-500 font-medium">periods</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Individual classes logged</p>
+        </div>
+
+        <!-- Daily Average Hours -->
+        <div class="bg-gradient-to-br from-purple-50 to-white border border-purple-100 p-4 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-purple-700">Avg Hours / Day</span>
+            <span class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold">⚡</span>
+          </div>
+          <div class="mt-2 flex items-baseline space-x-1">
+            <span id="statAvgHours" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0.0</span>
+            <span class="text-xs text-slate-500 font-medium">hrs/day</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Average teaching intensity</p>
+        </div>
+      </div>
+
+      <!-- Report Section Active Filter Badge Info -->
+      <div class="flex items-center justify-between px-1 mb-3">
+        <h3 class="text-sm font-bold text-slate-700 flex items-center space-x-2">
+          <span>Day-wise Log Containers</span>
+          <span id="reportFilterPill" class="text-[11px] font-semibold bg-brand-50 text-brand-700 px-2.5 py-0.5 rounded-full border border-brand-100">Showing All</span>
+        </h3>
+        <span id="daysCountSummary" class="text-xs font-semibold text-slate-500"></span>
+      </div>
+
+      <!-- Day Containers Feed -->
+      <div id="dayContainersList" class="space-y-4">
+        <!-- Injected Dynamically -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: GOOGLE SHEETS SETUP & GUIDE         -->
+    <!-- ========================================== -->
+    <section id="view-setup" class="tab-content hidden transition-opacity duration-300">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-7 card-shadow">
+        
+        <div class="pb-4 border-b border-slate-100 mb-6">
+          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Google Sheets Cloud Connection</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Sync logs directly into your Google Sheet using a free Google Apps Script Web App</p>
+        </div>
+
+        <!-- URL Configuration -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 mb-6">
+          <label for="appsScriptUrlInput" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            Google Apps Script Web App URL
+          </label>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="url" id="appsScriptUrlInput" placeholder="https://script.google.com/macros/s/AKfycbx.../exec" class="flex-1 bg-white border border-slate-300 text-slate-800 text-sm rounded-xl p-3 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
+            <button onclick="saveAndTestScriptUrl()" class="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-sm transition shadow-sm flex items-center justify-center space-x-1.5">
+              <span>Save & Connect</span>
+            </button>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">
+            Leave blank or clear anytime to return to <strong>Offline Demo Mode</strong>.
+          </p>
+        </div>
+
+        <!-- 3-Minute Setup Guide -->
+        <div>
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3 flex items-center space-x-2">
+            <span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs">?</span>
+            <span>How to setup your Google Sheet (Easy 3 Steps)</span>
+          </h3>
+
+          <ol class="space-y-4 text-xs sm:text-sm text-slate-600">
+            <li class="bg-white border border-slate-200 rounded-xl p-4">
+              <strong class="text-slate-900 block mb-1">Step 1: Open Google Sheets & Apps Script</strong>
+              Create a new Google Sheet at <a href="https://sheets.new" target="_blank" class="text-brand-600 underline font-semibold">sheets.new</a>. In the top menu, click <strong>Extensions</strong> &rarr; <strong>Apps Script</strong>.
+            </li>
+
+            <li class="bg-white border border-slate-200 rounded-xl p-4">
+              <div class="flex items-center justify-between mb-2">
+                <strong class="text-slate-900">Step 2: Paste the Apps Script Code</strong>
+                <button onclick="copyAppsScriptCode()" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700 rounded-lg border border-slate-300 transition flex items-center space-x-1">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                  <span id="copyBtnText">Copy Script Code</span>
+                </button>
+              </div>
+              <p class="text-xs text-slate-500 mb-2">Delete any existing code in <code>Code.gs</code> and paste the snippet below:</p>
+              <pre class="bg-slate-900 text-slate-100 p-3 rounded-lg overflow-x-auto text-[11px] leading-relaxed max-h-48 font-mono" id="scriptCodeBlock">function doGet(e) {
+  const action = e.parameter.action;
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getActiveSheet();
+  
+  if (action === "read") {
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    }
+    const headers = data.shift(); // remove header
+    const rows = data.map(function(r) {
+      let d = r[0];
+      if (d instanceof Date) {
+        d = Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd");
+      }
+      return {
+        date: String(d || "").trim(),
+        className: String(r[1] || "").trim(),
+        division: String(r[2] || "").trim(),
+        hours: Number(r[3]) || 0,
+        remarks: String(r[4] || "").trim()
+      };
+    }).filter(function(item) { return item.date !== ""; });
+    
+    return ContentService.createTextOutput(JSON.stringify(rows)).setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput(JSON.stringify({ status: "active" })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getActiveSheet();
+    
+    // Ensure header row exists
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["Date", "Class", "Division", "Hours", "Remarks", "Timestamp"]);
+    }
+    
+    const body = JSON.parse(e.postData.contents);
+    sheet.appendRow([
+      body.date,
+      body.className,
+      body.division,
+      Number(body.hours),
+      body.remarks || "",
+      new Date().toISOString()
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+            </li>
+
+            <li class="bg-white border border-slate-200 rounded-xl p-4">
+              <strong class="text-slate-900 block mb-1">Step 3: Deploy as Web App</strong>
+              <p>In Apps Script, click <span class="bg-slate-100 font-semibold px-1 rounded">Deploy</span> &gt; <span class="bg-slate-100 font-semibold px-1 rounded">New deployment</span>.</p>
+              <ul class="list-disc list-inside mt-1 space-y-0.5 text-xs text-slate-500">
+                <li>Click gear icon & select <strong>Web app</strong></li>
+                <li>Execute as: <strong>Me (your email)</strong></li>
+                <li>Who has access: <strong>Anyone</strong> (crucial for form submissions)</li>
+                <li>Click <strong>Deploy</strong> and copy the <strong>Web App URL</strong> into the field above.</li>
+              </ul>
+            </li>
+          </ol>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Nav for quick thumb switching (hidden in print) -->
+  <nav class="sm:hidden sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around py-2 px-3 no-print">
+    <button onclick="switchTab('log')" id="mNav-log" class="flex flex-col items-center text-brand-600 font-semibold text-[11px] p-1">
+      <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+      <span>Log</span>
+    </button>
+    <button onclick="switchTab('report')" id="mNav-report" class="flex flex-col items-center text-slate-500 font-medium text-[11px] p-1">
+      <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+      <span>Reports</span>
+    </button>
+    <button onclick="switchTab('setup')" id="mNav-setup" class="flex flex-col items-center text-slate-500 font-medium text-[11px] p-1">
+      <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT LOGIC                           -->
+  <!-- ========================================== -->
+  <script>
+    /**
+     * Strict Academic Class & Division Hierarchy:
+     * - LKG, UKG, 1, 2, 3: Divs A, B, C, D, E
+     * - 4, 6, 8, 9, 10: Divs A, B, C
+     * - 5, 7: Divs A, B
+     * - 11, 12: Divs C, H
+     */
+    const CLASS_DIVISIONS_MAP = {
+      'LKG': ['A', 'B', 'C', 'D', 'E'],
+      'UKG': ['A', 'B', 'C', 'D', 'E'],
+      '1':   ['A', 'B', 'C', 'D', 'E'],
+      '2':   ['A', 'B', 'C', 'D', 'E'],
+      '3':   ['A', 'B', 'C', 'D', 'E'],
+      '4':   ['A', 'B', 'C'],
+      '5':   ['A', 'B'],
+      '6':   ['A', 'B', 'C'],
+      '7':   ['A', 'B'],
+      '8':   ['A', 'B', 'C'],
+      '9':   ['A', 'B', 'C'],
+      '10':  ['A', 'B', 'C'],
+      '11':  ['C', 'H'],
+      '12':  ['C', 'H']
+    };
+
+    // Category grouping definitions for broad report filtering
+    const SECTION_GROUPS = {
+      'GROUP_LOWER': ['LKG', 'UKG', '1', '2', '3', '4'],
+      'GROUP_UPPER': ['5', '6', '7'],
+      'GROUP_HIGH':  ['8', '9', '10'],
+      'GROUP_HSS':   ['11', '12']
+    };
+
+    // Realistic mock records for instant testing
+    const INITIAL_MOCK_ENTRIES = [
+      { date: '2026-10-16', className: '10', division: 'A', hours: 1.5, remarks: 'Mathematics: Coordinate Geometry problem set 4B' },
+      { date: '2026-10-16', className: '10', division: 'B', hours: 1.0, remarks: 'Physics: Reflection & Refraction ray diagrams' },
+      { date: '2026-10-16', className: '5',  division: 'A', hours: 1.0, remarks: 'Environmental Studies: Water cycle discussion' },
+      { date: '2026-10-15', className: 'LKG', division: 'C', hours: 2.0, remarks: 'Phonics sounds, alphabet tracing, play session' },
+      { date: '2026-10-15', className: '3',  division: 'D', hours: 1.5, remarks: 'English: Reading Chapter 7 & Dictation test' },
+      { date: '2026-10-15', className: '8',  division: 'C', hours: 1.0, remarks: 'General Science: Cell Structure biology lab intro' },
+      { date: '2026-10-14', className: '12', division: 'C', hours: 2.0, remarks: 'Accountancy: Partnership dissolution numericals' },
+      { date: '2026-10-14', className: '11', division: 'H', hours: 1.5, remarks: 'History: Early Empires & Archaeological sources' },
+      { date: '2026-10-12', className: '4',  division: 'B', hours: 1.0, remarks: 'Social Studies: Maps and Globes activity' },
+      { date: '2026-10-12', className: '1',  division: 'A', hours: 2.0, remarks: 'Basic arithmetic addition worksheets' }
+    ];
+
+    // State Variables
+    let currentLogs = [];
+    let scriptUrl = localStorage.getItem('edulog_script_url') || 'https://script.google.com/macros/s/AKfycbx3un2HszJ1cB-OvFwtM3NhNxC6xp_Q8dEcwWoux7ADyo1pMKKwUXpqpewf3scLkXSV/exec';
+
+    // Initialize application on DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Set default date to today in input (YYYY-MM-DD format)
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('logDate').value = todayStr;
+
+      // 2. Load stored script url if present
+      if (scriptUrl) {
+        document.getElementById('appsScriptUrlInput').value = scriptUrl;
+      }
+      updateSyncStatusUI();
+
+      // 3. Load database (localStorage or fallback to mock data)
+      const cached = localStorage.getItem('edulog_local_data');
+      if (cached) {
+        try {
+          currentLogs = JSON.parse(cached);
+        } catch(e) {
+          currentLogs = [...INITIAL_MOCK_ENTRIES];
+        }
+      } else {
+        currentLogs = [...INITIAL_MOCK_ENTRIES];
+        saveLocalBackup();
+      }
+
+      // If user has a real URL, fetch live data
+      if (scriptUrl) {
+        fetchSheetData();
+      } else {
+        renderReports();
+      }
+    });
+
+    /**
+     * Tab Switcher (Desktop tabs + Mobile bottom nav)
+     */
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+      // Update Desktop tabs styling
+      ['log', 'report', 'setup'].forEach(t => {
+        const dBtn = document.getElementById(`tabBtn-${t}`);
+        const mBtn = document.getElementById(`mNav-${t}`);
+        if (t === tabId) {
+          dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm";
+          if (mBtn) {
+            mBtn.className = "flex flex-col items-center text-brand-600 font-semibold text-[11px] p-1";
+          }
+        } else {
+          dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900";
+          if (mBtn) {
+            mBtn.className = "flex flex-col items-center text-slate-500 font-medium text-[11px] p-1";
+          }
+        }
+      });
+
+      if (tabId === 'report') {
+        renderReports();
+      }
+    }
+
+    /**
+     * Updates Dynamic Division Dropdown for Session Entry Form
+     */
+    function onClassChangeLog() {
+      const classSelect = document.getElementById('logClass');
+      const divSelect = document.getElementById('logDivision');
+      const guideBadge = document.getElementById('divGuideBadge');
+      const selectedClass = classSelect.value;
+
+      divSelect.innerHTML = '';
+
+      if (!selectedClass || !CLASS_DIVISIONS_MAP[selectedClass]) {
+        divSelect.disabled = true;
+        divSelect.classList.add('bg-slate-100');
+        divSelect.classList.remove('bg-slate-50');
+        divSelect.innerHTML = '<option value="" selected disabled>Select class first</option>';
+        guideBadge.textContent = 'Select class first';
+        return;
+      }
+
+      const availableDivs = CLASS_DIVISIONS_MAP[selectedClass];
+      divSelect.disabled = false;
+      divSelect.classList.remove('bg-slate-100');
+      divSelect.classList.add('bg-slate-50');
+
+      let placeholderOption = document.createElement('option');
+      placeholderOption.value = '';
+      placeholderOption.textContent = `-- Choose Division (${availableDivs.join(', ')}) --`;
+      placeholderOption.disabled = true;
+      placeholderOption.selected = true;
+      divSelect.appendChild(placeholderOption);
+
+      availableDivs.forEach(div => {
+        const opt = document.createElement('option');
+        opt.value = div;
+        opt.textContent = `Division ${div}`;
+        divSelect.appendChild(opt);
+      });
+
+      guideBadge.textContent = `Valid: ${availableDivs.join(', ')}`;
+    }
+
+    /**
+     * Quick hours increment helper
+     */
+    function setQuickHours(val) {
+      document.getElementById('logHours').value = val;
+    }
+
+    /**
+     * Adapt Report Filter: Division dropdown reflects current Class Filter
+     */
+    function onClassFilterChange() {
+      const classFilterVal = document.getElementById('filterClass').value;
+      const divFilter = document.getElementById('filterDivision');
+
+      // Keep current selection if compatible
+      const prevVal = divFilter.value;
+      divFilter.innerHTML = '<option value="ALL">All Divisions</option>';
+
+      let allowedDivs = new Set();
+
+      if (classFilterVal === 'ALL') {
+        ['A', 'B', 'C', 'D', 'E', 'H'].forEach(d => allowedDivs.add(d));
+      } else if (SECTION_GROUPS[classFilterVal]) {
+        // Collect all divisions from group members
+        SECTION_GROUPS[classFilterVal].forEach(cls => {
+          (CLASS_DIVISIONS_MAP[cls] || []).forEach(d => allowedDivs.add(d));
+        });
+      } else if (CLASS_DIVISIONS_MAP[classFilterVal]) {
+        CLASS_DIVISIONS_MAP[classFilterVal].forEach(d => allowedDivs.add(d));
+      }
+
+      Array.from(allowedDivs).sort().forEach(div => {
+        const opt = document.createElement('option');
+        opt.value = div;
+        opt.textContent = `Division ${div}`;
+        if (div === prevVal) opt.selected = true;
+        divFilter.appendChild(opt);
+      });
+
+      renderReports();
+    }
+
+    /**
+     * Period select change handler (custom date display)
+     */
+    function onPeriodChange() {
+      const period = document.getElementById('filterPeriod').value;
+      const customRow = document.getElementById('customDateRangeRow');
+      if (period === 'CUSTOM') {
+        customRow.classList.remove('hidden');
+        customRow.classList.add('grid');
+      } else {
+        customRow.classList.add('hidden');
+        customRow.classList.remove('grid');
+      }
+      renderReports();
+    }
+
+    /**
+     * Handles Log Entry Form Submission
+     */
+    async function handleSessionSubmit(e) {
+      e.preventDefault();
+
+      const date = document.getElementById('logDate').value;
+      const className = document.getElementById('logClass').value;
+      const division = document.getElementById('logDivision').value;
+      const hours = parseFloat(document.getElementById('logHours').value);
+      const remarks = document.getElementById('logRemarks').value.trim();
+
+      if (!date || !className || !division || isNaN(hours) || hours <= 0) {
+        showToast('Please fill all required fields properly.', 'error');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      const btnIcon = document.getElementById('btnIcon');
+      const btnText = document.getElementById('btnText');
+
+      // Show spinner
+      submitBtn.disabled = true;
+      btnIcon.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>`;
+      btnText.textContent = 'Saving...';
+
+      const entry = { date, className, division, hours, remarks };
+
+      try {
+        if (scriptUrl) {
+          // Send to Google Sheets via POST (no-cors mode handles Google Script redirect)
+          await fetch(scriptUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(entry)
+          });
+          showToast(`Logged successfully to Google Sheet!`, 'success');
+        } else {
+          // Local demo mode
+          showToast(`Saved locally (Demo Mode)!`, 'info');
+        }
+
+        // Add to active local memory & storage
+        currentLogs.unshift(entry);
+        saveLocalBackup();
+
+        // Reset form inputs except date
+        document.getElementById('logClass').selectedIndex = 0;
+        onClassChangeLog();
+        document.getElementById('logHours').value = '';
+        document.getElementById('logRemarks').value = '';
+
+      } catch (err) {
+        console.error(err);
+        showToast('Error syncing with Google Sheet. Stored locally.', 'error');
+        currentLogs.unshift(entry);
+        saveLocalBackup();
+      } finally {
+        submitBtn.disabled = false;
+        btnIcon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>`;
+        btnText.textContent = 'Save Session Log';
+      }
+    }
+
+    /**
+     * Fetch Live Data from Google Sheets
+     */
+    async function fetchSheetData() {
+      if (!scriptUrl) {
+        renderReports();
+        return;
+      }
+
+      showToast('Refreshing data from Google Sheet...', 'info');
+
+      try {
+        const response = await fetch(`${scriptUrl}?action=read`);
+        const remoteData = await response.json();
+        
+        if (Array.isArray(remoteData) && remoteData.length > 0) {
+          currentLogs = remoteData;
+          saveLocalBackup();
+          showToast(`Loaded ${remoteData.length} records from Google Sheets`, 'success');
+        }
+      } catch (error) {
+        console.warn('Could not read from Google Apps Script. Using cached data.', error);
+        showToast('Failed to load Google Sheet. Showing cached data.', 'warning');
+      } finally {
+        renderReports();
+      }
+    }
+
+    /**
+     * Main Report Computation & Rendering Engine
+     * Groups by Day Containers, calculates total distinct days count & metrics
+     */
+    function renderReports() {
+      const classFilter = document.getElementById('filterClass').value;
+      const divFilter = document.getElementById('filterDivision').value;
+      const periodFilter = document.getElementById('filterPeriod').value;
+      const searchQuery = document.getElementById('filterSearch').value.toLowerCase().trim();
+
+      const container = document.getElementById('dayContainersList');
+
+      // Date calculations for quick filters
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+
+      // Calculate start of current week (Monday)
+      const dayOfWeek = now.getDay();
+      const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const startOfWeek = new Date(now.setDate(diffToMonday));
+      startOfWeek.setHours(0,0,0,0);
+
+      // Filter entries
+      const filtered = currentLogs.filter(entry => {
+        // 1. Class filter check
+        if (classFilter !== 'ALL') {
+          if (SECTION_GROUPS[classFilter]) {
+            if (!SECTION_GROUPS[classFilter].includes(entry.className)) return false;
+          } else {
+            if (entry.className !== classFilter) return false;
+          }
+        }
+
+        // 2. Division filter check
+        if (divFilter !== 'ALL' && entry.division !== divFilter) {
+          return false;
+        }
+
+        // 3. Search query in remarks, class or div
+        if (searchQuery) {
+          const matchRemark = (entry.remarks || '').toLowerCase().includes(searchQuery);
+          const matchClass = entry.className.toLowerCase().includes(searchQuery);
+          const matchDiv = entry.division.toLowerCase().includes(searchQuery);
+          if (!matchRemark && !matchClass && !matchDiv) return false;
+        }
+
+        // 4. Period / Date range filtering
+        if (entry.date) {
+          const entryDate = new Date(entry.date + 'T00:00:00');
+          if (periodFilter === 'THIS_MONTH') {
+            if (entryDate.getFullYear() !== currentYear || entryDate.getMonth() !== currentMonth) {
+              return false;
+            }
+          } else if (periodFilter === 'THIS_WEEK') {
+            if (entryDate < startOfWeek) return false;
+          } else if (periodFilter === 'CUSTOM') {
+            const startVal = document.getElementById('filterStartDate').value;
+            const endVal = document.getElementById('filterEndDate').value;
+            if (startVal && entryDate < new Date(startVal + 'T00:00:00')) return false;
+            if (endVal && entryDate > new Date(endVal + 'T23:59:59')) return false;
+          }
+        }
+
+        return true;
+      });
+
+      // Group by distinct Day (YYYY-MM-DD)
+      const dayGroups = {};
+      let totalHoursSum = 0;
+      let totalSessionsCount = filtered.length;
+
+      filtered.forEach(item => {
+        const d = item.date || 'Undated';
+        if (!dayGroups[d]) {
+          dayGroups[d] = {
+            date: d,
+            totalHours: 0,
+            sessions: []
+          };
+        }
+        dayGroups[d].sessions.push(item);
+        dayGroups[d].totalHours += Number(item.hours) || 0;
+        totalHoursSum += Number(item.hours) || 0;
+      });
+
+      // Distinct Active Days
+      const dayKeys = Object.keys(dayGroups).sort((a, b) => b.localeCompare(a)); // Newest first
+      const distinctDaysCount = dayKeys.length;
+
+      // Update KPI Statistics
+      document.getElementById('statTotalDays').textContent = distinctDaysCount;
+      document.getElementById('statTotalHours').textContent = totalHoursSum.toFixed(1);
+      document.getElementById('statTotalSessions').textContent = totalSessionsCount;
+      document.getElementById('statAvgHours').textContent = distinctDaysCount > 0 ? (totalHoursSum / distinctDaysCount).toFixed(1) : '0.0';
+
+      // Update filter badge text
+      const classSelectEl = document.getElementById('filterClass');
+      const selectedClassText = classSelectEl.options[classSelectEl.selectedIndex].text;
+      document.getElementById('reportFilterPill').textContent = `${selectedClassText} ${divFilter !== 'ALL' ? '• Div ' + divFilter : ''}`;
+      document.getElementById('daysCountSummary').textContent = `${distinctDaysCount} active days recorded`;
+
+      // Render Day Containers
+      if (dayKeys.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl p-10 text-center border border-slate-200">
+            <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center text-2xl">📋</div>
+            <h4 class="text-base font-bold text-slate-800">No Teaching Sessions Found</h4>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">There are no logged entries matching your selected class, division, or date range.</p>
+            <button onclick="resetFilters()" class="mt-4 px-4 py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold rounded-xl border border-brand-200 transition">Reset All Filters</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = dayKeys.map((dayDate, idx) => {
+        const group = dayGroups[dayDate];
+        const formattedDate = formatNiceDate(dayDate);
+        
+        const sessionsHtml = group.sessions.map((sess, sIdx) => {
+          return `
+            <div class="p-3.5 bg-white rounded-xl border border-slate-200/90 hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-slate-100 flex flex-col items-center justify-center border border-slate-200">
+                  <span class="text-[10px] uppercase font-bold text-slate-500 leading-none">Class</span>
+                  <span class="text-sm font-extrabold text-slate-900 leading-none mt-0.5">${sess.className}</span>
+                </div>
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="px-2 py-0.5 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                      Division ${sess.division}
+                    </span>
+                    <span class="text-xs font-bold text-slate-700">
+                      ⏱️ ${sess.hours} ${sess.hours === 1 ? 'Hour' : 'Hours'}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                    ${sess.remarks ? escapeHtml(sess.remarks) : '<span class="italic text-slate-400">No remarks entered</span>'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all hover:shadow-md card-shadow">
+            <!-- Day Container Header -->
+            <div class="bg-gradient-to-r from-slate-50 to-slate-100/70 px-4 sm:px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+                <div>
+                  <h4 class="text-sm font-bold text-slate-900">${formattedDate}</h4>
+                  <span class="text-[11px] text-slate-500 font-medium">${dayDate}</span>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
+                  Total: ${group.totalHours.toFixed(1)} hrs
+                </span>
+                <span class="px-2 py-1 rounded-lg bg-slate-200/70 text-slate-700 text-xs font-semibold">
+                  ${group.sessions.length} ${group.sessions.length === 1 ? 'session' : 'sessions'}
+                </span>
+              </div>
+            </div>
+
+            <!-- Day Container Body -->
+            <div class="p-3 sm:p-4 bg-slate-50/50 space-y-2.5">
+              ${sessionsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /**
+     * Reset entry form
+     */
+    function resetEntryForm() {
+      document.getElementById('sessionForm').reset();
+      document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+      onClassChangeLog();
+    }
+
+    /**
+     * Reset report filter controls
+     */
+    function resetFilters() {
+      document.getElementById('filterClass').value = 'ALL';
+      onClassFilterChange();
+      document.getElementById('filterDivision').value = 'ALL';
+      document.getElementById('filterPeriod').value = 'ALL';
+      document.getElementById('filterSearch').value = '';
+      onPeriodChange();
+      renderReports();
+    }
+
+    /**
+     * Save & Test Google Apps Script Web App URL
+     */
+    async function saveAndTestScriptUrl() {
+      const urlInput = document.getElementById('appsScriptUrlInput').value.trim();
+      scriptUrl = urlInput;
+      localStorage.setItem('edulog_script_url', scriptUrl);
+      updateSyncStatusUI();
+
+      if (!scriptUrl) {
+        showToast('Switched to Demo Mode (Local Data).', 'info');
+        return;
+      }
+
+      showToast('Testing Google Apps Script connection...', 'info');
+
+      try {
+        const res = await fetch(`${scriptUrl}?action=read`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          currentLogs = data;
+          saveLocalBackup();
+          showToast('Connection verified! Google Sheets synced.', 'success');
+        } else {
+          showToast('Connection succeeded, but got unexpected response.', 'warning');
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('Connected, but reading failed (CORS/Permissions). Postings will still work.', 'warning');
+      }
+    }
+
+    /**
+     * UI Status Badge updater
+     */
+    function updateSyncStatusUI() {
+      const dot = document.getElementById('syncIndicatorDot');
+      const text = document.getElementById('syncStatusText');
+      const btn = document.getElementById('syncStatusBtn');
+
+      if (scriptUrl) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        text.textContent = 'Google Sheet Active';
+        btn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-emerald-200 bg-emerald-50 text-emerald-700';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+        text.textContent = 'Demo Mode';
+        btn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-amber-200 bg-amber-50 text-amber-800';
+      }
+    }
+
+    /**
+     * Local storage backup
+     */
+    function saveLocalBackup() {
+      localStorage.setItem('edulog_local_data', JSON.stringify(currentLogs));
+    }
+
+    /**
+     * Export visible reports to CSV format
+     */
+    function exportCSV() {
+      if (currentLogs.length === 0) {
+        showToast('No session data available to export.', 'warning');
+        return;
+      }
+
+      const headers = ['Date', 'Class', 'Division', 'Hours', 'Remarks'];
+      const rows = currentLogs.map(item => [
+        `"${item.date || ''}"`,
+        `"${item.className || ''}"`,
+        `"${item.division || ''}"`,
+        item.hours || 0,
+        `"${(item.remarks || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `EduLog_School_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast('CSV downloaded successfully!', 'success');
+    }
+
+    /**
+     * Copy Google Apps Script code to clipboard
+     */
+    function copyAppsScriptCode() {
+      const code = document.getElementById('scriptCodeBlock').innerText;
+      const copyBtnText = document.getElementById('copyBtnText');
+
+      const tempTextarea = document.createElement('textarea');
+      tempTextarea.value = code;
+      document.body.appendChild(tempTextarea);
+      tempTextarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempTextarea);
+
+      copyBtnText.textContent = 'Copied!';
+      setTimeout(() => { copyBtnText.textContent = 'Copy Script Code'; }, 2000);
+      showToast('Apps Script code copied to clipboard!', 'success');
+    }
+
+    /**
+     * Format YYYY-MM-DD into a human-friendly day string
+     */
+    function formatNiceDate(dateStr) {
+      if (!dateStr || dateStr === 'Undated') return 'Undated Session';
+      try {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+          const d = new Date(parts[0], parts[1] - 1, parts[2]);
+          return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        }
+      } catch(e) {}
+      return dateStr;
+    }
+
+    /**
+     * Escape HTML string
+     */
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    /**
+     * In-App Toast Notification
+     */
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+
+      let bgStyle = 'bg-slate-900 text-white';
+      let icon = 'ℹ️';
+
+      if (type === 'success') {
+        bgStyle = 'bg-emerald-600 text-white';
+        icon = '✓';
+      } else if (type === 'error') {
+        bgStyle = 'bg-rose-600 text-white';
+        icon = '⚠️';
+      } else if (type === 'warning') {
+        bgStyle = 'bg-amber-600 text-white';
+        icon = '⚡';
+      }
+
+      toast.className = `${bgStyle} px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2 text-xs font-semibold transform transition-all duration-300 pointer-events-auto opacity-0 translate-y-2`;
+      toast.innerHTML = `<span>${icon}</span><span class="flex-1">${message}</span>`;
+
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>

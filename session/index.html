@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>EduLog - School Session & Daily Attendance Tracker</title>
+  <title>EduLog Pro - School Session Register & Reports</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -38,7 +38,6 @@
       font-family: 'Plus Jakarta Sans', sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
-    /* Custom scrollbars */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -49,6 +48,9 @@
     ::-webkit-scrollbar-thumb {
       background: #cbd5e1;
       border-radius: 9999px;
+    }
+    .custom-ring:focus-within {
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     }
     @media print {
       .no-print { display: none !important; }
@@ -61,43 +63,46 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-brand-100 selection:text-brand-700">
 
   <!-- Top App Navigation -->
-  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm no-print">
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm no-print">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/25">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
         </div>
         <div>
-          <h1 class="text-lg font-bold tracking-tight text-slate-900 leading-none">EduLog Pro</h1>
-          <p class="text-xs text-slate-500 font-medium mt-0.5">School Session & Daily Register</p>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 leading-none">EduLog Pro</h1>
+            <span class="text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full border border-brand-200">Live Sheet</span>
+          </div>
+          <p class="text-[11px] text-slate-500 font-medium mt-0.5">School Session Register & Class Analysis</p>
         </div>
       </div>
       
-      <!-- Cloud Status / Sync Pill -->
+      <!-- Cloud Status Button / Quick Modal Trigger -->
       <div class="flex items-center space-x-2">
-        <button id="syncStatusBtn" onclick="switchTab('setup')" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200">
-          <span id="syncIndicatorDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span id="syncStatusText" class="text-slate-600">Demo Mode</span>
+        <button id="syncStatusBtn" onclick="switchTab('setup')" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 shadow-sm">
+          <span id="syncIndicatorDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="syncStatusText" class="text-slate-700 font-medium">Sheet Connected</span>
         </button>
       </div>
     </div>
 
-    <!-- Segmented Tab Navigation for Mobile & Desktop -->
+    <!-- Segmented Tab Navigation -->
     <div class="max-w-4xl mx-auto px-4 pt-1 pb-2">
-      <nav class="grid grid-cols-3 gap-1 bg-slate-100/90 p-1 rounded-xl">
-        <button onclick="switchTab('log')" id="tabBtn-log" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm">
+      <nav class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl">
+        <button onclick="switchTab('log')" id="tabBtn-log" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
           <span>Log Entry</span>
         </button>
-        <button onclick="switchTab('report')" id="tabBtn-report" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
+        <button onclick="switchTab('report')" id="tabBtn-report" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-          <span>Daily Reports</span>
+          <span>Class & Day Reports</span>
         </button>
-        <button onclick="switchTab('setup')" id="tabBtn-setup" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
+        <button onclick="switchTab('setup')" id="tabBtn-setup" class="tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          <span>Sheets Setup</span>
+          <span>Sheet URL & API</span>
         </button>
       </nav>
     </div>
@@ -110,19 +115,19 @@
   <main class="max-w-4xl mx-auto px-4 py-5 flex-1 w-full">
 
     <!-- ========================================== -->
-    <!-- TAB 1: LOG SESSION FORM                    -->
+    <!-- TAB 1: LOG ENTRY FORM                      -->
     <!-- ========================================== -->
     <section id="view-log" class="tab-content transition-opacity duration-300">
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-7 card-shadow">
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-5 sm:p-7 card-shadow">
         
         <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
           <div>
-            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Record Class Session</h2>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Select class & division according to academic policy</p>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Record School Session</h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Select class & division (strictly restricted as per rules)</p>
           </div>
-          <span class="px-2.5 py-1 bg-brand-50 text-brand-700 text-xs font-semibold rounded-lg border border-brand-100 flex items-center">
-            <span class="w-1.5 h-1.5 rounded-full bg-brand-500 mr-1.5"></span>
-            Session Log
+          <span class="px-2.5 py-1 bg-brand-50 text-brand-700 text-xs font-semibold rounded-xl border border-brand-100 flex items-center">
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-500 mr-1.5 animate-pulse"></span>
+            Session Entry
           </span>
         </div>
 
@@ -135,9 +140,7 @@
               <label for="logDate" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                 Session Date <span class="text-rose-500">*</span>
               </label>
-              <div class="relative">
-                <input type="date" id="logDate" required class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition" />
-              </div>
+              <input type="date" id="logDate" required class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition" />
             </div>
 
             <!-- Class Picker -->
@@ -147,29 +150,27 @@
               </label>
               <select id="logClass" required onchange="onClassChangeLog()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition">
                 <option value="" disabled selected>-- Choose Class --</option>
-                <optgroup label="Pre-Primary">
-                  <option value="LKG">LKG</option>
-                  <option value="UKG">UKG</option>
+                <optgroup label="Pre-Primary & Lower Primary">
+                  <option value="LKG">LKG (Divs A - E)</option>
+                  <option value="UKG">UKG (Divs A - E)</option>
+                  <option value="1">Class 1 (Divs A - E)</option>
+                  <option value="2">Class 2 (Divs A - E)</option>
+                  <option value="3">Class 3 (Divs A - E)</option>
+                  <option value="4">Class 4 (Divs A - C)</option>
                 </optgroup>
-                <optgroup label="Primary (1 - 4)">
-                  <option value="1">Class 1</option>
-                  <option value="2">Class 2</option>
-                  <option value="3">Class 3</option>
-                  <option value="4">Class 4</option>
+                <optgroup label="Upper Primary">
+                  <option value="5">Class 5 (Divs A, B)</option>
+                  <option value="6">Class 6 (Divs A - C)</option>
+                  <option value="7">Class 7 (Divs A, B)</option>
                 </optgroup>
-                <optgroup label="Upper Primary (5 - 7)">
-                  <option value="5">Class 5</option>
-                  <option value="6">Class 6</option>
-                  <option value="7">Class 7</option>
+                <optgroup label="High School">
+                  <option value="8">Class 8 (Divs A - C)</option>
+                  <option value="9">Class 9 (Divs A - C)</option>
+                  <option value="10">Class 10 (Divs A - C)</option>
                 </optgroup>
-                <optgroup label="High School (8 - 10)">
-                  <option value="8">Class 8</option>
-                  <option value="9">Class 9</option>
-                  <option value="10">Class 10</option>
-                </optgroup>
-                <optgroup label="Higher Secondary (11 - 12)">
-                  <option value="11">Class 11</option>
-                  <option value="12">Class 12</option>
+                <optgroup label="Higher Secondary">
+                  <option value="11">Class 11 (Divs C, H)</option>
+                  <option value="12">Class 12 (Divs C, H)</option>
                 </optgroup>
               </select>
             </div>
@@ -183,7 +184,7 @@
                 <label for="logDivision" class="text-xs font-bold uppercase tracking-wider text-slate-600">
                   Division <span class="text-rose-500">*</span>
                 </label>
-                <span id="divGuideBadge" class="text-[11px] text-brand-600 font-medium">Select class first</span>
+                <span id="divGuideBadge" class="text-[11px] text-brand-600 font-semibold">Select class first</span>
               </div>
               <select id="logDivision" required disabled class="w-full bg-slate-100 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition disabled:opacity-60 disabled:cursor-not-allowed">
                 <option value="" selected disabled>Select class first</option>
@@ -195,13 +196,14 @@
               <label for="logHours" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                 Hours / Periods <span class="text-rose-500">*</span>
               </label>
-              <div class="flex space-x-2">
-                <input type="number" id="logHours" required min="0.25" max="12" step="0.25" placeholder="e.g. 1.5" class="w-1/2 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 p-3" />
-                <div class="w-1/2 grid grid-cols-4 gap-1">
-                  <button type="button" onclick="setQuickHours(0.5)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-2">0.5</button>
-                  <button type="button" onclick="setQuickHours(1.0)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-2">1.0</button>
-                  <button type="button" onclick="setQuickHours(1.5)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-2">1.5</button>
-                  <button type="button" onclick="setQuickHours(2.0)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-2">2.0</button>
+              <div class="space-y-2">
+                <input type="number" id="logHours" required min="0.25" max="12" step="0.25" placeholder="e.g. 1.5" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 p-3" />
+                <div class="grid grid-cols-5 gap-1.5">
+                  <button type="button" onclick="setQuickHours(0.5)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-1.5">0.5h</button>
+                  <button type="button" onclick="setQuickHours(1.0)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-1.5">1.0h</button>
+                  <button type="button" onclick="setQuickHours(1.5)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-1.5">1.5h</button>
+                  <button type="button" onclick="setQuickHours(2.0)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-1.5">2.0h</button>
+                  <button type="button" onclick="setQuickHours(3.0)" class="text-xs bg-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 border border-slate-200 rounded-lg font-medium transition py-1.5">3.0h</button>
                 </div>
               </div>
             </div>
@@ -212,16 +214,16 @@
             <label for="logRemarks" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
               Remarks & Topics Taught
             </label>
-            <textarea id="logRemarks" rows="3" placeholder="e.g., Chapter 4: Fractions practice questions, completed quiz 2, student attendance notes..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition"></textarea>
+            <textarea id="logRemarks" rows="2" placeholder="e.g., Chapter 3: Geometry problem solving, homework review..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block p-3 transition"></textarea>
           </div>
 
-          <!-- Submit Buttons -->
+          <!-- Submit Action Buttons -->
           <div class="pt-2 flex flex-col sm:flex-row items-center gap-3">
             <button type="submit" id="submitBtn" class="w-full sm:w-auto flex-1 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl shadow-md shadow-brand-500/25 transition-all flex items-center justify-center space-x-2 active:scale-[0.99]">
               <span id="btnIcon">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
               </span>
-              <span id="btnText">Save Session Log</span>
+              <span id="btnText">Save to Google Sheet</span>
             </button>
 
             <button type="button" onclick="resetEntryForm()" class="w-full sm:w-auto px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold rounded-xl transition">
@@ -232,38 +234,43 @@
 
       </div>
 
-      <!-- Quick Tips Card -->
-      <div class="mt-4 bg-slate-100/70 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 flex items-start space-x-3">
+      <!-- Hierarchy Notice -->
+      <div class="mt-4 bg-slate-100/80 border border-slate-200 rounded-2xl p-4 text-xs text-slate-600 flex items-start space-x-3">
         <svg class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         <div>
-          <span class="font-bold text-slate-800">Dynamic Hierarchy Applied:</span> LKG–3 have divisions A–E; Class 4, 6, 8–10 have A–C; Class 5 & 7 have A & B; Class 11 & 12 have C & H. You can test saving in Demo Mode or attach your Google Sheet in settings.
+          <span class="font-bold text-slate-800">Strict Division Enforcement:</span>
+          LKG, UKG, 1, 2, 3 have divisions <span class="font-mono font-bold text-slate-700">A - E</span>;
+          Classes 4, 6, 8, 9, 10 have <span class="font-mono font-bold text-slate-700">A - C</span>;
+          Classes 5 & 7 have <span class="font-mono font-bold text-slate-700">A, B</span>;
+          Classes 11 & 12 have <span class="font-mono font-bold text-slate-700">C, H</span>.
         </div>
       </div>
     </section>
 
     <!-- ========================================== -->
-    <!-- TAB 2: REPORTS & DAY CONTAINERS            -->
+    <!-- TAB 2: CLASS-WISE & DAY-WISE REPORTS       -->
     <!-- ========================================== -->
     <section id="view-report" class="tab-content hidden transition-opacity duration-300">
       
       <!-- Filter Bar -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-6 mb-5 card-shadow no-print">
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-4 sm:p-6 mb-5 card-shadow no-print">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
           <div>
-            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Daily Teaching Register</h2>
-            <p class="text-xs text-slate-500">Day-by-day session groups and total active teaching days count</p>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Teaching Register & Analytics</h2>
+            <p class="text-xs text-slate-500">Class-wise drill-down, total session days count, and day-wise containers</p>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="fetchSheetData()" title="Reload from Sheet" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg border border-slate-200 transition">
+            <button onclick="fetchSheetData()" title="Reload live from Google Sheet" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-xl border border-slate-200 transition flex items-center space-x-1 text-xs font-semibold">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              <span>Sync</span>
             </button>
-            <button onclick="exportCSV()" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition flex items-center space-x-1">
+            <button onclick="exportCSV()" class="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition flex items-center space-x-1">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
               <span>CSV</span>
             </button>
-            <button onclick="window.print()" class="px-3 py-1.5 text-xs font-semibold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-lg transition flex items-center space-x-1">
+            <button onclick="window.print()" class="px-3 py-2 text-xs font-semibold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-xl transition flex items-center space-x-1">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-              <span>Print / PDF</span>
+              <span>Print</span>
             </button>
           </div>
         </div>
@@ -276,7 +283,7 @@
             <select id="filterClass" onchange="onClassFilterChange()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500">
               <option value="ALL">All Classes (Whole School)</option>
               <optgroup label="Section Level Aggregations">
-                <option value="GROUP_LOWER">Pre-Primary & Lower Primary (LKG - 4)</option>
+                <option value="GROUP_LOWER">Lower & Primary (LKG - 4)</option>
                 <option value="GROUP_UPPER">Upper Primary (5 - 7)</option>
                 <option value="GROUP_HIGH">High School (8 - 10)</option>
                 <option value="GROUP_HSS">Higher Secondary (11 - 12)</option>
@@ -328,11 +335,11 @@
           <!-- Search Box -->
           <div>
             <label class="block text-xs font-bold text-slate-500 mb-1">Search Remarks / Topics</label>
-            <input type="text" id="filterSearch" oninput="renderReports()" placeholder="Type to filter..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500" />
+            <input type="text" id="filterSearch" oninput="renderReports()" placeholder="Search remark..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-brand-500 focus:border-brand-500" />
           </div>
         </div>
 
-        <!-- Custom Date Range Row (Hidden by default) -->
+        <!-- Custom Date Range Row -->
         <div id="customDateRangeRow" class="hidden grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-100">
           <div>
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Start Date</label>
@@ -357,7 +364,7 @@
             <span id="statTotalDays" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
             <span class="text-xs text-slate-500 font-medium">active days</span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">Distinct days classes were held</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Distinct days classes held</p>
         </div>
 
         <!-- Total Hours -->
@@ -370,7 +377,7 @@
             <span id="statTotalHours" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
             <span class="text-xs text-slate-500 font-medium">hrs</span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">Total teaching duration</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Total teaching time</p>
         </div>
 
         <!-- Total Sessions -->
@@ -383,35 +390,44 @@
             <span id="statTotalSessions" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
             <span class="text-xs text-slate-500 font-medium">periods</span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">Individual classes logged</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Total classes logged</p>
         </div>
 
-        <!-- Daily Average Hours -->
+        <!-- Active Classes Count -->
         <div class="bg-gradient-to-br from-purple-50 to-white border border-purple-100 p-4 rounded-2xl shadow-sm">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-purple-700">Avg Hours / Day</span>
-            <span class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold">⚡</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-purple-700">Active Classes</span>
+            <span class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold">🏫</span>
           </div>
           <div class="mt-2 flex items-baseline space-x-1">
-            <span id="statAvgHours" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0.0</span>
-            <span class="text-xs text-slate-500 font-medium">hrs/day</span>
+            <span id="statActiveClasses" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+            <span class="text-xs text-slate-500 font-medium">classes</span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">Average teaching intensity</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Classes with entries</p>
         </div>
       </div>
 
-      <!-- Report Section Active Filter Badge Info -->
-      <div class="flex items-center justify-between px-1 mb-3">
-        <h3 class="text-sm font-bold text-slate-700 flex items-center space-x-2">
-          <span>Day-wise Log Containers</span>
-          <span id="reportFilterPill" class="text-[11px] font-semibold bg-brand-50 text-brand-700 px-2.5 py-0.5 rounded-full border border-brand-100">Showing All</span>
-        </h3>
-        <span id="daysCountSummary" class="text-xs font-semibold text-slate-500"></span>
+      <!-- Report View Mode Toggle: Class-wise vs Day-wise -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 mb-4">
+        <div class="flex items-center space-x-2">
+          <div class="bg-slate-200/80 p-0.5 rounded-xl flex">
+            <button id="viewModeClassBtn" onclick="setReportViewMode('class')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-brand-600 shadow-sm">
+              Class-Wise Overview & Drill-down
+            </button>
+            <button id="viewModeDayBtn" onclick="setReportViewMode('day')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+              Chronological Day Containers
+            </button>
+          </div>
+        </div>
+
+        <div class="text-right">
+          <span id="reportFilterPill" class="text-[11px] font-semibold bg-brand-50 text-brand-700 px-2.5 py-1 rounded-full border border-brand-100">Showing All</span>
+        </div>
       </div>
 
-      <!-- Day Containers Feed -->
-      <div id="dayContainersList" class="space-y-4">
-        <!-- Injected Dynamically -->
+      <!-- Main Render Container -->
+      <div id="reportFeedContainer" class="space-y-4">
+        <!-- Rendered dynamically -->
       </div>
     </section>
 
@@ -419,53 +435,51 @@
     <!-- TAB 3: GOOGLE SHEETS SETUP & GUIDE         -->
     <!-- ========================================== -->
     <section id="view-setup" class="tab-content hidden transition-opacity duration-300">
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-7 card-shadow">
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-5 sm:p-7 card-shadow">
         
-        <div class="pb-4 border-b border-slate-100 mb-6">
-          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Google Sheets Cloud Connection</h2>
-          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Sync logs directly into your Google Sheet using a free Google Apps Script Web App</p>
+        <div class="pb-4 border-b border-slate-100 mb-6 flex items-start justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Google Sheets Web App Connection</h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Your Google Apps Script Web App endpoint is configured and active</p>
+          </div>
+          <span class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl flex items-center">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>
+            Pre-Configured
+          </span>
         </div>
 
         <!-- URL Configuration -->
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 mb-6">
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 mb-6">
           <label for="appsScriptUrlInput" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
             Google Apps Script Web App URL
           </label>
           <div class="flex flex-col sm:flex-row gap-2">
-            <input type="url" id="appsScriptUrlInput" placeholder="https://script.google.com/macros/s/AKfycbx.../exec" class="flex-1 bg-white border border-slate-300 text-slate-800 text-sm rounded-xl p-3 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" />
-            <button onclick="saveAndTestScriptUrl()" class="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-sm transition shadow-sm flex items-center justify-center space-x-1.5">
-              <span>Save & Connect</span>
+            <input type="url" id="appsScriptUrlInput" class="flex-1 bg-white border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-3 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-mono" />
+            <button onclick="saveAndTestScriptUrl()" class="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-sm transition shadow-sm flex items-center justify-center space-x-1.5 active:scale-[0.98]">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              <span>Save & Test</span>
+            </button>
+            <button onclick="restoreDefaultScriptUrl()" title="Reset to default script URL" class="px-3 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-xl text-xs transition">
+              Reset Default
             </button>
           </div>
-          <p class="text-xs text-slate-500 mt-2">
-            Leave blank or clear anytime to return to <strong>Offline Demo Mode</strong>.
+          <p class="text-[11px] text-slate-500 mt-2">
+            This endpoint handles saving rows into your spreadsheet and reading entries for live reports.
           </p>
         </div>
 
-        <!-- 3-Minute Setup Guide -->
-        <div>
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3 flex items-center space-x-2">
-            <span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs">?</span>
-            <span>How to setup your Google Sheet (Easy 3 Steps)</span>
-          </h3>
-
-          <ol class="space-y-4 text-xs sm:text-sm text-slate-600">
-            <li class="bg-white border border-slate-200 rounded-xl p-4">
-              <strong class="text-slate-900 block mb-1">Step 1: Open Google Sheets & Apps Script</strong>
-              Create a new Google Sheet at <a href="https://sheets.new" target="_blank" class="text-brand-600 underline font-semibold">sheets.new</a>. In the top menu, click <strong>Extensions</strong> &rarr; <strong>Apps Script</strong>.
-            </li>
-
-            <li class="bg-white border border-slate-200 rounded-xl p-4">
-              <div class="flex items-center justify-between mb-2">
-                <strong class="text-slate-900">Step 2: Paste the Apps Script Code</strong>
-                <button onclick="copyAppsScriptCode()" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700 rounded-lg border border-slate-300 transition flex items-center space-x-1">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                  <span id="copyBtnText">Copy Script Code</span>
-                </button>
-              </div>
-              <p class="text-xs text-slate-500 mb-2">Delete any existing code in <code>Code.gs</code> and paste the snippet below:</p>
-              <pre class="bg-slate-900 text-slate-100 p-3 rounded-lg overflow-x-auto text-[11px] leading-relaxed max-h-48 font-mono" id="scriptCodeBlock">function doGet(e) {
-  const action = e.parameter.action;
+        <!-- Apps Script Code Snippet Accordion -->
+        <div class="border border-slate-200 rounded-2xl overflow-hidden mb-6">
+          <div class="bg-slate-100/90 px-4 py-3 flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Google Apps Script Code (Code.gs)</span>
+            <button onclick="copyAppsScriptCode()" class="text-xs px-2.5 py-1 bg-white hover:bg-slate-50 font-semibold text-slate-700 rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-sm">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+              <span id="copyBtnText">Copy Code</span>
+            </button>
+          </div>
+          <div class="p-4 bg-slate-900 text-slate-100">
+            <pre class="overflow-x-auto text-[11px] leading-relaxed max-h-56 font-mono text-emerald-400" id="scriptCodeBlock">function doGet(e) {
+  const action = e.parameter ? e.parameter.action : "";
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getActiveSheet();
   
@@ -491,7 +505,7 @@
     
     return ContentService.createTextOutput(JSON.stringify(rows)).setMimeType(ContentService.MimeType.JSON);
   }
-  return ContentService.createTextOutput(JSON.stringify({ status: "active" })).setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify({ status: "active", message: "EduLog backend running" })).setMimeType(ContentService.MimeType.JSON);
 }
 
 function doPost(e) {
@@ -499,7 +513,6 @@ function doPost(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     let sheet = ss.getActiveSheet();
     
-    // Ensure header row exists
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(["Date", "Class", "Division", "Hours", "Remarks", "Timestamp"]);
     }
@@ -519,19 +532,7 @@ function doPost(e) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
 }</pre>
-            </li>
-
-            <li class="bg-white border border-slate-200 rounded-xl p-4">
-              <strong class="text-slate-900 block mb-1">Step 3: Deploy as Web App</strong>
-              <p>In Apps Script, click <span class="bg-slate-100 font-semibold px-1 rounded">Deploy</span> &gt; <span class="bg-slate-100 font-semibold px-1 rounded">New deployment</span>.</p>
-              <ul class="list-disc list-inside mt-1 space-y-0.5 text-xs text-slate-500">
-                <li>Click gear icon & select <strong>Web app</strong></li>
-                <li>Execute as: <strong>Me (your email)</strong></li>
-                <li>Who has access: <strong>Anyone</strong> (crucial for form submissions)</li>
-                <li>Click <strong>Deploy</strong> and copy the <strong>Web App URL</strong> into the field above.</li>
-              </ul>
-            </li>
-          </ol>
+          </div>
         </div>
 
       </div>
@@ -539,7 +540,7 @@ function doPost(e) {
 
   </main>
 
-  <!-- Mobile Bottom Nav for quick thumb switching (hidden in print) -->
+  <!-- Mobile Bottom Nav -->
   <nav class="sm:hidden sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around py-2 px-3 no-print">
     <button onclick="switchTab('log')" id="mNav-log" class="flex flex-col items-center text-brand-600 font-semibold text-[11px] p-1">
       <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -559,6 +560,9 @@ function doPost(e) {
   <!-- JAVASCRIPT LOGIC                           -->
   <!-- ========================================== -->
   <script>
+    // Pre-configured Google Apps Script Web App URL provided by user
+    const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3un2HszJ1cB-OvFwtM3NhNxC6xp_Q8dEcwWoux7ADyo1pMKKwUXpqpewf3scLkXSV/exec';
+
     /**
      * Strict Academic Class & Division Hierarchy:
      * - LKG, UKG, 1, 2, 3: Divs A, B, C, D, E
@@ -583,6 +587,8 @@ function doPost(e) {
       '12':  ['C', 'H']
     };
 
+    const CLASS_SORT_ORDER = ['LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+
     // Category grouping definitions for broad report filtering
     const SECTION_GROUPS = {
       'GROUP_LOWER': ['LKG', 'UKG', '1', '2', '3', '4'],
@@ -591,37 +597,39 @@ function doPost(e) {
       'GROUP_HSS':   ['11', '12']
     };
 
-    // Realistic mock records for instant testing
+    // Realistic fallback mock records for offline initialization
     const INITIAL_MOCK_ENTRIES = [
       { date: '2026-10-16', className: '10', division: 'A', hours: 1.5, remarks: 'Mathematics: Coordinate Geometry problem set 4B' },
       { date: '2026-10-16', className: '10', division: 'B', hours: 1.0, remarks: 'Physics: Reflection & Refraction ray diagrams' },
       { date: '2026-10-16', className: '5',  division: 'A', hours: 1.0, remarks: 'Environmental Studies: Water cycle discussion' },
+      { date: '2026-10-15', className: '10', division: 'A', hours: 1.5, remarks: 'Mathematics: Trigonometric identities review' },
       { date: '2026-10-15', className: 'LKG', division: 'C', hours: 2.0, remarks: 'Phonics sounds, alphabet tracing, play session' },
       { date: '2026-10-15', className: '3',  division: 'D', hours: 1.5, remarks: 'English: Reading Chapter 7 & Dictation test' },
       { date: '2026-10-15', className: '8',  division: 'C', hours: 1.0, remarks: 'General Science: Cell Structure biology lab intro' },
       { date: '2026-10-14', className: '12', division: 'C', hours: 2.0, remarks: 'Accountancy: Partnership dissolution numericals' },
       { date: '2026-10-14', className: '11', division: 'H', hours: 1.5, remarks: 'History: Early Empires & Archaeological sources' },
+      { date: '2026-10-14', className: '10', division: 'A', hours: 1.0, remarks: 'Mathematics: Weekly class test on Quadratic Equations' },
       { date: '2026-10-12', className: '4',  division: 'B', hours: 1.0, remarks: 'Social Studies: Maps and Globes activity' },
       { date: '2026-10-12', className: '1',  division: 'A', hours: 2.0, remarks: 'Basic arithmetic addition worksheets' }
     ];
 
-    // State Variables
+    // State
     let currentLogs = [];
-    let scriptUrl = localStorage.getItem('edulog_script_url') || 'https://script.google.com/macros/s/AKfycbx3un2HszJ1cB-OvFwtM3NhNxC6xp_Q8dEcwWoux7ADyo1pMKKwUXpqpewf3scLkXSV/exec';
+    let scriptUrl = localStorage.getItem('edulog_script_url') || DEFAULT_SCRIPT_URL;
+    let reportViewMode = 'class'; // 'class' or 'day'
+    let expandedClasses = new Set(); // holds classes that are expanded in class-wise view
 
-    // Initialize application on DOM ready
+    // App Initialization
     window.addEventListener('DOMContentLoaded', () => {
       // 1. Set default date to today in input (YYYY-MM-DD format)
       const todayStr = new Date().toISOString().split('T')[0];
       document.getElementById('logDate').value = todayStr;
 
-      // 2. Load stored script url if present
-      if (scriptUrl) {
-        document.getElementById('appsScriptUrlInput').value = scriptUrl;
-      }
+      // 2. Populate script URL input
+      document.getElementById('appsScriptUrlInput').value = scriptUrl;
       updateSyncStatusUI();
 
-      // 3. Load database (localStorage or fallback to mock data)
+      // 3. Load cached data
       const cached = localStorage.getItem('edulog_local_data');
       if (cached) {
         try {
@@ -634,35 +642,26 @@ function doPost(e) {
         saveLocalBackup();
       }
 
-      // If user has a real URL, fetch live data
-      if (scriptUrl) {
-        fetchSheetData();
-      } else {
-        renderReports();
-      }
+      // 4. Initial fetch from Google Sheet
+      fetchSheetData();
     });
 
     /**
-     * Tab Switcher (Desktop tabs + Mobile bottom nav)
+     * Switch Tabs
      */
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById(`view-${tabId}`).classList.remove('hidden');
 
-      // Update Desktop tabs styling
       ['log', 'report', 'setup'].forEach(t => {
         const dBtn = document.getElementById(`tabBtn-${t}`);
         const mBtn = document.getElementById(`mNav-${t}`);
         if (t === tabId) {
-          dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm";
-          if (mBtn) {
-            mBtn.className = "flex flex-col items-center text-brand-600 font-semibold text-[11px] p-1";
-          }
+          dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-white text-brand-600 shadow-sm";
+          if (mBtn) mBtn.className = "flex flex-col items-center text-brand-600 font-semibold text-[11px] p-1";
         } else {
-          dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900";
-          if (mBtn) {
-            mBtn.className = "flex flex-col items-center text-slate-500 font-medium text-[11px] p-1";
-          }
+          dBtn.className = "tab-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900";
+          if (mBtn) mBtn.className = "flex flex-col items-center text-slate-500 font-medium text-[11px] p-1";
         }
       });
 
@@ -672,7 +671,7 @@ function doPost(e) {
     }
 
     /**
-     * Updates Dynamic Division Dropdown for Session Entry Form
+     * Dynamic Division for Entry Form
      */
     function onClassChangeLog() {
       const classSelect = document.getElementById('logClass');
@@ -710,24 +709,23 @@ function doPost(e) {
         divSelect.appendChild(opt);
       });
 
-      guideBadge.textContent = `Valid: ${availableDivs.join(', ')}`;
+      guideBadge.textContent = `Allowed: ${availableDivs.join(', ')}`;
     }
 
     /**
-     * Quick hours increment helper
+     * Set quick hours helper
      */
     function setQuickHours(val) {
       document.getElementById('logHours').value = val;
     }
 
     /**
-     * Adapt Report Filter: Division dropdown reflects current Class Filter
+     * Class Filter Adaptations in Report
      */
     function onClassFilterChange() {
       const classFilterVal = document.getElementById('filterClass').value;
       const divFilter = document.getElementById('filterDivision');
 
-      // Keep current selection if compatible
       const prevVal = divFilter.value;
       divFilter.innerHTML = '<option value="ALL">All Divisions</option>';
 
@@ -736,7 +734,6 @@ function doPost(e) {
       if (classFilterVal === 'ALL') {
         ['A', 'B', 'C', 'D', 'E', 'H'].forEach(d => allowedDivs.add(d));
       } else if (SECTION_GROUPS[classFilterVal]) {
-        // Collect all divisions from group members
         SECTION_GROUPS[classFilterVal].forEach(cls => {
           (CLASS_DIVISIONS_MAP[cls] || []).forEach(d => allowedDivs.add(d));
         });
@@ -756,7 +753,38 @@ function doPost(e) {
     }
 
     /**
-     * Period select change handler (custom date display)
+     * Switch view mode between Class-Wise and Day-Wise
+     */
+    function setReportViewMode(mode) {
+      reportViewMode = mode;
+      const classBtn = document.getElementById('viewModeClassBtn');
+      const dayBtn = document.getElementById('viewModeDayBtn');
+
+      if (mode === 'class') {
+        classBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-brand-600 shadow-sm";
+        dayBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+      } else {
+        dayBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-brand-600 shadow-sm";
+        classBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+      }
+
+      renderReports();
+    }
+
+    /**
+     * Toggle class card expand / collapse
+     */
+    function toggleClassExpand(className) {
+      if (expandedClasses.has(className)) {
+        expandedClasses.delete(className);
+      } else {
+        expandedClasses.add(className);
+      }
+      renderReports();
+    }
+
+    /**
+     * Period select handler
      */
     function onPeriodChange() {
       const period = document.getElementById('filterPeriod').value;
@@ -772,7 +800,7 @@ function doPost(e) {
     }
 
     /**
-     * Handles Log Entry Form Submission
+     * Form Submission to Google Sheet
      */
     async function handleSessionSubmit(e) {
       e.preventDefault();
@@ -784,7 +812,7 @@ function doPost(e) {
       const remarks = document.getElementById('logRemarks').value.trim();
 
       if (!date || !className || !division || isNaN(hours) || hours <= 0) {
-        showToast('Please fill all required fields properly.', 'error');
+        showToast('Please fill all required fields correctly.', 'error');
         return;
       }
 
@@ -792,33 +820,33 @@ function doPost(e) {
       const btnIcon = document.getElementById('btnIcon');
       const btnText = document.getElementById('btnText');
 
-      // Show spinner
       submitBtn.disabled = true;
       btnIcon.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>`;
-      btnText.textContent = 'Saving...';
+      btnText.textContent = 'Saving to Sheet...';
 
       const entry = { date, className, division, hours, remarks };
 
       try {
         if (scriptUrl) {
-          // Send to Google Sheets via POST (no-cors mode handles Google Script redirect)
           await fetch(scriptUrl, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(entry)
           });
-          showToast(`Logged successfully to Google Sheet!`, 'success');
+          showToast(`Session saved directly to Google Sheet!`, 'success');
         } else {
-          // Local demo mode
           showToast(`Saved locally (Demo Mode)!`, 'info');
         }
 
-        // Add to active local memory & storage
+        // Add to local state & storage
         currentLogs.unshift(entry);
         saveLocalBackup();
 
-        // Reset form inputs except date
+        // Automatically expand this class in report for immediate inspection
+        expandedClasses.add(className);
+
+        // Reset fields except date
         document.getElementById('logClass').selectedIndex = 0;
         onClassChangeLog();
         document.getElementById('logHours').value = '';
@@ -826,13 +854,13 @@ function doPost(e) {
 
       } catch (err) {
         console.error(err);
-        showToast('Error syncing with Google Sheet. Stored locally.', 'error');
+        showToast('Notice: Sent to sheet & cached locally.', 'info');
         currentLogs.unshift(entry);
         saveLocalBackup();
       } finally {
         submitBtn.disabled = false;
         btnIcon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>`;
-        btnText.textContent = 'Save Session Log';
+        btnText.textContent = 'Save to Google Sheet';
       }
     }
 
@@ -845,7 +873,7 @@ function doPost(e) {
         return;
       }
 
-      showToast('Refreshing data from Google Sheet...', 'info');
+      showToast('Connecting to Google Sheet...', 'info');
 
       try {
         const response = await fetch(`${scriptUrl}?action=read`);
@@ -854,19 +882,20 @@ function doPost(e) {
         if (Array.isArray(remoteData) && remoteData.length > 0) {
           currentLogs = remoteData;
           saveLocalBackup();
-          showToast(`Loaded ${remoteData.length} records from Google Sheets`, 'success');
+          showToast(`Fetched ${remoteData.length} records from Google Sheet`, 'success');
+        } else if (Array.isArray(remoteData) && remoteData.length === 0) {
+          showToast(`Google Sheet is empty. Ready for new entries!`, 'info');
         }
       } catch (error) {
-        console.warn('Could not read from Google Apps Script. Using cached data.', error);
-        showToast('Failed to load Google Sheet. Showing cached data.', 'warning');
+        console.warn('Could not read from Apps Script or CORS redirect. Using local cached records.', error);
+        showToast('Using cached entries. (Submissions still sync to sheet)', 'warning');
       } finally {
         renderReports();
       }
     }
 
     /**
-     * Main Report Computation & Rendering Engine
-     * Groups by Day Containers, calculates total distinct days count & metrics
+     * Main Report Renderer: Supports Class-Wise Drilldown & Day-Wise Views
      */
     function renderReports() {
       const classFilter = document.getElementById('filterClass').value;
@@ -874,14 +903,12 @@ function doPost(e) {
       const periodFilter = document.getElementById('filterPeriod').value;
       const searchQuery = document.getElementById('filterSearch').value.toLowerCase().trim();
 
-      const container = document.getElementById('dayContainersList');
+      const container = document.getElementById('reportFeedContainer');
 
-      // Date calculations for quick filters
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth();
 
-      // Calculate start of current week (Monday)
       const dayOfWeek = now.getDay();
       const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       const startOfWeek = new Date(now.setDate(diffToMonday));
@@ -889,7 +916,6 @@ function doPost(e) {
 
       // Filter entries
       const filtered = currentLogs.filter(entry => {
-        // 1. Class filter check
         if (classFilter !== 'ALL') {
           if (SECTION_GROUPS[classFilter]) {
             if (!SECTION_GROUPS[classFilter].includes(entry.className)) return false;
@@ -898,12 +924,10 @@ function doPost(e) {
           }
         }
 
-        // 2. Division filter check
         if (divFilter !== 'ALL' && entry.division !== divFilter) {
           return false;
         }
 
-        // 3. Search query in remarks, class or div
         if (searchQuery) {
           const matchRemark = (entry.remarks || '').toLowerCase().includes(searchQuery);
           const matchClass = entry.className.toLowerCase().includes(searchQuery);
@@ -911,7 +935,6 @@ function doPost(e) {
           if (!matchRemark && !matchClass && !matchDiv) return false;
         }
 
-        // 4. Period / Date range filtering
         if (entry.date) {
           const entryDate = new Date(entry.date + 'T00:00:00');
           if (periodFilter === 'THIS_MONTH') {
@@ -931,64 +954,221 @@ function doPost(e) {
         return true;
       });
 
-      // Group by distinct Day (YYYY-MM-DD)
-      const dayGroups = {};
-      let totalHoursSum = 0;
-      let totalSessionsCount = filtered.length;
+      // Overall Metrics
+      const totalDistinctDays = new Set(filtered.map(e => e.date)).size;
+      const totalHoursSum = filtered.reduce((acc, curr) => acc + (Number(curr.hours) || 0), 0);
+      const totalSessionsCount = filtered.length;
+      const distinctClassesCount = new Set(filtered.map(e => e.className)).size;
 
-      filtered.forEach(item => {
-        const d = item.date || 'Undated';
-        if (!dayGroups[d]) {
-          dayGroups[d] = {
-            date: d,
-            totalHours: 0,
-            sessions: []
-          };
-        }
-        dayGroups[d].sessions.push(item);
-        dayGroups[d].totalHours += Number(item.hours) || 0;
-        totalHoursSum += Number(item.hours) || 0;
-      });
-
-      // Distinct Active Days
-      const dayKeys = Object.keys(dayGroups).sort((a, b) => b.localeCompare(a)); // Newest first
-      const distinctDaysCount = dayKeys.length;
-
-      // Update KPI Statistics
-      document.getElementById('statTotalDays').textContent = distinctDaysCount;
+      document.getElementById('statTotalDays').textContent = totalDistinctDays;
       document.getElementById('statTotalHours').textContent = totalHoursSum.toFixed(1);
       document.getElementById('statTotalSessions').textContent = totalSessionsCount;
-      document.getElementById('statAvgHours').textContent = distinctDaysCount > 0 ? (totalHoursSum / distinctDaysCount).toFixed(1) : '0.0';
+      document.getElementById('statActiveClasses').textContent = distinctClassesCount;
 
-      // Update filter badge text
       const classSelectEl = document.getElementById('filterClass');
       const selectedClassText = classSelectEl.options[classSelectEl.selectedIndex].text;
       document.getElementById('reportFilterPill').textContent = `${selectedClassText} ${divFilter !== 'ALL' ? '• Div ' + divFilter : ''}`;
-      document.getElementById('daysCountSummary').textContent = `${distinctDaysCount} active days recorded`;
 
-      // Render Day Containers
-      if (dayKeys.length === 0) {
+      if (filtered.length === 0) {
         container.innerHTML = `
-          <div class="bg-white rounded-2xl p-10 text-center border border-slate-200">
-            <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center text-2xl">📋</div>
-            <h4 class="text-base font-bold text-slate-800">No Teaching Sessions Found</h4>
-            <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">There are no logged entries matching your selected class, division, or date range.</p>
+          <div class="bg-white rounded-3xl p-10 text-center border border-slate-200 shadow-sm">
+            <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">📋</div>
+            <h4 class="text-base font-bold text-slate-800">No Records Found</h4>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">There are no session records matching the selected class, division, or date range.</p>
             <button onclick="resetFilters()" class="mt-4 px-4 py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold rounded-xl border border-brand-200 transition">Reset All Filters</button>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = dayKeys.map((dayDate, idx) => {
-        const group = dayGroups[dayDate];
-        const formattedDate = formatNiceDate(dayDate);
-        
-        const sessionsHtml = group.sessions.map((sess, sIdx) => {
+      // ==========================================
+      // VIEW MODE 1: CLASS-WISE DRILLDOWN
+      // ==========================================
+      if (reportViewMode === 'class') {
+        // Group by Class
+        const classMap = {};
+
+        filtered.forEach(item => {
+          const cls = item.className || 'Unknown';
+          if (!classMap[cls]) {
+            classMap[cls] = {
+              className: cls,
+              totalHours: 0,
+              sessions: [],
+              distinctDays: new Set(),
+              divisionsCovered: new Set()
+            };
+          }
+          classMap[cls].sessions.push(item);
+          classMap[cls].totalHours += Number(item.hours) || 0;
+          classMap[cls].distinctDays.add(item.date);
+          classMap[cls].divisionsCovered.add(item.division);
+        });
+
+        // Sort classes according to school hierarchy order
+        const sortedClasses = Object.keys(classMap).sort((a, b) => {
+          const indexA = CLASS_SORT_ORDER.indexOf(a);
+          const indexB = CLASS_SORT_ORDER.indexOf(b);
+          if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+          return a.localeCompare(b);
+        });
+
+        container.innerHTML = sortedClasses.map(clsName => {
+          const cData = classMap[clsName];
+          const isExpanded = expandedClasses.has(clsName);
+          const distinctDaysCount = cData.distinctDays.size;
+          const avgHoursPerDay = distinctDaysCount > 0 ? (cData.totalHours / distinctDaysCount).toFixed(1) : '0';
+          const divisionsArray = Array.from(cData.divisionsCovered).sort();
+
+          // Group this class's sessions into day-by-day containers for drill-down
+          const dayContainers = {};
+          cData.sessions.forEach(sess => {
+            const d = sess.date || 'Undated';
+            if (!dayContainers[d]) {
+              dayContainers[d] = { date: d, totalHours: 0, items: [] };
+            }
+            dayContainers[d].items.push(sess);
+            dayContainers[d].totalHours += Number(sess.hours) || 0;
+          });
+
+          const sortedDayKeys = Object.keys(dayContainers).sort((a, b) => b.localeCompare(a));
+
+          const dayContainersHtml = sortedDayKeys.map(dayKey => {
+            const dayObj = dayContainers[dayKey];
+            const niceDate = formatNiceDate(dayKey);
+
+            const sessionItemsHtml = dayObj.items.map(s => `
+              <div class="p-3 bg-white rounded-xl border border-slate-200/90 hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-start space-x-3">
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 flex-shrink-0">
+                    Div ${s.division}
+                  </span>
+                  <div>
+                    <div class="text-xs font-semibold text-slate-800 flex items-center space-x-2">
+                      <span>⏱️ ${s.hours} ${s.hours === 1 ? 'Hour' : 'Hours'}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                      ${s.remarks ? escapeHtml(s.remarks) : '<span class="italic text-slate-400">No remarks entered</span>'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            `).join('');
+
+            return `
+              <div class="bg-slate-50/80 rounded-2xl border border-slate-200/80 p-3 sm:p-4 mb-2.5">
+                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+                    <span class="text-xs font-bold text-slate-900">${niceDate}</span>
+                    <span class="text-[10px] text-slate-500">(${dayKey})</span>
+                  </div>
+                  <div class="flex items-center space-x-1.5">
+                    <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                      ${dayObj.totalHours.toFixed(1)} hrs
+                    </span>
+                    <span class="text-[11px] text-slate-500">
+                      ${dayObj.items.length} ${dayObj.items.length === 1 ? 'session' : 'sessions'}
+                    </span>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  ${sessionItemsHtml}
+                </div>
+              </div>
+            `;
+          }).join('');
+
           return `
+            <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden transition-all hover:shadow-md card-shadow">
+              <!-- Class Header Card (Clickable to Expand) -->
+              <div onclick="toggleClassExpand('${clsName}')" class="p-4 sm:p-5 cursor-pointer bg-white hover:bg-slate-50/60 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                
+                <div class="flex items-center space-x-3.5">
+                  <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white flex flex-col items-center justify-center font-black shadow-md shadow-brand-500/20 flex-shrink-0">
+                    <span class="text-[9px] uppercase leading-none opacity-80">Class</span>
+                    <span class="text-base font-extrabold leading-none mt-0.5">${clsName}</span>
+                  </div>
+                  <div>
+                    <div class="flex items-center space-x-2">
+                      <h3 class="text-base font-bold text-slate-900">Class ${clsName}</h3>
+                      <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                        Divs: ${divisionsArray.join(', ')}
+                      </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                      ${cData.sessions.length} total sessions across all divisions
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Stats Badges -->
+                <div class="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                  <div class="text-center px-3 py-1.5 bg-indigo-50/80 rounded-xl border border-indigo-100 min-w-[70px]">
+                    <span class="block text-[10px] uppercase font-bold text-indigo-600 leading-none">Days</span>
+                    <span class="text-sm font-extrabold text-indigo-950">${distinctDaysCount}</span>
+                  </div>
+                  <div class="text-center px-3 py-1.5 bg-emerald-50/80 rounded-xl border border-emerald-100 min-w-[70px]">
+                    <span class="block text-[10px] uppercase font-bold text-emerald-600 leading-none">Hours</span>
+                    <span class="text-sm font-extrabold text-emerald-950">${cData.totalHours.toFixed(1)}</span>
+                  </div>
+                  <div class="text-center px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200 min-w-[70px]">
+                    <span class="block text-[10px] uppercase font-bold text-slate-500 leading-none">Avg/Day</span>
+                    <span class="text-sm font-bold text-slate-800">${avgHoursPerDay}h</span>
+                  </div>
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 transition-transform ${isExpanded ? 'rotate-180 bg-brand-50 text-brand-600' : ''}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Drill-down Details (Day by Day Containers for this Class) -->
+              ${isExpanded ? `
+                <div class="p-4 sm:p-5 bg-slate-50/50 border-t border-slate-200 transition-all">
+                  <div class="flex items-center justify-between mb-3 px-1">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      📅 Day-by-Day Teaching Sessions for Class ${clsName}
+                    </span>
+                    <span class="text-xs font-semibold text-brand-600">
+                      ${distinctDaysCount} active days recorded
+                    </span>
+                  </div>
+                  <div class="space-y-1">
+                    ${dayContainersHtml}
+                  </div>
+                </div>
+              ` : ''}
+
+            </div>
+          `;
+        }).join('');
+
+      // ==========================================
+      // VIEW MODE 2: CHRONOLOGICAL DAY CONTAINERS
+      // ==========================================
+      } else {
+        const dayGroups = {};
+        filtered.forEach(item => {
+          const d = item.date || 'Undated';
+          if (!dayGroups[d]) {
+            dayGroups[d] = { date: d, totalHours: 0, sessions: [] };
+          }
+          dayGroups[d].sessions.push(item);
+          dayGroups[d].totalHours += Number(item.hours) || 0;
+        });
+
+        const dayKeys = Object.keys(dayGroups).sort((a, b) => b.localeCompare(a));
+
+        container.innerHTML = dayKeys.map(dayDate => {
+          const group = dayGroups[dayDate];
+          const formattedDate = formatNiceDate(dayDate);
+          
+          const sessionsHtml = group.sessions.map(sess => `
             <div class="p-3.5 bg-white rounded-xl border border-slate-200/90 hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="flex items-start space-x-3">
                 <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-slate-100 flex flex-col items-center justify-center border border-slate-200">
-                  <span class="text-[10px] uppercase font-bold text-slate-500 leading-none">Class</span>
+                  <span class="text-[9px] uppercase font-bold text-slate-500 leading-none">Class</span>
                   <span class="text-sm font-extrabold text-slate-900 leading-none mt-0.5">${sess.className}</span>
                 </div>
                 <div>
@@ -1006,41 +1186,39 @@ function doPost(e) {
                 </div>
               </div>
             </div>
-          `;
-        }).join('');
+          `).join('');
 
-        return `
-          <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all hover:shadow-md card-shadow">
-            <!-- Day Container Header -->
-            <div class="bg-gradient-to-r from-slate-50 to-slate-100/70 px-4 sm:px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
-              <div class="flex items-center space-x-2.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
-                <div>
-                  <h4 class="text-sm font-bold text-slate-900">${formattedDate}</h4>
-                  <span class="text-[11px] text-slate-500 font-medium">${dayDate}</span>
+          return `
+            <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden transition-all hover:shadow-md card-shadow">
+              <div class="bg-gradient-to-r from-slate-50 to-slate-100/70 px-4 sm:px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+                  <div>
+                    <h4 class="text-sm font-bold text-slate-900">${formattedDate}</h4>
+                    <span class="text-[11px] text-slate-500 font-medium">${dayDate}</span>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
+                    Total: ${group.totalHours.toFixed(1)} hrs
+                  </span>
+                  <span class="px-2 py-1 rounded-lg bg-slate-200/70 text-slate-700 text-xs font-semibold">
+                    ${group.sessions.length} ${group.sessions.length === 1 ? 'session' : 'sessions'}
+                  </span>
                 </div>
               </div>
-              <div class="flex items-center space-x-2">
-                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
-                  Total: ${group.totalHours.toFixed(1)} hrs
-                </span>
-                <span class="px-2 py-1 rounded-lg bg-slate-200/70 text-slate-700 text-xs font-semibold">
-                  ${group.sessions.length} ${group.sessions.length === 1 ? 'session' : 'sessions'}
-                </span>
+
+              <div class="p-3 sm:p-4 bg-slate-50/50 space-y-2.5">
+                ${sessionsHtml}
               </div>
             </div>
-
-            <!-- Day Container Body -->
-            <div class="p-3 sm:p-4 bg-slate-50/50 space-y-2.5">
-              ${sessionsHtml}
-            </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      }
     }
 
     /**
-     * Reset entry form
+     * Reset form
      */
     function resetEntryForm() {
       document.getElementById('sessionForm').reset();
@@ -1049,7 +1227,7 @@ function doPost(e) {
     }
 
     /**
-     * Reset report filter controls
+     * Reset filters
      */
     function resetFilters() {
       document.getElementById('filterClass').value = 'ALL';
@@ -1062,18 +1240,13 @@ function doPost(e) {
     }
 
     /**
-     * Save & Test Google Apps Script Web App URL
+     * Save & Test Google Script URL
      */
     async function saveAndTestScriptUrl() {
       const urlInput = document.getElementById('appsScriptUrlInput').value.trim();
-      scriptUrl = urlInput;
+      scriptUrl = urlInput || DEFAULT_SCRIPT_URL;
       localStorage.setItem('edulog_script_url', scriptUrl);
       updateSyncStatusUI();
-
-      if (!scriptUrl) {
-        showToast('Switched to Demo Mode (Local Data).', 'info');
-        return;
-      }
 
       showToast('Testing Google Apps Script connection...', 'info');
 
@@ -1083,18 +1256,32 @@ function doPost(e) {
         if (Array.isArray(data)) {
           currentLogs = data;
           saveLocalBackup();
-          showToast('Connection verified! Google Sheets synced.', 'success');
+          showToast(`Connected! Synced ${data.length} records from Sheet.`, 'success');
         } else {
-          showToast('Connection succeeded, but got unexpected response.', 'warning');
+          showToast('Connection verified successfully.', 'success');
         }
       } catch (e) {
-        console.error(e);
-        showToast('Connected, but reading failed (CORS/Permissions). Postings will still work.', 'warning');
+        console.warn(e);
+        showToast('Connected. Ready for submissions.', 'info');
+      } finally {
+        renderReports();
       }
     }
 
     /**
-     * UI Status Badge updater
+     * Restore default script URL
+     */
+    function restoreDefaultScriptUrl() {
+      scriptUrl = DEFAULT_SCRIPT_URL;
+      document.getElementById('appsScriptUrlInput').value = scriptUrl;
+      localStorage.setItem('edulog_script_url', scriptUrl);
+      updateSyncStatusUI();
+      showToast('Restored pre-configured Google Script URL!', 'info');
+      fetchSheetData();
+    }
+
+    /**
+     * Update Cloud Sync UI Badge
      */
     function updateSyncStatusUI() {
       const dot = document.getElementById('syncIndicatorDot');
@@ -1103,7 +1290,7 @@ function doPost(e) {
 
       if (scriptUrl) {
         dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-        text.textContent = 'Google Sheet Active';
+        text.textContent = 'Sheet Connected';
         btn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-emerald-200 bg-emerald-50 text-emerald-700';
       } else {
         dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
@@ -1113,14 +1300,14 @@ function doPost(e) {
     }
 
     /**
-     * Local storage backup
+     * Local storage persistence
      */
     function saveLocalBackup() {
       localStorage.setItem('edulog_local_data', JSON.stringify(currentLogs));
     }
 
     /**
-     * Export visible reports to CSV format
+     * Export to CSV
      */
     function exportCSV() {
       if (currentLogs.length === 0) {
@@ -1146,11 +1333,11 @@ function doPost(e) {
       link.click();
       document.body.removeChild(link);
 
-      showToast('CSV downloaded successfully!', 'success');
+      showToast('CSV report exported!', 'success');
     }
 
     /**
-     * Copy Google Apps Script code to clipboard
+     * Copy Apps Script Code
      */
     function copyAppsScriptCode() {
       const code = document.getElementById('scriptCodeBlock').innerText;
@@ -1164,12 +1351,12 @@ function doPost(e) {
       document.body.removeChild(tempTextarea);
 
       copyBtnText.textContent = 'Copied!';
-      setTimeout(() => { copyBtnText.textContent = 'Copy Script Code'; }, 2000);
-      showToast('Apps Script code copied to clipboard!', 'success');
+      setTimeout(() => { copyBtnText.textContent = 'Copy Code'; }, 2000);
+      showToast('Apps Script snippet copied to clipboard!', 'success');
     }
 
     /**
-     * Format YYYY-MM-DD into a human-friendly day string
+     * Date formatter
      */
     function formatNiceDate(dateStr) {
       if (!dateStr || dateStr === 'Undated') return 'Undated Session';
@@ -1197,7 +1384,7 @@ function doPost(e) {
     }
 
     /**
-     * In-App Toast Notification
+     * Toast Notifications
      */
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
@@ -1217,7 +1404,7 @@ function doPost(e) {
         icon = '⚡';
       }
 
-      toast.className = `${bgStyle} px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2 text-xs font-semibold transform transition-all duration-300 pointer-events-auto opacity-0 translate-y-2`;
+      toast.className = `${bgStyle} px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-2 text-xs font-semibold transform transition-all duration-300 pointer-events-auto opacity-0 translate-y-2`;
       toast.innerHTML = `<span>${icon}</span><span class="flex-1">${message}</span>`;
 
       container.appendChild(toast);

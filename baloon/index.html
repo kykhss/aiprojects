@@ -2,997 +2,975 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SkyKeys - Balloon Typing Arcade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mouse Mastery Academy - Fun Mouse Skills Practice</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="style.js"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
-    * {
-      box-sizing: border-box;
+    body {
+      font-family: 'Fredoka', 'Inter', sans-serif;
       user-select: none;
       -webkit-user-select: none;
-      margin: 0;
-      padding: 0;
     }
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      overflow: hidden;
-      touch-action: manipulation;
+    .custom-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     }
-    .font-display {
-      font-family: 'Outfit', sans-serif;
+    .balloon-bob {
+      animation: gentleBob 3s ease-in-out infinite alternate;
     }
-
-    /* Ambient Twilight/Dawn Gradient Sky */
-    .arcade-sky {
-      background: linear-gradient(180deg, #090b1c 0%, #151a3a 22%, #2d1d4d 46%, #4a225b 72%, #792e62 88%, #c2576b 100%);
+    @keyframes gentleBob {
+      0% { transform: translateY(0px) rotate(-2deg); }
+      100% { transform: translateY(-16px) rotate(3deg); }
     }
-
-    /* Ambient Mist & Clouds */
-    .mist-layer {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% 100%, rgba(244, 114, 182, 0.18) 0%, rgba(99, 102, 241, 0.08) 50%, transparent 80%);
-      pointer-events: none;
+    .shake-anim {
+      animation: shake 0.45s cubic-bezier(.36,.07,.19,.97) both;
     }
-
-    /* Cloud Silhouettes */
-    .cloud-svg {
-      position: absolute;
-      fill: rgba(255, 255, 255, 0.08);
-      filter: blur(2px);
-      pointer-events: none;
-      animation: drift linear infinite;
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-3px, 0, 0); }
+      20%, 80% { transform: translate3d(5px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+      40%, 60% { transform: translate3d(6px, 0, 0); }
     }
-    @keyframes drift {
-      from { transform: translateX(-350px); }
-      to { transform: translateX(105vw); }
+    .pop-anim {
+      animation: popBurst 0.35s ease-out forwards;
     }
-
-    /* Glassmorphism Classes */
-    .glass-panel {
-      background: rgba(18, 22, 46, 0.65);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.37);
+    @keyframes popBurst {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.35); opacity: 0.8; }
+      100% { transform: scale(0); opacity: 0; }
     }
-    .glass-pill {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(12px);
+    /* Custom Scrollbar for scroll track */
+    ::-webkit-scrollbar {
+      width: 12px;
     }
-
-    .balloon-container {
-      position: absolute;
-      transform: translate(-50%, 0);
-      cursor: pointer;
-      will-change: transform;
-      filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.35));
-      transition: filter 0.15s ease;
+    ::-webkit-scrollbar-track {
+      background: #e2e8f0;
+      border-radius: 8px;
     }
-    .balloon-container:hover {
-      filter: drop-shadow(0 18px 28px rgba(255, 255, 255, 0.35));
-    }
-
-    .balloon-sway {
-      animation: swayAir 3s ease-in-out infinite alternate;
-      transform-origin: bottom center;
-    }
-    @keyframes swayAir {
-      0% { transform: rotate(-5deg); }
-      100% { transform: rotate(5deg); }
-    }
-
-    .balloon-ribbon {
-      animation: ribbonWave 2.4s ease-in-out infinite alternate;
-      transform-origin: top center;
-    }
-    @keyframes ribbonWave {
-      0% { transform: rotate(-8deg) scaleX(0.9); }
-      100% { transform: rotate(8deg) scaleX(1.1); }
-    }
-
-    .key-cap {
-      position: relative;
-      background: linear-gradient(180deg, #1e2640 0%, #111628 100%);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 4px 0 #080b15, 0 6px 12px rgba(0, 0, 0, 0.4);
-      transition: all 0.07s cubic-bezier(0.2, 0, 0, 1);
-    }
-    .key-cap:active, .key-cap.is-pressed {
-      transform: translateY(3px);
-      box-shadow: 0 1px 0 #080b15, 0 2px 4px rgba(0, 0, 0, 0.3);
-      filter: brightness(1.35);
-    }
-
-    /* Active Glowing Target Keys */
-    .key-target {
-      border: 1px solid rgba(250, 204, 21, 0.9) !important;
-      box-shadow: 0 0 16px rgba(250, 204, 21, 0.5), 0 4px 0 #080b15 !important;
-      background: linear-gradient(180deg, #2a2c47 0%, #1f1b3c 100%) !important;
-      animation: targetPulse 1.4s ease-in-out infinite alternate;
-    }
-    @keyframes targetPulse {
-      0% { box-shadow: 0 0 10px rgba(250, 204, 21, 0.4), 0 4px 0 #080b15; }
-      100% { box-shadow: 0 0 22px rgba(250, 204, 21, 0.85), 0 4px 0 #080b15; }
-    }
-
-    /* Tactile Home Row Bumps (F and J) */
-    .home-bump::after {
-      content: '';
-      position: absolute;
-      bottom: 5px;
-      width: 8px;
-      height: 2px;
-      background: rgba(255, 255, 255, 0.4);
-      border-radius: 2px;
-    }
-
-    /* Juice screen shakes */
-    .screen-kick {
-      animation: kick 0.18s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-    }
-    @keyframes kick {
-      10%, 90% { transform: translate3d(-1px, 1px, 0); }
-      20%, 80% { transform: translate3d(2px, -1px, 0); }
-      30%, 50%, 70% { transform: translate3d(-2px, 2px, 0); }
-      40%, 60% { transform: translate3d(2px, -2px, 0); }
+    ::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 8px;
     }
   </style>
 </head>
+<body class="bg-gradient-to-br from-indigo-100 via-sky-100 to-amber-50 min-h-screen text-slate-800 flex flex-col items-center justify-between p-3 sm:p-6 overflow-x-hidden">
 
-<body class="arcade-sky h-screen w-screen relative overflow-hidden flex flex-col justify-between text-white">
-
-  <div class="mist-layer"></div>
-
-  <!-- Animated SVG Clouds in Background -->
-  <svg class="cloud-svg" style="width: 280px; height: 90px; top: 10%; animation-duration: 65s; animation-delay: -10s;" viewBox="0 0 100 35">
-    <path d="M10,25 Q15,10 30,15 Q40,5 60,10 Q75,2 85,15 Q95,20 90,30 Q60,35 10,25 Z" />
-  </svg>
-  <svg class="cloud-svg" style="width: 380px; height: 120px; top: 32%; animation-duration: 90s; animation-delay: -45s;" viewBox="0 0 100 35">
-    <path d="M10,25 Q15,10 30,15 Q40,5 60,10 Q75,2 85,15 Q95,20 90,30 Q60,35 10,25 Z" />
-  </svg>
-  <svg class="cloud-svg" style="width: 320px; height: 100px; top: 58%; animation-duration: 75s; animation-delay: -25s;" viewBox="0 0 100 35">
-    <path d="M10,25 Q15,10 30,15 Q40,5 60,10 Q75,2 85,15 Q95,20 90,30 Q60,35 10,25 Z" />
-  </svg>
-
-  <!-- Canvas for particle bursts & shockwaves -->
-  <canvas id="fx-canvas" class="absolute inset-0 pointer-events-none z-20"></canvas>
-
-  <header class="relative z-30 w-full px-4 sm:px-8 pt-4 pb-2">
-    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
-      
-      <!-- Brand & Title -->
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-fuchsia-600 via-pink-500 to-amber-400 p-[1.5px] shadow-lg shadow-pink-500/30 flex items-center justify-center">
-          <div class="w-full h-full bg-[#111428] rounded-[14px] flex items-center justify-center text-2xl">
-            🎈
-          </div>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="font-display font-black text-xl sm:text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-300 to-indigo-200">
-              SKYKEYS
-            </h1>
-            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/40 text-pink-300">
-              Arcade
-            </span>
-          </div>
-          <p class="text-xs font-semibold text-pink-200/60 hidden sm:block">Pop floating letter balloons before they escape!</p>
-        </div>
+  <!-- Top Header & Global Status Bar -->
+  <header class="w-full max-w-5xl bg-white/90 backdrop-blur-md rounded-3xl p-4 sm:p-5 shadow-lg border-2 border-indigo-200 mb-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center space-x-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl shadow-md">
+        <i class="fa-solid fa-computer-mouse"></i>
       </div>
-
-      <!-- Stats Pill Counter -->
-      <div class="flex items-center gap-2 sm:gap-4 glass-panel px-4 py-2 rounded-2xl border border-white/10 shadow-xl">
-        
-        <!-- Target Goal -->
-        <div class="flex flex-col items-center min-w-[58px]">
-          <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400">Target</span>
-          <div class="flex items-baseline gap-0.5">
-            <span id="hud-popped" class="font-display font-black text-xl text-amber-400">0</span>
-            <span class="text-xs font-bold text-slate-400">/15</span>
-          </div>
-        </div>
-
-        <div class="h-7 w-px bg-white/10"></div>
-
-        <!-- Combo Streak -->
-        <div class="flex flex-col items-center min-w-[55px]">
-          <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400">Combo</span>
-          <span id="hud-combo" class="font-display font-black text-xl text-pink-400">0x</span>
-        </div>
-
-        <div class="h-7 w-px bg-white/10"></div>
-
-        <!-- Accuracy -->
-        <div class="flex flex-col items-center min-w-[55px]">
-          <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400">Accuracy</span>
-          <span id="hud-accuracy" class="font-display font-black text-xl text-emerald-400">100%</span>
-        </div>
-
-        <!-- Controls (Sound, Difficulty, Keyboard toggle) -->
-        <div class="flex items-center gap-1.5 ml-1 sm:ml-2">
-          <button id="sound-btn" class="glass-pill p-2 sm:p-2.5 rounded-xl text-slate-200 hover:text-white hover:bg-white/15 active:scale-95 transition" title="Mute/Unmute Audio">
-            🔊
-          </button>
-          <button id="diff-btn" class="glass-pill px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-300 hover:bg-white/15 active:scale-95 transition" title="Adjust Speed">
-            Normal
-          </button>
-          <button id="kbd-toggle-btn" class="glass-pill p-2 sm:p-2.5 rounded-xl text-slate-200 hover:text-white hover:bg-white/15 active:scale-95 transition" title="Toggle Virtual Keyboard">
-            ⌨️
-          </button>
-        </div>
-
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-indigo-900 leading-tight">Mouse Mastery Academy</h1>
+        <p id="level-subtitle" class="text-xs sm:text-sm font-medium text-slate-500">Train Left-Click, Right-Click, Scroll & Drag-Drop!</p>
       </div>
     </div>
 
-    <!-- Target Progress Bar -->
-    <div class="max-w-6xl mx-auto mt-2.5">
-      <div class="h-2 w-full bg-slate-900/60 rounded-full overflow-hidden p-0.5 border border-white/10 backdrop-blur-md">
-        <div id="progress-gauge" class="h-full bg-gradient-to-r from-amber-400 via-pink-500 to-indigo-500 rounded-full w-0 transition-all duration-300 shadow-[0_0_12px_rgba(236,72,153,0.7)]"></div>
+    <!-- Live Level & Chances Indicator -->
+    <div class="flex items-center gap-3 sm:gap-6 flex-wrap">
+      <!-- Stage Badge -->
+      <div class="bg-indigo-50 border border-indigo-200 px-4 py-1.5 rounded-2xl flex items-center gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-indigo-500">Stage</span>
+        <span id="stage-badge" class="font-bold text-indigo-700 text-base">1 / 3</span>
       </div>
+
+      <!-- Chance Counters -->
+      <div class="bg-amber-50 border border-amber-200 px-4 py-1.5 rounded-2xl flex items-center gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-amber-600">Trials Done</span>
+        <span id="trials-badge" class="font-bold text-amber-700 text-base">0 / 10</span>
+      </div>
+
+      <!-- Live Score -->
+      <div class="bg-emerald-50 border border-emerald-200 px-4 py-1.5 rounded-2xl flex items-center gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600">Points</span>
+        <span id="score-badge" class="font-bold text-emerald-700 text-base">0</span>
+      </div>
+
+      <!-- Sound Toggle -->
+      <button id="sound-btn" onclick="toggleSound()" class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95 shadow-sm" title="Toggle Sound">
+        <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+      </button>
     </div>
   </header>
 
-  <main id="game-stage" class="relative z-10 flex-1 w-full overflow-hidden">
-    
-    <!-- Tutorial Floating Helper -->
-    <div id="start-banner" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4 transition-opacity duration-700">
-      <div class="glass-panel px-6 py-4 rounded-3xl border border-white/20 shadow-2xl max-w-sm">
-        <div class="text-4xl animate-bounce mb-1">🎈</div>
-        <h2 class="font-display font-extrabold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-300 to-white">
-          Ready to Pop?
-        </h2>
-        <p class="text-slate-300 text-xs sm:text-sm mt-1 font-medium">
-          Type the letter on each balloon or tap it before it reaches the top of the sky!
+  <!-- Level Navigation Tabs -->
+  <div class="w-full max-w-5xl flex items-center justify-center gap-2 sm:gap-4 mb-4">
+    <div id="step-indicator-1" class="flex-1 text-center py-2 px-3 rounded-2xl font-semibold text-xs sm:text-sm transition-all duration-300 bg-indigo-600 text-white shadow-md">
+      1. Right-Click Pop
+    </div>
+    <div id="step-indicator-2" class="flex-1 text-center py-2 px-3 rounded-2xl font-semibold text-xs sm:text-sm transition-all duration-300 bg-white/80 text-slate-500 border border-slate-200">
+      2. Scroll & Left-Click
+    </div>
+    <div id="step-indicator-3" class="flex-1 text-center py-2 px-3 rounded-2xl font-semibold text-xs sm:text-sm transition-all duration-300 bg-white/80 text-slate-500 border border-slate-200">
+      3. Drag & Drop Match
+    </div>
+  </div>
+
+  <!-- Interactive Instruction Banner -->
+  <div class="w-full max-w-5xl mb-3">
+    <div id="instruction-box" class="bg-amber-100 border-l-4 border-amber-500 text-amber-900 p-3 sm:p-4 rounded-2xl flex items-center justify-between shadow-sm transition-all duration-200">
+      <div class="flex items-center gap-3">
+        <div class="text-xl sm:text-2xl text-amber-600 animate-pulse">
+          <i id="instruction-icon" class="fa-regular fa-hand-pointer"></i>
+        </div>
+        <p id="instruction-text" class="text-sm sm:text-base font-semibold">
+          Level 1: Balloons are floating! <span class="text-red-600 underline font-extrabold">RIGHT-CLICK</span> with your mouse to pop each balloon!
         </p>
       </div>
+      <!-- Visual Mouse Hint Diagram -->
+      <div class="hidden sm:flex items-center gap-2 text-xs bg-white/80 px-3 py-1.5 rounded-xl border border-amber-300 shadow-inner">
+        <div class="relative w-6 h-8 border-2 border-slate-700 rounded-lg flex flex-col items-center">
+          <div class="w-full h-3 border-b-2 border-slate-700 flex">
+            <div id="mouse-hint-left" class="w-1/2 border-r border-slate-700 h-full"></div>
+            <div id="mouse-hint-right" class="w-1/2 h-full bg-red-400 animate-pulse"></div>
+          </div>
+          <div class="w-1 h-2 bg-slate-400 rounded-full mt-1"></div>
+        </div>
+        <span id="mouse-action-label" class="font-bold text-slate-700">Right Button</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Game Playing Canvas Area -->
+  <main class="w-full max-w-5xl flex-1 relative bg-white/95 backdrop-blur-sm rounded-3xl border-4 border-indigo-200 shadow-2xl p-4 sm:p-6 overflow-hidden flex flex-col items-center justify-center min-h-[460px]">
+
+    <!-- LEVEL 1: Right-Click Balloon Pop Container -->
+    <div id="level-1-container" class="w-full h-full absolute inset-0 overflow-hidden select-none">
+      <div class="absolute top-4 left-6 text-slate-400 font-semibold text-xs sm:text-sm flex items-center gap-2 pointer-events-none">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+        Right-Click on the balloon before it reaches the top!
+      </div>
+      <!-- Balloons will be dynamically appended here -->
+    </div>
+
+    <!-- LEVEL 2: Left Click + Scroll Wheel Container -->
+    <div id="level-2-container" class="hidden w-full h-full absolute inset-0 flex flex-col md:flex-row items-center justify-between p-4 sm:p-8 select-none">
+      <!-- Left side: Scroll Control Elevation Tower -->
+      <div class="w-full md:w-1/4 h-28 md:h-full bg-slate-50 border-2 border-indigo-200 rounded-2xl p-4 flex flex-col items-center justify-between shadow-inner mb-4 md:mb-0 relative">
+        <div class="text-center">
+          <p class="text-xs uppercase tracking-wider font-bold text-indigo-700">Altitude Meter</p>
+          <p class="text-[11px] text-slate-400">Scroll Wheel Up / Down 🖱️</p>
+        </div>
+
+        <!-- Vertical elevation track -->
+        <div class="w-12 h-3/4 bg-slate-200 rounded-full relative my-1 flex items-center justify-center border border-slate-300 shadow-inner">
+          <!-- Target indicator bar -->
+          <div id="scroll-target-line" class="absolute w-14 h-4 bg-emerald-400/70 border-2 border-emerald-600 rounded-md transition-all duration-300 flex items-center justify-center text-[10px] font-bold text-emerald-900 pointer-events-none shadow" style="top: 50%;">
+            GOAL
+          </div>
+          <!-- User Scroller Needle / Reticle -->
+          <div id="scroll-needle" class="absolute w-14 h-6 bg-indigo-600 rounded-xl shadow-lg border-2 border-white flex items-center justify-center text-white text-xs transition-all duration-75" style="top: 80%;">
+            <i class="fa-solid fa-arrows-up-down text-[10px]"></i>
+          </div>
+        </div>
+
+        <div class="text-center font-bold text-xs text-indigo-900">
+          Height: <span id="altitude-display" class="text-indigo-600 text-sm">20%</span>
+        </div>
+      </div>
+
+      <!-- Right side: Target Sky Arena -->
+      <div id="sky-arena" class="w-full md:w-3/4 h-full relative bg-gradient-to-b from-sky-200 via-sky-100 to-emerald-50 rounded-2xl border-2 border-sky-300 overflow-hidden flex items-center justify-center shadow-inner">
+        <!-- Crosshair Beam -->
+        <div id="horizontal-beam" class="absolute left-0 right-0 h-1 bg-indigo-500/50 pointer-events-none transition-all duration-75 z-10" style="top: 80%;">
+          <div class="absolute -top-3 left-4 bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full shadow font-bold">
+            Aim Level
+          </div>
+        </div>
+
+        <!-- Flying Cloud Accents -->
+        <div class="absolute top-8 left-12 text-white/70 text-4xl pointer-events-none"><i class="fa-solid fa-cloud"></i></div>
+        <div class="absolute top-28 right-16 text-white/70 text-5xl pointer-events-none"><i class="fa-solid fa-cloud"></i></div>
+
+        <!-- Level 2 Interactive Target Balloon -->
+        <div id="level2-target" class="absolute transition-all duration-500 cursor-crosshair flex flex-col items-center">
+          <!-- Balloon graphic rendered here -->
+        </div>
+
+        <!-- Scroll instruction prompt floating on arena -->
+        <div id="level2-status-hint" class="absolute bottom-4 bg-white/90 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 shadow-md border border-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-arrow-up-down text-indigo-500"></i> Scroll your mouse wheel to match the balloon altitude, then <span class="text-emerald-600">LEFT CLICK</span>!
+        </div>
+      </div>
+    </div>
+
+    <!-- LEVEL 3: Drag & Drop Matching Container -->
+    <div id="level-3-container" class="hidden w-full h-full absolute inset-0 flex flex-col justify-between p-4 sm:p-6 select-none">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-bold text-lg text-slate-700">Drag & Drop Matching Yard</h2>
+          <p class="text-xs text-slate-500">Click and HOLD left mouse button, DRAG balloon into matching color basket, then RELEASE!</p>
+        </div>
+        <div id="drag-round-tracker" class="text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl border border-amber-300">
+          Match Item 1 of 10
+        </div>
+      </div>
+
+      <!-- Spawning source zone for current draggable balloon -->
+      <div id="drag-source-zone" class="w-full flex-1 flex flex-col items-center justify-center my-2 border-2 border-dashed border-indigo-200 rounded-2xl bg-indigo-50/40 relative">
+        <p class="text-xs font-semibold text-indigo-400 absolute top-3">DRAG FROM HERE</p>
+        <div id="draggable-item" draggable="true" class="cursor-grab active:cursor-grabbing p-4 transition-transform hover:scale-105 active:scale-95">
+          <!-- Dynamic Balloon Icon with Drag Attributes -->
+        </div>
+      </div>
+
+      <!-- Drop Target Baskets (3 Colored Boxes) -->
+      <div class="w-full grid grid-cols-3 gap-3 sm:gap-6 mt-2">
+        <!-- Basket 1: Red -->
+        <div data-color="red" class="drop-zone bg-red-50 border-3 border-dashed border-red-300 hover:border-red-500 hover:bg-red-100 rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center transition-all duration-200 min-h-[110px] text-center shadow-sm">
+          <div class="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center text-lg mb-1 shadow">
+            <i class="fa-solid fa-basket-shopping"></i>
+          </div>
+          <span class="text-xs sm:text-sm font-bold text-red-700 uppercase tracking-wider">Ruby Red</span>
+          <span class="text-[10px] text-red-500 font-medium">Drop Red Here</span>
+        </div>
+
+        <!-- Basket 2: Blue -->
+        <div data-color="blue" class="drop-zone bg-blue-50 border-3 border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-100 rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center transition-all duration-200 min-h-[110px] text-center shadow-sm">
+          <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-lg mb-1 shadow">
+            <i class="fa-solid fa-basket-shopping"></i>
+          </div>
+          <span class="text-xs sm:text-sm font-bold text-blue-700 uppercase tracking-wider">Ocean Blue</span>
+          <span class="text-[10px] text-blue-500 font-medium">Drop Blue Here</span>
+        </div>
+
+        <!-- Basket 3: Yellow -->
+        <div data-color="yellow" class="drop-zone bg-amber-50 border-3 border-dashed border-amber-300 hover:border-amber-500 hover:bg-amber-100 rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center transition-all duration-200 min-h-[110px] text-center shadow-sm">
+          <div class="w-10 h-10 rounded-full bg-amber-400 text-white flex items-center justify-center text-lg mb-1 shadow">
+            <i class="fa-solid fa-basket-shopping"></i>
+          </div>
+          <span class="text-xs sm:text-sm font-bold text-amber-700 uppercase tracking-wider">Sunny Yellow</span>
+          <span class="text-[10px] text-amber-600 font-medium">Drop Yellow Here</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINAL REPORT / SCORECARD OVERLAY -->
+    <div id="scorecard-modal" class="hidden absolute inset-0 bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center z-50 animate-fade-in text-center">
+      <div class="w-20 h-20 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-4xl shadow-inner mb-3">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+      <h2 class="text-3xl font-extrabold text-indigo-950">Mouse Academy Graduation!</h2>
+      <p id="final-rank-title" class="text-lg font-bold text-indigo-600 mt-1">Mouse Master ⭐⭐⭐</p>
+      
+      <!-- Detailed Score Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-xl my-6">
+        <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 shadow-sm">
+          <p class="text-xs text-indigo-500 font-semibold uppercase">Stage 1: Right Click</p>
+          <p id="score-l1" class="text-2xl font-black text-indigo-900 mt-1">10 / 10</p>
+          <span id="badge-l1" class="text-[11px] font-bold text-emerald-600">Perfect Reflexes!</span>
+        </div>
+        <div class="bg-sky-50 border border-sky-200 rounded-2xl p-4 shadow-sm">
+          <p class="text-xs text-sky-500 font-semibold uppercase">Stage 2: Scroll & Left</p>
+          <p id="score-l2" class="text-2xl font-black text-sky-900 mt-1">10 / 10</p>
+          <span id="badge-l2" class="text-[11px] font-bold text-emerald-600">Great Aim!</span>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm">
+          <p class="text-xs text-amber-600 font-semibold uppercase">Stage 3: Drag & Drop</p>
+          <p id="score-l3" class="text-2xl font-black text-amber-900 mt-1">10 / 10</p>
+          <span id="badge-l3" class="text-[11px] font-bold text-emerald-600">Super Dexterity!</span>
+        </div>
+      </div>
+
+      <!-- Total Combined Points -->
+      <div class="text-slate-600 text-sm mb-6">
+        Total Score: <span id="final-total-score" class="font-black text-indigo-700 text-xl">300</span> / 300 Points
+      </div>
+
+      <!-- Action Button -->
+      <button onclick="restartGame()" class="px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold rounded-2xl shadow-xl transition transform hover:scale-105 active:scale-95 flex items-center gap-3">
+        <i class="fa-solid fa-rotate-right"></i> Play Again & Practice More
+      </button>
+    </div>
+
+    <!-- Error Floating Tooltip Toast (Reusable) -->
+    <div id="error-toast" class="hidden absolute z-40 bg-red-600 text-white font-bold px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-2 pointer-events-none transition-all duration-200 shake-anim text-xs sm:text-sm">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span id="toast-message">Oops! Incorrect action!</span>
+    </div>
+
+    <!-- Success Floating Banner -->
+    <div id="level-complete-modal" class="hidden absolute z-40 bg-white/95 border-2 border-emerald-400 p-6 rounded-3xl shadow-2xl flex flex-col items-center justify-center gap-3 max-w-sm text-center">
+      <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <h3 id="stage-clear-title" class="text-xl font-black text-slate-800">Stage Cleared!</h3>
+      <p id="stage-clear-desc" class="text-xs text-slate-500">Awesome mouse handling. Next challenge is ready!</p>
+      <button id="next-stage-btn" onclick="advanceStage()" class="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition">
+        Continue to Next Stage &rarr;
+      </button>
     </div>
 
   </main>
 
-  <footer id="keyboard-container" class="relative z-30 w-full px-2 sm:px-6 pb-3 pt-1 transition-all duration-300">
-    <div class="max-w-3xl mx-auto glass-panel p-2 sm:p-3 rounded-2xl sm:rounded-3xl border border-white/15 shadow-2xl">
-      <div class="flex items-center justify-between text-[11px] text-slate-300 font-semibold px-2 mb-1.5">
-        <span class="flex items-center gap-1.5">
-          <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-          Illuminated keys represent balloons in flight
-        </span>
-        <span class="text-pink-300/80 hidden sm:inline">Tactile Home-Row Keys: F & J</span>
-      </div>
-
-      <!-- Key Rows -->
-      <div class="flex flex-col gap-1.5 items-center w-full">
-        <div id="row-1" class="flex gap-1 sm:gap-1.5 justify-center w-full"></div>
-        <div id="row-2" class="flex gap-1 sm:gap-1.5 justify-center w-full"></div>
-        <div id="row-3" class="flex gap-1 sm:gap-1.5 justify-center w-full"></div>
-      </div>
+  <!-- Bottom Navigation & Tip Footer -->
+  <footer class="w-full max-w-5xl mt-4 flex flex-col sm:flex-row items-center justify-between text-slate-500 text-xs gap-2 px-2">
+    <div class="flex items-center gap-4">
+      <span><i class="fa-solid fa-shield-halved text-indigo-500 mr-1"></i> Context menu disabled for smooth training</span>
+      <span>•</span>
+      <span>10 Chances per skill set</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+      Interactive Web Audio Synthesizer Active
     </div>
   </footer>
 
-  <div id="victory-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xl opacity-0 pointer-events-none transition-all duration-500">
-    <div id="victory-card" class="glass-panel p-6 sm:p-8 rounded-3xl border-2 border-amber-400/40 max-w-md w-11/12 shadow-[0_0_60px_rgba(245,158,11,0.25)] text-center transform scale-90 transition-all duration-500 relative overflow-hidden">
-      
-      <!-- Subtle ambient radial lights -->
-      <div class="absolute -top-16 -right-16 w-36 h-36 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-16 -left-16 w-36 h-36 bg-pink-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
-      <!-- Trophy badge -->
-      <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shadow-xl shadow-amber-500/40 mb-3 animate-bounce">
-        <div class="w-full h-full bg-[#12162e] rounded-[22px] flex items-center justify-center text-4xl">
-          🏆
-        </div>
-      </div>
-
-      <h2 class="font-display font-black text-3xl sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-200 to-indigo-100">
-        MISSION ACCOMPLISHED!
-      </h2>
-      <p class="text-xs sm:text-sm text-pink-200/80 font-bold mt-1 mb-5">
-        You popped all 15 balloons with lightning speed!
-      </p>
-
-      <!-- Arcade Stats Grid -->
-      <div class="grid grid-cols-2 gap-2.5 mb-6 text-left">
-        
-        <div class="glass-pill p-3 rounded-2xl border border-white/10">
-          <span class="text-[10px] uppercase font-extrabold text-slate-400">Total Popped</span>
-          <div class="font-display font-black text-2xl text-amber-300">15 / 15</div>
-        </div>
-
-        <div class="glass-pill p-3 rounded-2xl border border-white/10">
-          <span class="text-[10px] uppercase font-extrabold text-slate-400">Accuracy</span>
-          <div id="modal-accuracy" class="font-display font-black text-2xl text-emerald-400">100%</div>
-        </div>
-
-        <div class="glass-pill p-3 rounded-2xl border border-white/10">
-          <span class="text-[10px] uppercase font-extrabold text-slate-400">Max Combo</span>
-          <div id="modal-combo" class="font-display font-black text-2xl text-pink-400">15x 🔥</div>
-        </div>
-
-        <div class="glass-pill p-3 rounded-2xl border border-white/10">
-          <span class="text-[10px] uppercase font-extrabold text-slate-400">Speed (CPM)</span>
-          <div id="modal-cpm" class="font-display font-black text-2xl text-cyan-400">84</div>
-        </div>
-
-      </div>
-
-      <!-- Play Again CTA -->
-      <button id="restart-btn" class="w-full py-4 rounded-2xl font-display font-black text-lg uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-400 via-pink-400 to-cyan-400 hover:brightness-110 active:scale-98 transition shadow-[0_0_24px_rgba(244,114,182,0.4)] cursor-pointer">
-        Play Next Wave 🚀
-      </button>
-
-    </div>
-  </div>
-
+  <!-- JAVASCRIPT LOGIC -->
   <script>
-    class RetroSoundEngine {
-      constructor() {
-        this.ctx = null;
-        this.isMuted = false;
+    /* ==========================================================================
+       1. WEB AUDIO SYNTHESIZER (NO EXTERNAL AUDIO FILES NEEDED)
+       ========================================================================== */
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
       }
-
-      init() {
-        if (!this.ctx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          this.ctx = new AudioContext();
-        }
-        if (this.ctx.state === 'suspended') {
-          this.ctx.resume();
-        }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
       }
+    }
 
-      playPop(combo = 1) {
-        if (this.isMuted) return;
-        this.init();
-        const now = this.ctx.currentTime;
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('sound-icon');
+      if (soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high';
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-red-500';
+      }
+    }
 
-        // Pitch escalates slightly with higher streak combos
-        const basePitch = Math.min(650, 360 + (combo * 24));
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-
+    // Balloon Pop Sound
+    function playPopSound() {
+      if (!soundEnabled) return;
+      initAudio();
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(basePitch, now);
-        osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
-
-        gain.gain.setValueAtTime(0.45, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-
+        osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.13);
+      } catch (e) { console.warn(e); }
+    }
 
-        osc.start(now);
-        osc.stop(now + 0.09);
-
-        // White noise crisp pop transient
-        const bufferSize = this.ctx.sampleRate * 0.025;
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const output = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          output[i] = Math.random() * 2 - 1;
-        }
-
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
-        const noiseGain = this.ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.3, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.025);
-
-        noise.connect(noiseGain);
-        noiseGain.connect(this.ctx.destination);
-        noise.start(now);
-        noise.stop(now + 0.03);
-      }
-
-      playMiss() {
-        if (this.isMuted) return;
-        this.init();
-        const now = this.ctx.currentTime;
-
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-
+    // Error Buzz Sound
+    function playErrorSound() {
+      if (!soundEnabled) return;
+      initAudio();
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(140, now);
-        osc.frequency.exponentialRampToValueAtTime(90, now + 0.16);
-
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
-
+        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(110, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.26);
+      } catch (e) { console.warn(e); }
+    }
 
-        osc.start(now);
-        osc.stop(now + 0.17);
-      }
-
-      playVictory() {
-        if (this.isMuted) return;
-        this.init();
-        const chord = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
-        chord.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          const noteTime = this.ctx.currentTime + (idx * 0.08);
-
+    // Success Chime Sound
+    function playSuccessSound() {
+      if (!soundEnabled) return;
+      initAudio();
+      try {
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, noteTime);
-
-          gain.gain.setValueAtTime(0, noteTime);
-          gain.gain.linearRampToValueAtTime(0.22, noteTime + 0.02);
-          gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.7);
-
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.08));
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime + (idx * 0.08));
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (idx * 0.08) + 0.2);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
-
-          osc.start(noteTime);
-          osc.stop(noteTime + 0.75);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + (idx * 0.08));
+          osc.stop(audioCtx.currentTime + (idx * 0.08) + 0.21);
         });
-      }
+      } catch (e) { console.warn(e); }
     }
 
-    const sound = new RetroSoundEngine();
-
-    const BALLOON_STYLES = [
-      {
-        id: 'crimson',
-        gradStart: '#ff4d6d',
-        gradEnd: '#c9184a',
-        glow: 'rgba(255, 77, 109, 0.45)',
-        knot: '#a0123a',
-        string: 'rgba(255, 200, 221, 0.65)'
-      },
-      {
-        id: 'violet',
-        gradStart: '#a855f7',
-        gradEnd: '#6b21a8',
-        glow: 'rgba(168, 85, 247, 0.45)',
-        knot: '#581c87',
-        string: 'rgba(233, 213, 255, 0.65)'
-      },
-      {
-        id: 'cyan',
-        gradStart: '#06b6d4',
-        gradEnd: '#0e7490',
-        glow: 'rgba(6, 182, 212, 0.45)',
-        knot: '#155e75',
-        string: 'rgba(207, 250, 254, 0.65)'
-      },
-      {
-        id: 'amber',
-        gradStart: '#f59e0b',
-        gradEnd: '#b45309',
-        glow: 'rgba(245, 158, 11, 0.45)',
-        knot: '#92400e',
-        string: 'rgba(254, 243, 199, 0.65)'
-      },
-      {
-        id: 'emerald',
-        gradStart: '#10b981',
-        gradEnd: '#047857',
-        glow: 'rgba(16, 185, 129, 0.45)',
-        knot: '#065f46',
-        string: 'rgba(209, 250, 229, 0.65)'
-      },
-      {
-        id: 'pink',
-        gradStart: '#ec4899',
-        gradEnd: '#9d174d',
-        glow: 'rgba(236, 72, 153, 0.45)',
-        knot: '#831843',
-        string: 'rgba(252, 231, 243, 0.65)'
-      }
-    ];
-
-    const KEYBOARD_ROWS = [
-      ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-      ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-      ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
-    ];
-
-    const canvas = document.getElementById('fx-canvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    let shockwaves = [];
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    class Particle {
-      constructor(x, y, color) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 2 + Math.random() * 8;
-        this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed;
-        this.size = 3 + Math.random() * 6;
-        this.alpha = 1;
-        this.decay = 0.02 + Math.random() * 0.03;
-        this.gravity = 0.15;
-        this.rotation = Math.random() * 360;
-        this.vRot = (Math.random() - 0.5) * 15;
-      }
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vy += this.gravity;
-        this.alpha -= this.decay;
-        this.rotation += this.vRot;
-      }
-      draw(c) {
-        c.save();
-        c.translate(this.x, this.y);
-        c.rotate((this.rotation * Math.PI) / 180);
-        c.globalAlpha = Math.max(0, this.alpha);
-        c.fillStyle = this.color;
-        c.fillRect(-this.size / 2, -this.size / 2, this.size, this.size * 1.4);
-        c.restore();
-      }
+    // Drop Thud / Click sound
+    function playDropSound() {
+      if (!soundEnabled) return;
+      initAudio();
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(280, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.09);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+      } catch (e) { console.warn(e); }
     }
 
-    class Shockwave {
-      constructor(x, y, color) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.radius = 8;
-        this.maxRadius = 60 + Math.random() * 20;
-        this.alpha = 0.9;
-        this.growth = 3.5;
-      }
-      update() {
-        this.radius += this.growth;
-        this.alpha -= 0.045;
-      }
-      draw(c) {
-        c.save();
-        c.beginPath();
-        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        c.strokeStyle = this.color;
-        c.lineWidth = 3;
-        c.globalAlpha = Math.max(0, this.alpha);
-        c.stroke();
-        c.restore();
-      }
-    }
+    /* ==========================================================================
+       2. GLOBAL GAME STATE MANAGEMENT
+       ========================================================================== */
+    const TOTAL_CHANCES = 10;
+    let currentStage = 1; // 1, 2, or 3
+    let currentTrial = 0; // 0 to 10 for each level
+    let totalScore = 0;
 
-    function spawnBurst(x, y, color) {
-      for (let i = 0; i < 24; i++) {
-        particles.push(new Particle(x, y, color));
-      }
-      shockwaves.push(new Shockwave(x, y, color));
-    }
-
-    function renderFX() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (let i = shockwaves.length - 1; i >= 0; i--) {
-        const sw = shockwaves[i];
-        sw.update();
-        sw.draw(ctx);
-        if (sw.alpha <= 0) shockwaves.splice(i, 1);
-      }
-
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.update();
-        p.draw(ctx);
-        if (p.alpha <= 0) particles.splice(i, 1);
-      }
-
-      requestAnimationFrame(renderFX);
-    }
-    renderFX();
-
-    const DIFFICULTIES = [
-      { name: 'Relaxed', speed: 1.0, spawnDelay: 2100 },
-      { name: 'Normal', speed: 1.45, spawnDelay: 1700 },
-      { name: 'Arcade', speed: 2.1, spawnDelay: 1250 }
-    ];
-    let diffIndex = 1;
-
-    const state = {
-      targetGoal: 15,
-      poppedCount: 0,
-      totalKeystrokes: 0,
-      correctKeystrokes: 0,
-      currentCombo: 0,
-      maxCombo: 0,
-      startTime: null,
-      balloons: [],
-      spawnTimer: null,
-      animFrame: null,
-      isGameOver: false,
+    // Per-level scoring metrics
+    const scores = {
+      level1: { correct: 0, attempts: 0 },
+      level2: { correct: 0, attempts: 0 },
+      level3: { correct: 0, attempts: 0 }
     };
 
-    const dom = {
-      stage: document.getElementById('game-stage'),
-      popped: document.getElementById('hud-popped'),
-      combo: document.getElementById('hud-combo'),
-      accuracy: document.getElementById('hud-accuracy'),
-      gauge: document.getElementById('progress-gauge'),
-      soundBtn: document.getElementById('sound-btn'),
-      diffBtn: document.getElementById('diff-btn'),
-      kbdToggleBtn: document.getElementById('kbd-toggle-btn'),
-      kbdContainer: document.getElementById('keyboard-container'),
-      startBanner: document.getElementById('start-banner'),
-      victoryModal: document.getElementById('victory-modal'),
-      victoryCard: document.getElementById('victory-card'),
-      modalAccuracy: document.getElementById('modal-accuracy'),
-      modalCombo: document.getElementById('modal-combo'),
-      modalCpm: document.getElementById('modal-cpm'),
-      restartBtn: document.getElementById('restart-btn'),
-    };
+    // Global right-click context menu prevention to allow right-click game actions
+    window.addEventListener('contextmenu', (e) => {
+      e.preventDefault(); // Prevents default context menu universally in the app
+    });
 
-    function buildKeyboard() {
-      KEYBOARD_ROWS.forEach((row, rIdx) => {
-        const rowEl = document.getElementById(`row-${rIdx + 1}`);
-        rowEl.innerHTML = '';
-        row.forEach(letter => {
-          const btn = document.createElement('button');
-          btn.id = `key-${letter}`;
-          const isHomeKey = letter === 'F' || letter === 'J';
-          btn.className = `key-cap w-7 h-10 sm:w-11 sm:h-12 rounded-xl text-white font-display font-extrabold text-sm sm:text-base flex items-center justify-center relative cursor-pointer active:scale-95 ${isHomeKey ? 'home-bump' : ''}`;
-          btn.innerHTML = `<span>${letter}</span>`;
-          
-          btn.addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            sound.init();
-            handleKeystroke(letter);
-          });
+    // Color definitions for balloon assets
+    const balloonColors = [
+      { name: 'red', bg: '#ef4444', border: '#b91c1c', highlight: '#fca5a5' },
+      { name: 'blue', bg: '#3b82f6', border: '#1d4ed8', highlight: '#93c5fd' },
+      { name: 'yellow', bg: '#eab308', border: '#a16207', highlight: '#fde047' },
+      { name: 'emerald', bg: '#10b981', border: '#047857', highlight: '#6ee7b7' },
+      { name: 'purple', bg: '#a855f7', border: '#7e22ce', highlight: '#d8b4fe' },
+      { name: 'pink', bg: '#ec4899', border: '#be185d', highlight: '#f472b6' }
+    ];
 
-          rowEl.appendChild(btn);
-        });
-      });
-    }
-
-    function updateKeyboardHighlights() {
-      const activeLetters = new Set(state.balloons.map(b => b.letter));
-      KEYBOARD_ROWS.flat().forEach(char => {
-        const el = document.getElementById(`key-${char}`);
-        if (!el) return;
-        if (activeLetters.has(char)) {
-          el.classList.add('key-target');
-        } else {
-          el.classList.remove('key-target');
-        }
-      });
-    }
-
-    function animateKeyCap(char, isSuccess) {
-      const el = document.getElementById(`key-${char}`);
-      if (!el) return;
-      el.classList.add('is-pressed');
-      const prevBorder = el.style.borderColor;
-      el.style.borderColor = isSuccess ? '#10b981' : '#f43f5e';
-      setTimeout(() => {
-        el.classList.remove('is-pressed');
-        el.style.borderColor = prevBorder;
-      }, 120);
-    }
-
-    function createBalloonElement(letter, style) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'balloon-container';
-
-      wrapper.innerHTML = `
-        <div class="balloon-sway">
-          <!-- 3D Glossy Vector Balloon -->
-          <svg width="86" height="106" viewBox="0 0 86 106" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <radialGradient id="grad-${style.id}-${letter}" cx="35%" cy="30%" r="65%">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/>
-                <stop offset="25%" stop-color="${style.gradStart}"/>
-                <stop offset="85%" stop-color="${style.gradEnd}"/>
-                <stop offset="100%" stop-color="${style.knot}"/>
-              </radialGradient>
-              <linearGradient id="glare-${style.id}" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
-                <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-
-            <!-- Balloon Main Body with 3D Spherical Radial Fill -->
-            <path d="M43 2C19.25 2 0 20.8 0 44C0 67.2 19.25 86 43 86C66.75 86 86 67.2 86 44C86 20.8 66.75 2 43 2Z" fill="url(#grad-${style.id}-${letter})"/>
-            
-            <!-- Secondary Specular Highlight Curve -->
-            <ellipse cx="28" cy="24" rx="14" ry="8" transform="rotate(-35 28 24)" fill="url(#glare-${style.id})"/>
-            <circle cx="20" cy="38" r="3.5" fill="#ffffff" fill-opacity="0.5"/>
-
-            <!-- Tied Knot -->
-            <path d="M37 84L49 84L46 91L40 91Z" fill="${style.knot}"/>
-
-            <!-- Animated Ribbon -->
-            <g class="balloon-ribbon">
-              <path d="M43 91C43 95 38 98 44 103C48 106 41 109 43 115" stroke="${style.string}" stroke-width="2" stroke-linecap="round" fill="none"/>
-            </g>
-
-            <!-- Letter Display -->
-            <text x="43" y="55" text-anchor="middle" dominant-baseline="middle" 
-                  fill="#ffffff" font-family="'Outfit', sans-serif" font-weight="900" 
-                  font-size="34" style="text-shadow: 0 3px 6px rgba(0,0,0,0.45); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-              ${letter}
-            </text>
-          </svg>
-        </div>
+    // Helper: Generate an SVG Balloon string with custom color
+    function getBalloonSVG(colorObj, width = 85, height = 110) {
+      return `
+        <svg width="${width}" height="${height}" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg" class="filter drop-shadow-md pointer-events-none">
+          <!-- Balloon Body -->
+          <ellipse cx="50" cy="52" rx="42" ry="48" fill="${colorObj.bg}" stroke="${colorObj.border}" stroke-width="2.5"/>
+          <!-- Shiny Highlight -->
+          <ellipse cx="36" cy="34" rx="12" ry="20" transform="rotate(-25 36 34)" fill="${colorObj.highlight}" fill-opacity="0.6"/>
+          <!-- Knot -->
+          <polygon points="46,100 54,100 58,107 42,107" fill="${colorObj.border}"/>
+          <!-- String -->
+          <path d="M50 107 Q42 118 53 125 T48 135" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
       `;
-
-      return wrapper;
     }
 
-    function spawnBalloon() {
-      if (state.isGameOver || state.balloons.length >= 6) return;
+    // Helper: Show error toast near mouse or screen center
+    function showErrorToast(msg, x = null, y = null) {
+      playErrorSound();
+      const toast = document.getElementById('error-toast');
+      const text = document.getElementById('toast-message');
+      text.innerText = msg;
+      
+      if (x !== null && y !== null) {
+        toast.style.left = `${Math.min(window.innerWidth - 260, Math.max(20, x - 100))}px`;
+        toast.style.top = `${Math.max(80, y - 60)}px`;
+      } else {
+        toast.style.left = '50%';
+        toast.style.top = '30%';
+        toast.style.transform = 'translate(-50%, -50%)';
+      }
 
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      const existing = state.balloons.map(b => b.letter);
-      const candidates = letters.split('').filter(ch => !existing.includes(ch));
-      const pool = candidates.length > 0 ? candidates : letters.split('');
-      const letter = pool[Math.floor(Math.random() * pool.length)];
+      toast.classList.remove('hidden');
+      toast.classList.add('shake-anim');
 
-      const style = BALLOON_STYLES[Math.floor(Math.random() * BALLOON_STYLES.length)];
-      const stageW = dom.stage.clientWidth || window.innerWidth;
-      const margin = 60;
-      const x = margin + Math.random() * (stageW - margin * 2);
-      const startY = dom.stage.clientHeight + 30;
+      setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('shake-anim');
+      }, 1800);
+    }
 
-      const element = createBalloonElement(letter, style);
-      element.style.left = `${x}px`;
-      element.style.top = `${startY}px`;
+    function updateHeaderUI() {
+      document.getElementById('stage-badge').innerText = `${currentStage} / 3`;
+      document.getElementById('trials-badge').innerText = `${currentTrial} / ${TOTAL_CHANCES}`;
+      document.getElementById('score-badge').innerText = totalScore;
+    }
 
-      element.addEventListener('pointerdown', (e) => {
+    /* ==========================================================================
+       3. LEVEL 1: RIGHT-CLICK BALLOON POPPING
+       ========================================================================== */
+    let level1Timer = null;
+    let activeBalloonEl = null;
+
+    function startLevel1() {
+      currentStage = 1;
+      currentTrial = 0;
+      updateHeaderUI();
+      setActiveTabUI(1);
+
+      document.getElementById('instruction-text').innerHTML = 
+        `Stage 1: Balloons are floating! <strong class="text-red-600 underline">RIGHT-CLICK</strong> to POP! (Avoid Left-Clicking!)`;
+      document.getElementById('mouse-hint-right').className = 'w-1/2 h-full bg-red-500 animate-pulse';
+      document.getElementById('mouse-hint-left').className = 'w-1/2 border-r border-slate-700 h-full bg-transparent';
+      document.getElementById('mouse-action-label').innerText = 'Right Click';
+
+      document.getElementById('level-1-container').classList.remove('hidden');
+      document.getElementById('level-2-container').classList.add('hidden');
+      document.getElementById('level-3-container').classList.add('hidden');
+
+      spawnLevel1Balloon();
+    }
+
+    function spawnLevel1Balloon() {
+      if (currentTrial >= TOTAL_CHANCES) {
+        completeStage(1);
+        return;
+      }
+
+      const container = document.getElementById('level-1-container');
+      // Clean old balloon
+      if (activeBalloonEl && activeBalloonEl.parentNode) {
+        activeBalloonEl.remove();
+      }
+
+      const color = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+      const balloon = document.createElement('div');
+      balloon.className = 'absolute cursor-pointer balloon-bob transition-all select-none';
+      balloon.innerHTML = getBalloonSVG(color, 90, 118);
+
+      // Random horizontal start within bounds
+      const containerWidth = container.clientWidth || 800;
+      const containerHeight = container.clientHeight || 450;
+      const startX = Math.floor(Math.random() * (containerWidth - 140)) + 40;
+      
+      balloon.style.left = `${startX}px`;
+      balloon.style.bottom = `-120px`;
+
+      container.appendChild(balloon);
+      activeBalloonEl = balloon;
+
+      // Handle interactions:
+      // A) RIGHT CLICK = SUCCESS
+      balloon.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        handleKeystroke(letter);
+        handleL1Success(balloon, e.clientX, e.clientY);
       });
 
-      dom.stage.appendChild(element);
+      // B) LEFT CLICK = ERROR REMINDER
+      balloon.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleL1LeftClickError(balloon, e.clientX, e.clientY);
+      });
 
-      const speedFactor = DIFFICULTIES[diffIndex].speed;
-      const balloonObj = {
-        letter,
-        x,
-        baseX: x,
-        y: startY,
-        color: style.gradStart,
-        speed: (speedFactor + Math.random() * 0.5),
-        wobbleFreq: 0.03 + Math.random() * 0.02,
-        wobbleAmp: 16 + Math.random() * 12,
-        phase: Math.random() * 100,
-        element
+      // Float upwards animation via JS loop
+      let posY = -120;
+      const speed = 1.35 + (currentTrial * 0.12); // Slightly increases with progress
+
+      if (level1Timer) clearInterval(level1Timer);
+      level1Timer = setInterval(() => {
+        posY += speed;
+        balloon.style.bottom = `${posY}px`;
+
+        // If it escapes the top without pop
+        if (posY > containerHeight + 20) {
+          clearInterval(level1Timer);
+          if (balloon.parentNode) balloon.remove();
+          // Missed trial
+          currentTrial++;
+          scores.level1.attempts++;
+          updateHeaderUI();
+          showErrorToast('Balloon flew away! Be ready to Right-Click!');
+          setTimeout(spawnLevel1Balloon, 600);
+        }
+      }, 20);
+    }
+
+    function handleL1LeftClickError(balloon, clientX, clientY) {
+      balloon.classList.add('shake-anim');
+      setTimeout(() => balloon.classList.remove('shake-anim'), 400);
+      showErrorToast("Oops! That's a LEFT CLICK! Please RIGHT-CLICK!", clientX, clientY);
+    }
+
+    function handleL1Success(balloon, clientX, clientY) {
+      if (level1Timer) clearInterval(level1Timer);
+      playPopSound();
+
+      // Confetti burst on pop
+      confetti({
+        particleCount: 25,
+        spread: 60,
+        origin: { x: clientX / window.innerWidth, y: clientY / window.innerHeight }
+      });
+
+      balloon.classList.add('pop-anim');
+      setTimeout(() => {
+        if (balloon.parentNode) balloon.remove();
+      }, 300);
+
+      currentTrial++;
+      scores.level1.correct++;
+      scores.level1.attempts++;
+      totalScore += 10;
+      updateHeaderUI();
+
+      if (currentTrial < TOTAL_CHANCES) {
+        setTimeout(spawnLevel1Balloon, 500);
+      } else {
+        setTimeout(() => completeStage(1), 600);
+      }
+    }
+
+    /* ==========================================================================
+       4. LEVEL 2: SCROLL WHEEL + LEFT CLICK CHALLENGE
+       ========================================================================== */
+    let currentNeedleAltitude = 80; // 0 to 100%
+    let targetBalloonAltitude = 50; // 0 to 100%
+    let currentL2Color = null;
+
+    function startLevel2() {
+      currentStage = 2;
+      currentTrial = 0;
+      updateHeaderUI();
+      setActiveTabUI(2);
+
+      document.getElementById('instruction-text').innerHTML = 
+        `Stage 2: Use your <strong class="text-indigo-600">SCROLL WHEEL</strong> to align the Aim Line, then <strong class="text-emerald-600 underline">LEFT-CLICK</strong> to catch!`;
+      document.getElementById('mouse-hint-right').className = 'w-1/2 h-full bg-transparent';
+      document.getElementById('mouse-hint-left').className = 'w-1/2 border-r border-slate-700 h-full bg-emerald-500 animate-pulse';
+      document.getElementById('mouse-action-label').innerText = 'Scroll & Left Click';
+
+      document.getElementById('level-1-container').classList.add('hidden');
+      document.getElementById('level-2-container').classList.remove('hidden');
+      document.getElementById('level-3-container').classList.add('hidden');
+
+      initLevel2Controls();
+      spawnLevel2Round();
+    }
+
+    function initLevel2Controls() {
+      const arena = document.getElementById('sky-arena');
+
+      // Prevent window scrolling while over arena & adjust altitude needle
+      arena.onwheel = (e) => {
+        e.preventDefault();
+        // deltaY > 0 is scroll down; deltaY < 0 is scroll up
+        const step = 6;
+        if (e.deltaY < 0) {
+          // Scroll up -> higher altitude (smaller top %)
+          currentNeedleAltitude = Math.max(10, currentNeedleAltitude - step);
+        } else {
+          // Scroll down -> lower altitude (larger top %)
+          currentNeedleAltitude = Math.min(85, currentNeedleAltitude + step);
+        }
+        applyNeedlePosition();
+      };
+    }
+
+    function applyNeedlePosition() {
+      const needle = document.getElementById('scroll-needle');
+      const beam = document.getElementById('horizontal-beam');
+      const altDisplay = document.getElementById('altitude-display');
+
+      needle.style.top = `${currentNeedleAltitude}%`;
+      beam.style.top = `${currentNeedleAltitude}%`;
+
+      // Altitude as human readable percentage: (100 - currentNeedleAltitude)
+      const visualAlt = Math.round(100 - currentNeedleAltitude);
+      altDisplay.innerText = `${visualAlt}%`;
+    }
+
+    function spawnLevel2Round() {
+      if (currentTrial >= TOTAL_CHANCES) {
+        completeStage(2);
+        return;
+      }
+
+      currentL2Color = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+      // Random target altitude from 15% to 80%
+      targetBalloonAltitude = Math.floor(Math.random() * 65) + 15;
+
+      const targetBox = document.getElementById('level2-target');
+      const targetGoalLine = document.getElementById('scroll-target-line');
+
+      // Place target balloon in arena
+      targetBox.innerHTML = getBalloonSVG(currentL2Color, 80, 105);
+      targetBox.style.top = `${targetBalloonAltitude}%`;
+      // Center horizontally with gentle random offset
+      targetBox.style.left = `${Math.floor(Math.random() * 40) + 30}%`;
+
+      // Update goal line on meter
+      targetGoalLine.style.top = `${targetBalloonAltitude}%`;
+
+      // Bind events for Left Click and accidental Right Click
+      targetBox.oncontextmenu = (e) => {
+        e.preventDefault();
+        showErrorToast('Level 2 uses LEFT CLICK! Do not right click!', e.clientX, e.clientY);
       };
 
-      state.balloons.push(balloonObj);
-      updateKeyboardHighlights();
+      targetBox.onclick = (e) => {
+        e.preventDefault();
+        handleLevel2LeftClick(e);
+      };
+    }
 
-      if (dom.startBanner) {
-        dom.startBanner.style.opacity = '0';
+    function handleLevel2LeftClick(e) {
+      // Check if user aligned altitude with target altitude within tolerance (+/- 14%)
+      const diff = Math.abs(currentNeedleAltitude - targetBalloonAltitude);
+
+      if (diff <= 14) {
+        // Aligned and left-clicked!
+        playPopSound();
+        confetti({
+          particleCount: 30,
+          spread: 70,
+          origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight }
+        });
+
+        currentTrial++;
+        scores.level2.correct++;
+        scores.level2.attempts++;
+        totalScore += 10;
+        updateHeaderUI();
+
+        const targetBox = document.getElementById('level2-target');
+        targetBox.classList.add('pop-anim');
+        setTimeout(() => {
+          targetBox.classList.remove('pop-anim');
+          spawnLevel2Round();
+        }, 350);
+
+      } else {
+        // Misaligned altitude
+        showErrorToast(`Aim line is not aligned! Scroll wheel to match height!`, e.clientX, e.clientY);
       }
     }
 
-    function gameLoop() {
-      if (state.isGameOver) return;
+    /* ==========================================================================
+       5. LEVEL 3: DRAG & DROP COLOR MATCHING
+       ========================================================================== */
+    const dragColors = ['red', 'blue', 'yellow'];
+    let currentDragColor = 'red';
 
-      for (let i = state.balloons.length - 1; i >= 0; i--) {
-        const b = state.balloons[i];
-        b.y -= b.speed;
-        b.phase += b.wobbleFreq;
-        b.x = b.baseX + Math.sin(b.phase) * b.wobbleAmp;
+    function startLevel3() {
+      currentStage = 3;
+      currentTrial = 0;
+      updateHeaderUI();
+      setActiveTabUI(3);
 
-        b.element.style.transform = `translate3d(${b.x - b.baseX}px, 0, 0)`;
-        b.element.style.top = `${b.y}px`;
+      document.getElementById('instruction-text').innerHTML = 
+        `Stage 3: <strong class="text-indigo-600">Click & Drag</strong> the balloon into the basket with the matching color!`;
+      document.getElementById('mouse-hint-right').className = 'w-1/2 h-full bg-transparent';
+      document.getElementById('mouse-hint-left').className = 'w-1/2 border-r border-slate-700 h-full bg-amber-500 animate-pulse';
+      document.getElementById('mouse-action-label').innerText = 'Hold & Drag';
 
-        // If escaped beyond top screen
-        if (b.y < -130) {
-          b.element.remove();
-          state.balloons.splice(i, 1);
-          // Combo reset on balloon escape
-          if (state.currentCombo > 0) {
-            state.currentCombo = 0;
-            updateHUD();
-          }
-          updateKeyboardHighlights();
-        }
-      }
+      document.getElementById('level-1-container').classList.add('hidden');
+      document.getElementById('level-2-container').classList.add('hidden');
+      document.getElementById('level-3-container').classList.remove('hidden');
 
-      state.animFrame = requestAnimationFrame(gameLoop);
+      initDragAndDropListeners();
+      spawnDragRound();
     }
 
-    function handleKeystroke(char) {
-      if (state.isGameOver) return;
-
-      if (!state.startTime) {
-        state.startTime = Date.now();
+    function spawnDragRound() {
+      if (currentTrial >= TOTAL_CHANCES) {
+        completeStage(3);
+        return;
       }
 
-      const key = char.toUpperCase();
-      state.totalKeystrokes++;
+      document.getElementById('drag-round-tracker').innerText = `Item ${currentTrial + 1} of ${TOTAL_CHANCES}`;
 
-      // Filter matching balloons in sky
-      const matchingIndices = [];
-      state.balloons.forEach((b, index) => {
-        if (b.letter === key) matchingIndices.push(index);
+      // Pick one of red, blue, or yellow
+      currentDragColor = dragColors[Math.floor(Math.random() * dragColors.length)];
+      const colorObj = balloonColors.find(c => c.name === currentDragColor);
+
+      const dragItem = document.getElementById('draggable-item');
+      dragItem.innerHTML = getBalloonSVG(colorObj, 95, 125);
+      dragItem.setAttribute('data-color', currentDragColor);
+      dragItem.style.opacity = '1';
+    }
+
+    function initDragAndDropListeners() {
+      const dragItem = document.getElementById('draggable-item');
+      const dropZones = document.querySelectorAll('.drop-zone');
+
+      // Drag Start
+      dragItem.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', dragItem.getAttribute('data-color'));
+        dragItem.classList.add('opacity-40');
       });
 
-      if (matchingIndices.length > 0) {
-        // Pop balloon that is closest to escaping (lowest y)
-        matchingIndices.sort((a, b) => state.balloons[a].y - state.balloons[b].y);
-        const targetIndex = matchingIndices[0];
-        const balloon = state.balloons[targetIndex];
+      // Drag End
+      dragItem.addEventListener('dragend', () => {
+        dragItem.classList.remove('opacity-40');
+      });
 
-        // Trigger effects
-        state.currentCombo++;
-        if (state.currentCombo > state.maxCombo) {
-          state.maxCombo = state.currentCombo;
-        }
-        state.correctKeystrokes++;
-        state.poppedCount++;
+      // Also support pointer/mouse touch fallback
+      dragItem.oncontextmenu = (e) => {
+        e.preventDefault();
+        showErrorToast('Use LEFT CLICK and drag the balloon!', e.clientX, e.clientY);
+      };
 
-        sound.playPop(state.currentCombo);
+      // Set up drop zones
+      dropZones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault(); // Necessary to allow drop
+          zone.classList.add('scale-105', 'bg-indigo-100');
+        });
 
-        const rect = balloon.element.getBoundingClientRect();
-        spawnBurst(rect.left + rect.width / 2, rect.top + 45, balloon.color);
+        zone.addEventListener('dragleave', () => {
+          zone.classList.remove('scale-105', 'bg-indigo-100');
+        });
 
-        balloon.element.remove();
-        state.balloons.splice(targetIndex, 1);
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('scale-105', 'bg-indigo-100');
+          const droppedColor = e.dataTransfer.getData('text/plain');
+          const targetColor = zone.getAttribute('data-color');
 
-        animateKeyCap(key, true);
-        updateHUD();
-        updateKeyboardHighlights();
+          if (droppedColor === targetColor) {
+            handleDropSuccess(zone, e.clientX, e.clientY);
+          } else {
+            handleDropMismatch(zone, e.clientX, e.clientY);
+          }
+        });
+      });
+    }
 
-        // Check 15-balloon victory trigger
-        if (state.poppedCount >= state.targetGoal) {
-          triggerVictory();
-        }
+    function handleDropSuccess(zone, clientX, clientY) {
+      playDropSound();
+      playSuccessSound();
+
+      confetti({
+        particleCount: 35,
+        spread: 60,
+        origin: { x: clientX / window.innerWidth, y: clientY / window.innerHeight }
+      });
+
+      currentTrial++;
+      scores.level3.correct++;
+      scores.level3.attempts++;
+      totalScore += 10;
+      updateHeaderUI();
+
+      if (currentTrial < TOTAL_CHANCES) {
+        spawnDragRound();
       } else {
-        // Keystroke miss
-        sound.playMiss();
-        state.currentCombo = 0;
-        animateKeyCap(key, false);
-
-        // Screen Kick Shake juice
-        document.body.classList.add('screen-kick');
-        setTimeout(() => document.body.classList.remove('screen-kick'), 200);
-
-        updateHUD();
+        setTimeout(() => completeStage(3), 500);
       }
     }
 
-    function updateHUD() {
-      dom.popped.textContent = state.poppedCount;
-      dom.combo.textContent = `${state.currentCombo}x`;
-      
-      const accuracy = state.totalKeystrokes === 0 
-        ? 100 
-        : Math.max(0, Math.round((state.correctKeystrokes / state.totalKeystrokes) * 100));
-      dom.accuracy.textContent = `${accuracy}%`;
-
-      const progress = Math.min(100, (state.poppedCount / state.targetGoal) * 100);
-      dom.gauge.style.width = `${progress}%`;
+    function handleDropMismatch(zone, clientX, clientY) {
+      playErrorSound();
+      showErrorToast(`Color mismatch! Match ${currentDragColor.toUpperCase()} with the same basket!`, clientX, clientY);
+      zone.classList.add('shake-anim');
+      setTimeout(() => zone.classList.remove('shake-anim'), 400);
     }
 
-    function triggerVictory() {
-      state.isGameOver = true;
-      clearInterval(state.spawnTimer);
-      cancelAnimationFrame(state.animFrame);
+    /* ==========================================================================
+       6. STAGE TRANSITIONS & FINAL SCORECARD
+       ========================================================================== */
+    function completeStage(stage) {
+      if (stage < 3) {
+        playSuccessSound();
+        const modal = document.getElementById('level-complete-modal');
+        const title = document.getElementById('stage-clear-title');
+        const desc = document.getElementById('stage-clear-desc');
 
-      state.balloons.forEach(b => b.element.remove());
-      state.balloons = [];
-      updateKeyboardHighlights();
+        if (stage === 1) {
+          title.innerText = 'Stage 1 Complete!';
+          desc.innerText = `Great Right-Click mastery! (${scores.level1.correct}/10 pops)`;
+        } else if (stage === 2) {
+          title.innerText = 'Stage 2 Complete!';
+          desc.innerText = `Awesome Scroll Wheel & Left-Click aim! (${scores.level2.correct}/10 hits)`;
+        }
 
-      sound.playVictory();
+        modal.classList.remove('hidden');
+      } else {
+        showFinalReport();
+      }
+    }
 
-      // Confetti burst
+    function advanceStage() {
+      document.getElementById('level-complete-modal').classList.add('hidden');
+      if (currentStage === 1) {
+        startLevel2();
+      } else if (currentStage === 2) {
+        startLevel3();
+      }
+    }
+
+    function showFinalReport() {
       confetti({
         particleCount: 100,
-        spread: 70,
+        spread: 90,
         origin: { y: 0.6 }
       });
-      setTimeout(() => {
-        confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0.05, y: 0.7 } });
-        confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 0.95, y: 0.7 } });
-      }, 250);
+      playSuccessSound();
 
-      // Calculations
-      const elapsedSec = Math.max(1, (Date.now() - state.startTime) / 1000);
-      const cpm = Math.round((state.correctKeystrokes / elapsedSec) * 60);
-      const accuracy = Math.round((state.correctKeystrokes / state.totalKeystrokes) * 100);
+      const modal = document.getElementById('scorecard-modal');
+      modal.classList.remove('hidden');
 
-      dom.modalAccuracy.textContent = `${accuracy}%`;
-      dom.modalCombo.textContent = `${state.maxCombo}x 🔥`;
-      dom.modalCpm.textContent = cpm;
+      document.getElementById('score-l1').innerText = `${scores.level1.correct} / 10`;
+      document.getElementById('score-l2').innerText = `${scores.level2.correct} / 10`;
+      document.getElementById('score-l3').innerText = `${scores.level3.correct} / 10`;
+      document.getElementById('final-total-score').innerText = totalScore;
 
-      // Unhide Modal
-      dom.victoryModal.classList.remove('opacity-0', 'pointer-events-none');
-      dom.victoryCard.classList.remove('scale-90');
-      dom.victoryCard.classList.add('scale-100');
-    }
+      // Evaluation grade
+      const rankTitle = document.getElementById('final-rank-title');
+      const totalCorrect = scores.level1.correct + scores.level2.correct + scores.level3.correct;
 
-    function startNewGame() {
-      if (state.spawnTimer) clearInterval(state.spawnTimer);
-      if (state.animFrame) cancelAnimationFrame(state.animFrame);
-
-      state.balloons.forEach(b => b.element.remove());
-      state.balloons = [];
-
-      state.poppedCount = 0;
-      state.totalKeystrokes = 0;
-      state.correctKeystrokes = 0;
-      state.currentCombo = 0;
-      state.maxCombo = 0;
-      state.startTime = null;
-      state.isGameOver = false;
-
-      dom.victoryModal.classList.add('opacity-0', 'pointer-events-none');
-      dom.victoryCard.classList.remove('scale-100');
-      dom.victoryCard.classList.add('scale-90');
-
-      if (dom.startBanner) dom.startBanner.style.opacity = '1';
-
-      updateHUD();
-      updateKeyboardHighlights();
-
-      // Initial spawns
-      spawnBalloon();
-      setTimeout(spawnBalloon, 700);
-
-      const delay = DIFFICULTIES[diffIndex].spawnDelay;
-      state.spawnTimer = setInterval(() => {
-        if (!state.isGameOver && state.balloons.length < 5) {
-          spawnBalloon();
-        }
-      }, delay);
-
-      gameLoop();
-    }
-
-    // Physical Keyboard Listener
-    window.addEventListener('keydown', (e) => {
-      if (e.key && e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
-        e.preventDefault();
-        sound.init();
-        handleKeystroke(e.key);
+      if (totalCorrect >= 27) {
+        rankTitle.innerHTML = 'Grand Mouse Master ⭐⭐⭐';
+        rankTitle.className = 'text-xl font-black text-amber-500';
+      } else if (totalCorrect >= 20) {
+        rankTitle.innerHTML = 'Skilled Navigator ⭐⭐';
+        rankTitle.className = 'text-xl font-black text-indigo-600';
+      } else {
+        rankTitle.innerHTML = 'Mouse Trainee ⭐';
+        rankTitle.className = 'text-xl font-black text-sky-600';
       }
-    });
+    }
 
-    // Sound Toggle
-    dom.soundBtn.addEventListener('click', () => {
-      sound.isMuted = !sound.isMuted;
-      dom.soundBtn.textContent = sound.isMuted ? '🔇' : '🔊';
-    });
+    function restartGame() {
+      document.getElementById('scorecard-modal').classList.add('hidden');
+      totalScore = 0;
+      scores.level1 = { correct: 0, attempts: 0 };
+      scores.level2 = { correct: 0, attempts: 0 };
+      scores.level3 = { correct: 0, attempts: 0 };
+      startLevel1();
+    }
 
-    // Difficulty Toggle
-    dom.diffBtn.addEventListener('click', () => {
-      diffIndex = (diffIndex + 1) % DIFFICULTIES.length;
-      dom.diffBtn.textContent = DIFFICULTIES[diffIndex].name;
-      startNewGame();
-    });
+    function setActiveTabUI(step) {
+      for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById(`step-indicator-${i}`);
+        if (i === step) {
+          el.className = 'flex-1 text-center py-2 px-3 rounded-2xl font-bold text-xs sm:text-sm bg-indigo-600 text-white shadow-md transition-all';
+        } else {
+          el.className = 'flex-1 text-center py-2 px-3 rounded-2xl font-semibold text-xs sm:text-sm bg-white/80 text-slate-500 border border-slate-200 transition-all';
+        }
+      }
+    }
 
-    // Virtual Keyboard Collapse Toggle
-    dom.kbdToggleBtn.addEventListener('click', () => {
-      dom.kbdContainer.classList.toggle('hidden');
-    });
-
-    // Victory Restart CTA
-    dom.restartBtn.addEventListener('click', () => {
-      sound.init();
-      startNewGame();
-    });
-
-    // Boot
-    window.addEventListener('DOMContentLoaded', () => {
-      buildKeyboard();
-      startNewGame();
-    });
+    // Initialize application on window load
+    window.onload = () => {
+      startLevel1();
+    };
   </script>
 </body>
 </html>

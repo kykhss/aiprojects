@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ColorType: Student Typing Playground</title>
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Google Fonts: Kid-friendly rounded fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Bubblegum+Sans&family=Comfortaa:wght@600;700&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --app-font: 'Fredoka', cursive, sans-serif;
+    }
+
+    body {
+      font-family: var(--app-font);
+      background: radial-gradient(circle at 10% 20%, #1e1b4b 0%, #0f172a 90%);
+      color: #f8fafc;
+      min-height: 100vh;
+    }
+
+    /* Navbar styling */
+    .app-header {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Magic Display Screen */
+    .display-screen {
+      min-height: 250px;
+      max-height: 420px;
+      overflow-y: auto;
+      border-radius: 1.5rem;
+      background: #090d16;
+      border: 2px solid rgba(168, 85, 247, 0.35);
+      box-shadow: 0 10px 30px -10px rgba(147, 51, 234, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.6);
+      transition: all 0.3s ease;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .display-screen:focus-within {
+      border-color: #c084fc;
+    }
+
+    /* Colorful animated character */
+    .char-letter {
+      display: inline-block;
+      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: popIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      transform-origin: bottom center;
+      user-select: text;
+    }
+
+    .char-letter:hover {
+      transform: scale(1.35) translateY(-4px) rotate(4deg);
+      cursor: pointer;
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0.3) translateY(10px);
+        opacity: 0;
+      }
+      70% {
+        transform: scale(1.15) translateY(-2px);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Custom Blinking Cursor */
+    .blinking-cursor {
+      display: inline-block;
+      width: 4px;
+      border-radius: 3px;
+      background-color: #38bdf8;
+      margin-left: 3px;
+      animation: blink 0.8s infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    /* Input Card */
+    .card-custom {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1.25rem;
+    }
+
+    .form-control-custom {
+      background-color: #0b0f19 !important;
+      color: #ffffff !important;
+      border: 2px solid #334155 !important;
+      border-radius: 0.85rem !important;
+      font-size: 1.15rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control-custom:focus {
+      border-color: #a855f7 !important;
+      box-shadow: 0 0 0 0.25rem rgba(168, 85, 247, 0.25) !important;
+    }
+
+    .form-control-custom::placeholder {
+      color: #64748b;
+    }
+
+    /* Custom form elements */
+    .form-select-custom {
+      background-color: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 0.75rem;
+    }
+
+    .form-select-custom:focus {
+      background-color: #1e293b;
+      color: #fff;
+      border-color: #a855f7;
+      box-shadow: 0 0 0 0.25rem rgba(168, 85, 247, 0.2);
+    }
+
+    /* Custom range slider */
+    .form-range::-webkit-slider-thumb {
+      background: #c084fc;
+    }
+    .form-range::-webkit-slider-runnable-track {
+      background-color: #334155;
+    }
+
+    /* Badges */
+    .badge-pill-custom {
+      padding: 0.55em 0.85em;
+      border-radius: 50rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #6366f1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #818cf8;
+    }
+  </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- Navigation / App Header -->
+  <header class="app-header sticky-top py-3 mb-4">
+    <div class="container-xl d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow-sm" style="width: 44px; height: 44px; background: linear-gradient(135deg, #ec4899, #8b5cf6, #06b6d4);">
+          <i class="bi bi-stars fs-4"></i>
+        </div>
+        <div>
+          <h1 class="h4 mb-0 fw-bold text-white">ColorType Studio</h1>
+          <small class="text-secondary d-none d-sm-block">Vibrant real-time colorful typing for students</small>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="d-flex align-items-center gap-2">
+        <button id="soundToggleBtn" class="btn btn-outline-light btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1 shadow-sm">
+          <i id="soundIcon" class="bi bi-volume-up-fill text-warning"></i>
+          <span id="soundLabel" class="d-none d-sm-inline">Sound: On</span>
+        </button>
+
+        <button id="confettiBtn" class="btn btn-primary btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1 shadow-sm" style="background: linear-gradient(135deg, #a855f7, #ec4899); border: none;">
+          <i class="bi bi-balloon-fill"></i>
+          <span>Celebrate!</span>
+        </button>
+
+        <button id="clearBtn" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1">
+          <i class="bi bi-trash3-fill"></i>
+          <span class="d-none d-sm-inline">Clear</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="container-xl flex-grow-1 pb-4">
+
+    <!-- Live Colorful Screen Card -->
+    <div class="card card-custom p-4 mb-4 shadow-lg position-relative overflow-hidden">
+      <!-- Screen Top Bar with Stats Badges -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between pb-3 mb-2 border-bottom border-secondary border-opacity-25 gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
+          <span class="fw-bold text-info text-uppercase fs-6 tracking-wide">Live Color Output</span>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <span id="charCountBadge" class="badge-pill-custom text-light"><i class="bi bi-alphabet-uppercase text-primary me-1"></i>0 Characters</span>
+          <span id="wordCountBadge" class="badge-pill-custom text-light"><i class="bi bi-fonts text-success me-1"></i>0 Words</span>
+          <span id="readingTimeBadge" class="badge-pill-custom text-light"><i class="bi bi-stopwatch text-warning me-1"></i>0s Read</span>
+        </div>
+      </div>
+
+      <!-- Color Letters Canvas Screen -->
+      <div id="colorfulDisplay" class="display-screen p-4 my-2" style="font-size: 38px; letter-spacing: 2px;">
+        <span class="text-secondary fst-italic fs-5">
+          ✨ Type down below in the box to watch every letter turn into bright colors!
+        </span>
+        <span class="blinking-cursor" style="height: 34px;"></span>
+      </div>
+
+      <!-- Screen Bottom Controls -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between pt-3 mt-1 border-top border-secondary border-opacity-25 gap-2 text-secondary small">
+        <div>
+          <i class="bi bi-magic text-warning me-1"></i>
+          <span>Hover or tap characters to make them pop!</span>
+        </div>
+        <div>
+          <button id="copyBtn" class="btn btn-outline-secondary btn-sm rounded-pill text-white px-3">
+            <i class="bi bi-clipboard me-1"></i> Copy Text
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Typing Input Area -->
+    <div class="card card-custom p-4 mb-4 shadow">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <label for="studentInput" class="form-label fw-bold text-white mb-0 fs-5 d-flex align-items-center gap-2">
+          <i class="bi bi-keyboard-fill text-info"></i> Student Typing Zone
+        </label>
+        <span id="milestonePrompt" class="text-warning small fw-semibold">Type 25 words for a confetti reward! 🚀</span>
+      </div>
+
+      <textarea
+        id="studentInput"
+        rows="3"
+        class="form-control form-control-custom w-100 p-3"
+        placeholder="Type words, spelling lists, funny stories, or names here..."
+        autofocus
+      ></textarea>
+
+      <!-- Typing Streak Progress Bar -->
+      <div class="mt-3">
+        <div class="d-flex justify-content-between small text-secondary mb-1 fw-semibold">
+          <span>Typing Progress Milestone</span>
+          <span id="streakProgressText">0 / 25 words</span>
+        </div>
+        <div class="progress" style="height: 8px; background-color: #334155; border-radius: 10px;">
+          <div id="streakBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Color, Font, and Case Controls -->
+    <div class="card card-custom p-4 mb-4 shadow">
+      <h2 class="h5 fw-bold text-white mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-sliders2-vertical text-warning"></i> Appearance & Style Controls
+      </h2>
+
+      <div class="row g-3">
+        <!-- Palette Selector -->
+        <div class="col-12 col-md-6 col-lg-3">
+          <label for="paletteSelect" class="form-label text-secondary small fw-bold">
+            <i class="bi bi-palette-fill text-danger me-1"></i> Color Theme
+          </label>
+          <select id="paletteSelect" class="form-select form-select-custom">
+            <option value="rainbow" selected>🌈 Rainbow Pop</option>
+            <option value="candy">🍬 Candy Pastel</option>
+            <option value="neon">⚡ Neon Glow</option>
+            <option value="sunset">🌅 Sunset Flame</option>
+            <option value="forest">🌲 Forest Emerald</option>
+          </select>
+        </div>
+
+        <!-- Font Family Selector -->
+        <div class="col-12 col-md-6 col-lg-3">
+          <label for="fontSelect" class="form-label text-secondary small fw-bold">
+            <i class="bi bi-type text-success me-1"></i> Font Style
+          </label>
+          <select id="fontSelect" class="form-select form-select-custom">
+            <option value="'Fredoka', cursive, sans-serif" selected>Fredoka (Rounded & Fun)</option>
+            <option value="'Bubblegum Sans', cursive">Bubblegum (Playful)</option>
+            <option value="'Comfortaa', cursive">Comfortaa (Modern Smooth)</option>
+            <option value="monospace">Monospace (Code Style)</option>
+          </select>
+        </div>
+
+        <!-- Text Case Selector Buttons -->
+        <div class="col-12 col-md-6 col-lg-3">
+          <label class="form-label text-secondary small fw-bold">
+            <i class="bi bi-badge-ad-fill text-info me-1"></i> Letter Casing
+          </label>
+          <div class="btn-group w-100" role="group">
+            <button type="button" id="caseNormal" class="btn btn-outline-info active btn-sm py-2">Normal</button>
+            <button type="button" id="caseUpper" class="btn btn-outline-info btn-sm py-2">UPPER</button>
+            <button type="button" id="caseLower" class="btn btn-outline-info btn-sm py-2">lower</button>
+          </div>
+        </div>
+
+        <!-- Font Size Slider -->
+        <div class="col-12 col-md-6 col-lg-3">
+          <div class="d-flex justify-content-between">
+            <label for="fontSizeSlider" class="form-label text-secondary small fw-bold mb-1">
+              <i class="bi bi-aspect-ratio text-warning me-1"></i> Size
+            </label>
+            <span id="fontSizeVal" class="text-info small fw-bold">38px</span>
+          </div>
+          <input type="range" class="form-range" id="fontSizeSlider" min="20" max="64" value="38">
+        </div>
+      </div>
+
+      <!-- Second Row of Settings: Text Shadow & Coloring Mode -->
+      <div class="row g-3 mt-1 pt-3 border-top border-secondary border-opacity-25">
+        <div class="col-12 col-sm-6 d-flex align-items-center gap-3">
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" id="glowToggle" checked>
+            <label class="form-check-label text-light small fw-bold" for="glowToggle">
+              <i class="bi bi-sun-fill text-warning me-1"></i> Vibrant Glow Shadows
+            </label>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 text-sm-end">
+          <div class="btn-group" role="group">
+            <span class="btn btn-sm btn-dark text-secondary disabled border-0">Color By:</span>
+            <button id="modeChar" class="btn btn-sm btn-primary">Letter</button>
+            <button id="modeWord" class="btn btn-sm btn-outline-primary">Word</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggested Sentence Starters for Quick Practice -->
+    <div class="card card-custom p-3 shadow-sm">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="small fw-bold text-info me-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i>Try Typing:</span>
+        <button class="btn btn-sm btn-outline-secondary text-light rounded-pill prompt-chip">🚀 Blast off into outer space!</button>
+        <button class="btn btn-sm btn-outline-secondary text-light rounded-pill prompt-chip">🦄 The magical friendly unicorn</button>
+        <button class="btn btn-sm btn-outline-secondary text-light rounded-pill prompt-chip">🍕 Delicious extra cheese pizza</button>
+        <button class="btn btn-sm btn-outline-secondary text-light rounded-pill prompt-chip">🐬 Dolphins leaping over waves</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Live Toast Notification (Bootstrap Toast) -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="liveToast" class="toast align-items-center text-bg-dark border-primary" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body d-flex align-items-center gap-2">
+          <i id="toastIcon" class="bi bi-check-circle-fill text-success fs-5"></i>
+          <span id="toastMessage">Action completed!</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5.3 Bundle with Popper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Application Logic -->
+  <script>
+    // State
+    let currentTheme = 'rainbow';
+    let coloringMode = 'char'; // 'char' or 'word'
+    let textCase = 'normal';   // 'normal', 'upper', or 'lower'
+    let soundEnabled = true;
+    let glowEnabled = true;
+    let nextWordMilestone = 25;
+
+    // Palettes
+    const palettes = {
+      rainbow: ['#FF3366', '#FF6633', '#FFCC00', '#33CC66', '#00CCFF', '#9933FF', '#FF33B8'],
+      candy: ['#FF9AA2', '#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3C4FB'],
+      neon: ['#39FF14', '#00FFFF', '#FF007F', '#FFE600', '#BC13FE', '#00FF66', '#FF3131'],
+      sunset: ['#FF4E50', '#FC913A', '#F9D423', '#EDE574', '#FF6B6B', '#D72638', '#EB5757'],
+      forest: ['#10B981', '#34D399', '#6EE7B7', '#A7F3D0', '#059669', '#047857', '#3B82F6']
+    };
+
+    // Elements
+    const studentInput = document.getElementById('studentInput');
+    const colorfulDisplay = document.getElementById('colorfulDisplay');
+    const charCountBadge = document.getElementById('charCountBadge');
+    const wordCountBadge = document.getElementById('wordCountBadge');
+    const readingTimeBadge = document.getElementById('readingTimeBadge');
+    const streakBar = document.getElementById('streakBar');
+    const streakProgressText = document.getElementById('streakProgressText');
+    const milestonePrompt = document.getElementById('milestonePrompt');
+    const paletteSelect = document.getElementById('paletteSelect');
+    const fontSelect = document.getElementById('fontSelect');
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    const fontSizeVal = document.getElementById('fontSizeVal');
+    const glowToggle = document.getElementById('glowToggle');
+    const modeChar = document.getElementById('modeChar');
+    const modeWord = document.getElementById('modeWord');
+    const caseNormal = document.getElementById('caseNormal');
+    const caseUpper = document.getElementById('caseUpper');
+    const caseLower = document.getElementById('caseLower');
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const soundIcon = document.getElementById('soundIcon');
+    const soundLabel = document.getElementById('soundLabel');
+    const confettiBtn = document.getElementById('confettiBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const liveToast = document.getElementById('liveToast');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+
+    // Bootstrap Toast Instance
+    const bsToast = new bootstrap.Toast(liveToast, { delay: 2500 });
+
+    function showNotification(msg, isSuccess = true) {
+      toastMessage.textContent = msg;
+      toastIcon.className = isSuccess ? 'bi bi-check-circle-fill text-success fs-5' : 'bi bi-info-circle-fill text-info fs-5';
+      bsToast.show();
+    }
+
+    // Audio Synthesizer (Cute Keyboard Pop)
+    let audioCtx = null;
+    function playKeyTone() {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const pitches = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33];
+        const pitch = pitches[Math.floor(Math.random() * pitches.length)];
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(pitch * 1.4, audioCtx.currentTime + 0.07);
+
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch (err) {}
+    }
+
+    function playMilestoneSound() {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((freq, i) => {
+          setTimeout(() => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.22);
+          }, i * 90);
+        });
+      } catch (err) {}
+    }
+
+    // Apply Case Formatting
+    function formatCase(str) {
+      if (textCase === 'upper') return str.toUpperCase();
+      if (textCase === 'lower') return str.toLowerCase();
+      return str;
+    }
+
+    // Render Display with Colors on Change
+    function renderColorfulDisplay() {
+      const raw = studentInput.value;
+      const palette = palettes[currentTheme] || palettes.rainbow;
+
+      if (!raw) {
+        colorfulDisplay.innerHTML = `
+          <span class="text-secondary fst-italic fs-5">
+            ✨ Type down below in the box to watch every letter turn into bright colors!
+          </span>
+          <span class="blinking-cursor" style="height: ${parseInt(fontSizeSlider.value) * 0.9}px;"></span>
+        `;
+        charCountBadge.innerHTML = '<i class="bi bi-alphabet-uppercase text-primary me-1"></i>0 Characters';
+        wordCountBadge.innerHTML = '<i class="bi bi-fonts text-success me-1"></i>0 Words';
+        readingTimeBadge.innerHTML = '<i class="bi bi-stopwatch text-warning me-1"></i>0s Read';
+        updateStats(0, 0);
+        return;
+      }
+
+      const text = formatCase(raw);
+      const lines = text.split('\n');
+      let html = '';
+      let colorIdx = 0;
+
+      lines.forEach((line, lineIdx) => {
+        if (line === '') {
+          html += '<br>';
+          return;
+        }
+
+        if (coloringMode === 'word') {
+          const parts = line.split(/(\s+)/);
+          parts.forEach(part => {
+            if (/^\s+$/.test(part)) {
+              html += part.replace(/ /g, '&nbsp;');
+            } else {
+              const color = palette[colorIdx % palette.length];
+              colorIdx++;
+              const shadow = glowEnabled ? `text-shadow: 0 0 16px ${color}99, 0 2px 4px rgba(0,0,0,0.8);` : '';
+              html += `<span class="char-letter fw-bold" style="color: ${color}; ${shadow}">${part}</span>`;
+            }
+          });
+        } else {
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === ' ') {
+              html += '&nbsp;';
+            } else {
+              const color = palette[colorIdx % palette.length];
+              colorIdx++;
+              const shadow = glowEnabled ? `text-shadow: 0 0 14px ${color}bb, 0 2px 4px rgba(0,0,0,0.8);` : '';
+              html += `<span class="char-letter fw-bold" style="color: ${color}; ${shadow}">${char}</span>`;
+            }
+          }
+        }
+
+        if (lineIdx < lines.length - 1) {
+          html += '<br>';
+        }
+      });
+
+      const cursorH = Math.max(22, parseInt(fontSizeSlider.value) * 0.85);
+      html += `<span class="blinking-cursor" style="height: ${cursorH}px;"></span>`;
+      colorfulDisplay.innerHTML = html;
+
+      // Calculate statistics
+      const chars = raw.length;
+      const words = raw.trim() === '' ? 0 : raw.trim().split(/\s+/).length;
+      const readingTime = Math.ceil(words / 150 * 60);
+
+      charCountBadge.innerHTML = `<i class="bi bi-alphabet-uppercase text-primary me-1"></i>${chars} Character${chars === 1 ? '' : 's'}`;
+      wordCountBadge.innerHTML = `<i class="bi bi-fonts text-success me-1"></i>${words} Word${words === 1 ? '' : 's'}`;
+      readingTimeBadge.innerHTML = `<i class="bi bi-stopwatch text-warning me-1"></i>${readingTime}s Read`;
+
+      updateStats(chars, words);
+    }
+
+    // Milestones & Streaks
+    function updateStats(chars, words) {
+      const progress = words % 25;
+      const percentage = (progress / 25) * 100;
+      streakBar.style.width = `${words === 0 ? 0 : percentage}%`;
+      streakProgressText.textContent = `${progress} / 25 words`;
+
+      if (words >= nextWordMilestone && words > 0) {
+        confetti({
+          particleCount: 85,
+          spread: 75,
+          origin: { y: 0.6 }
+        });
+        playMilestoneSound();
+        showNotification(`🎉 Great job! You reached ${words} words!`);
+        nextWordMilestone = Math.floor(words / 25) * 25 + 25;
+      }
+
+      milestonePrompt.textContent = `Type ${25 - progress} more words for a celebration! 🚀`;
+    }
+
+    // Input event
+    studentInput.addEventListener('input', () => {
+      renderColorfulDisplay();
+      playKeyTone();
+    });
+
+    // Theme changes
+    paletteSelect.addEventListener('change', (e) => {
+      currentTheme = e.target.value;
+      renderColorfulDisplay();
+      playKeyTone();
+    });
+
+    // Font changes
+    fontSelect.addEventListener('change', (e) => {
+      colorfulDisplay.style.fontFamily = e.target.value;
+      studentInput.style.fontFamily = e.target.value;
+    });
+
+    // Font size changes
+    fontSizeSlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      fontSizeVal.textContent = `${val}px`;
+      colorfulDisplay.style.fontSize = `${val}px`;
+      const cursor = colorfulDisplay.querySelector('.blinking-cursor');
+      if (cursor) cursor.style.height = `${parseInt(val) * 0.85}px`;
+    });
+
+    // Glow toggle
+    glowToggle.addEventListener('change', (e) => {
+      glowEnabled = e.target.checked;
+      renderColorfulDisplay();
+    });
+
+    // Mode Toggle (letter vs word)
+    modeChar.addEventListener('click', () => {
+      coloringMode = 'char';
+      modeChar.className = 'btn btn-sm btn-primary';
+      modeWord.className = 'btn btn-sm btn-outline-primary';
+      renderColorfulDisplay();
+    });
+
+    modeWord.addEventListener('click', () => {
+      coloringMode = 'word';
+      modeWord.className = 'btn btn-sm btn-primary';
+      modeChar.className = 'btn btn-sm btn-outline-primary';
+      renderColorfulDisplay();
+    });
+
+    // Case selection
+    function setActiveCase(btn, c) {
+      caseNormal.classList.remove('active');
+      caseUpper.classList.remove('active');
+      caseLower.classList.remove('active');
+      btn.classList.add('active');
+      textCase = c;
+      renderColorfulDisplay();
+    }
+
+    caseNormal.addEventListener('click', () => setActiveCase(caseNormal, 'normal'));
+    caseUpper.addEventListener('click', () => setActiveCase(caseUpper, 'upper'));
+    caseLower.addEventListener('click', () => setActiveCase(caseLower, 'lower'));
+
+    // Sound toggle
+    soundToggleBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      if (soundEnabled) {
+        soundIcon.className = 'bi bi-volume-up-fill text-warning';
+        soundLabel.textContent = 'Sound: On';
+        showNotification('Typing sound effects turned ON');
+      } else {
+        soundIcon.className = 'bi bi-volume-mute-fill text-secondary';
+        soundLabel.textContent = 'Sound: Off';
+        showNotification('Typing sound effects muted', false);
+      }
+    });
+
+    // Confetti button
+    confettiBtn.addEventListener('click', () => {
+      confetti({
+        particleCount: 110,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+      playMilestoneSound();
+      showNotification('Confetti party! Keep up the typing!');
+    });
+
+    // Clear button
+    clearBtn.addEventListener('click', () => {
+      studentInput.value = '';
+      nextWordMilestone = 25;
+      renderColorfulDisplay();
+      studentInput.focus();
+      showNotification('Typing board cleared!');
+    });
+
+    // Copy text
+    copyBtn.addEventListener('click', () => {
+      if (!studentInput.value) {
+        showNotification('Nothing to copy yet!', false);
+        return;
+      }
+      const textToCopy = formatCase(studentInput.value);
+      const tempArea = document.createElement('textarea');
+      tempArea.value = textToCopy;
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      try {
+        document.execCommand('copy');
+        showNotification('Text copied to clipboard!');
+      } catch (err) {
+        showNotification('Unable to copy text', false);
+      }
+      document.body.removeChild(tempArea);
+    });
+
+    // Prompt Chips
+    document.querySelectorAll('.prompt-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const text = chip.textContent.replace(/^[^\w\s]+/, '').trim();
+        studentInput.value = text;
+        renderColorfulDisplay();
+        studentInput.focus();
+        confetti({ particleCount: 30, spread: 50, origin: { y: 0.7 } });
+      });
+    });
+
+    // Initial render
+    window.addEventListener('DOMContentLoaded', () => {
+      renderColorfulDisplay();
+    });
+  </script>
+</body>
+</html>

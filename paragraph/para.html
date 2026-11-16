@@ -1,0 +1,376 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Type & Sparkle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: one centred practice board. Top chips, progress bar, big colourful paragraph, a "next key" helper, and a result panel that replaces the helper at the end. */
+:root {
+  --bg: #efeaff;
+  --bg2: #dff4ff;
+  --card: #ffffff;
+  --ink: #2a2250;
+  --muted: #7a72a6;
+  --untyped: #8f88b8;
+  --line: #e4defa;
+  --accent: #6d4aff;
+  --accent-ink: #ffffff;
+  --good: #1fb36b;
+  --bad: #e5383b;
+  --bad-bg: #ffe3e6;
+  --c1: #ff7a00;
+  --c2: #d99a00;
+  --c3: #1fb36b;
+  --c4: #0fb5c4;
+  --c5: #3a86ff;
+  --c6: #8338ec;
+  --c7: #f72585;
+  --font-display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --font-text: "Andika", "Verdana", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  background-image: linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 1.5;
+  padding-block: 24px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  min-height: 100%;
+}
+.wrap { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+header { display: flex; flex-direction: column; gap: 4px; }
+h1 {
+  font-family: var(--font-display); font-weight: 700; margin: 0;
+  font-size: clamp(2rem, 7vw, 3rem); line-height: 1.05; letter-spacing: .01em;
+  text-wrap: balance;
+}
+h1 span:nth-child(1){color:var(--c7)} h1 span:nth-child(2){color:var(--c1)} h1 span:nth-child(3){color:var(--c3)}
+h1 span:nth-child(4){color:var(--c5)} h1 span:nth-child(5){color:var(--c6)}
+.sub { margin: 0; color: var(--muted); font-size: 1.02rem; max-width: 60ch; }
+
+.board {
+  background: var(--card); border-radius: 28px; padding: clamp(16px, 4vw, 30px);
+  box-shadow: 0 18px 40px -18px rgba(70, 40, 160, .35), 0 2px 0 var(--line);
+  display: flex; flex-direction: column; gap: 16px; position: relative; cursor: text;
+  border: 3px solid transparent; transition: border-color .2s;
+}
+.board.focused { border-color: var(--accent); }
+.topbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip {
+  font-family: var(--font-display); font-weight: 600; font-size: .95rem;
+  background: #f3efff; color: var(--accent); border-radius: 999px; padding: 4px 14px;
+}
+.chip.warn { background: #fff1d6; color: #9a5b00; }
+.bar { height: 14px; border-radius: 999px; background: #f1edff; overflow: hidden; }
+.bar i {
+  display: block; height: 100%; width: 0; border-radius: 999px;
+  background: linear-gradient(90deg, var(--c7), var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c6));
+  background-size: 100vw 100%; transition: width .18s ease-out;
+}
+
+.text {
+  display: flex; flex-wrap: wrap; align-items: baseline; row-gap: .5em;
+  font-family: var(--font-text); font-weight: 700;
+  font-size: clamp(1.4rem, 5vw, 2.3rem); line-height: 1.25;
+  padding: 6px 2px; user-select: none; -webkit-user-select: none;
+}
+.word { display: inline-flex; white-space: nowrap; }
+.ch {
+  display: inline-block; position: relative; color: var(--untyped);
+  border-radius: 8px; min-width: .3em; text-align: center; padding: 0 .02em;
+  transition: color .12s;
+}
+.ch.ok { color: var(--wc); }
+.ch.bad { background: var(--bad); color: #fff; }
+.ch.cur::after {
+  content: ""; position: absolute; left: 6%; right: 6%; bottom: -.12em; height: .13em;
+  border-radius: 4px; background: var(--accent); animation: blink 1s steps(2, start) infinite;
+}
+.sp { display: inline-block; width: .55em; height: 1em; position: relative; border-radius: 8px; }
+.sp::before {
+  content: ""; position: absolute; left: 12%; right: 12%; bottom: .08em; height: .26em;
+  border: .09em solid var(--line); border-top: none; border-radius: 0 0 .2em .2em;
+}
+.sp.ok::before { border-color: var(--good); }
+.sp.bad { background: var(--bad); }
+.sp.bad::before { border-color: #fff; }
+.sp.cur::after { left: 0; right: 0; }
+.nl {
+  display: inline-block; font-size: .72em; font-weight: 700; line-height: 1.6;
+  padding: 0 .55em; margin-left: .15em; border-radius: 10px; background: #f3efff; color: var(--untyped);
+  position: relative;
+}
+.nl.ok { background: #dcf7ea; color: var(--good); }
+.nl.bad { background: var(--bad); color: #fff; }
+.nl.cur::after {
+  content: ""; position: absolute; left: 8%; right: 8%; bottom: -.12em; height: .16em;
+  border-radius: 4px; background: var(--accent); animation: blink 1s steps(2, start) infinite;
+}
+.brk { flex-basis: 100%; height: 0; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.focushint {
+  align-self: flex-start; font-family: var(--font-display); font-weight: 600;
+  background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 6px 16px;
+}
+.board.focused .focushint { display: none; }
+
+.hint {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: #f7f4ff; border-radius: 20px; padding: 12px 16px;
+}
+.key {
+  min-width: 3.4rem; height: 3.4rem; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: var(--ink);
+  background: #fff; border-radius: 14px; border: 2px solid var(--line); border-bottom-width: 6px;
+  white-space: nowrap;
+}
+.hmsg { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+.hmsg small { display: block; font-weight: 400; color: var(--muted); font-size: .88rem; }
+
+.result {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  background: linear-gradient(135deg, #fff4fa, #f1f6ff); border-radius: 22px; padding: 22px 16px;
+}
+.result h2 { margin: 0; font-family: var(--font-display); font-size: clamp(1.6rem, 6vw, 2.2rem); color: var(--c6); text-wrap: balance; }
+.stars { font-size: 3rem; letter-spacing: .12em; line-height: 1; }
+.stars .on { color: #ffb400; } .stars .off { color: #dcd6f2; }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.stat { background: #fff; border-radius: 16px; padding: 8px 16px; font-weight: 700; border: 2px solid var(--line); }
+.stat b { font-family: var(--font-display); color: var(--accent); font-size: 1.3rem; display: block; line-height: 1.2; }
+.stat span { font-size: .85rem; color: var(--muted); font-weight: 400; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+button {
+  font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; cursor: pointer;
+  border: none; border-radius: 16px; padding: 12px 22px; color: var(--accent-ink); background: var(--accent);
+  box-shadow: 0 5px 0 #4a2fc4; transition: transform .08s, box-shadow .08s;
+}
+button.alt { background: #fff; color: var(--accent); box-shadow: 0 5px 0 var(--line); border: 2px solid var(--line); }
+button:active { transform: translateY(4px); box-shadow: 0 1px 0 #4a2fc4; }
+button.alt:active { box-shadow: 0 1px 0 var(--line); }
+button:focus-visible { outline: 4px solid var(--c5); outline-offset: 3px; }
+
+#ta { position: fixed; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; resize: none; }
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 20; }
+.confetti i { position: absolute; top: -20px; width: 10px; height: 16px; border-radius: 3px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translate(var(--dx), 110vh) rotate(var(--rot)); } }
+@media (prefers-reduced-motion: reduce) {
+  .ch.cur::after, .nl.cur::after { animation: none; }
+  .bar i { transition: none; }
+}
+</style>
+
+<main class="wrap">
+  <header>
+    <h1 aria-label="Type and Sparkle"><span>Type</span> <span>&amp;</span> <span>Spar</span><span>kle</span><span>!</span></h1>
+    <p class="sub">Type exactly what you see. Capital letters, small letters, spaces and new lines (press Enter) all count. Red letters need fixing: press Backspace and try again.</p>
+  </header>
+
+  <section class="board" id="board" aria-label="Typing practice">
+    <div class="topbar">
+      <span class="chip" id="chipPara">Paragraph 1 of 8</span>
+      <span class="chip" id="chipMiss">Mistakes: 0</span>
+      <span class="chip warn" id="caps" hidden>Caps Lock is on</span>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="fill"></i></div>
+    <div class="text" id="text"></div>
+    <div class="focushint" id="fh">Tap the words, then start typing</div>
+    <div class="hint" id="hint">
+      <span class="key" id="key">H</span>
+      <span class="hmsg" id="hmsg"></span>
+    </div>
+    <div class="result" id="result" hidden>
+      <h2 id="rTitle">Great job!</h2>
+      <div class="stars" id="stars" aria-label="Stars earned"></div>
+      <div class="stats">
+        <div class="stat"><b id="rTime">0s</b><span>time</span></div>
+        <div class="stat"><b id="rWpm">0</b><span>words a minute</span></div>
+        <div class="stat"><b id="rMiss">0</b><span>mistakes</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button type="button" id="btnNext">Next paragraph</button>
+    <button type="button" class="alt" id="btnRestart">Start again</button>
+  </div>
+  <textarea id="ta" aria-label="Type here" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+</main>
+
+<script>
+(function () {
+  var PARAS = [
+    "Hello! My name is Mia.\nI have a red kite and a blue ball.\nOn Sunday, we fly the kite at the park.",
+    "The Sun is a big, bright star.\nIt gives us light and warmth every day.\nCan you feel it on your face?",
+    "Tom has a pet dog named Max.\nMax likes to run, jump, and play.\nAfter dinner, Tom gives him a treat.",
+    "Kerala is green and beautiful.\nThere are coconut trees near the sea.\nBoats float slowly on the backwaters.",
+    "Birds build nests in tall trees.\nThey sing early in the morning.\nWhat is your favourite bird?",
+    "Rain fell on the roof all night.\nIn the morning, the garden smelled fresh.\nTiny drops sparkled on every leaf.",
+    "A good friend is kind and honest.\nShe shares her lunch and says thank you.\nWe can all be good friends!",
+    "Computers help us learn new things.\nFirst, press the keys with care.\nThen watch the words appear on the screen!"
+  ];
+  var COLORS = ["--c1", "--c3", "--c5", "--c7", "--c6", "--c4", "--c2"];
+  var NAMES = { ",": "Comma", ".": "Full stop", "?": "Question mark", "!": "Exclamation mark", "'": "Apostrophe" };
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var board = $("board"), textEl = $("text"), ta = $("ta"), fill = $("fill");
+  var text = "", typed = [], mistakes = 0, startTime = 0, done = false, pIndex = 0, spans = [];
+
+  function build() {
+    textEl.innerHTML = ""; spans = [];
+    var wordIdx = 0, cur = null;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i], el;
+      if (ch === " ") {
+        cur = null; el = document.createElement("span"); el.className = "sp"; textEl.appendChild(el);
+      } else if (ch === "\n") {
+        cur = null; el = document.createElement("span"); el.className = "nl"; el.textContent = "↵";
+        textEl.appendChild(el);
+        var b = document.createElement("div"); b.className = "brk"; textEl.appendChild(b);
+      } else {
+        if (!cur) {
+          cur = document.createElement("span"); cur.className = "word";
+          cur.style.setProperty("--wc", "var(" + COLORS[wordIdx % COLORS.length] + ")");
+          textEl.appendChild(cur); wordIdx++;
+        }
+        el = document.createElement("span"); el.className = "ch"; el.textContent = ch; cur.appendChild(el);
+      }
+      spans.push(el);
+    }
+  }
+
+  function render() {
+    var correctPrefix = 0, broken = false;
+    for (var i = 0; i < spans.length; i++) {
+      var el = spans[i], base = el.classList.contains("sp") ? "sp" : el.classList.contains("nl") ? "nl" : "ch";
+      var state = "";
+      if (i < typed.length) {
+        var ok = typed[i] === text[i];
+        state = ok ? " ok" : " bad";
+        if (ok && !broken) correctPrefix++; else broken = true;
+      } else if (i === typed.length) state = " cur";
+      el.className = base + state;
+    }
+    fill.style.width = (correctPrefix / text.length * 100) + "%";
+    $("chipMiss").textContent = "Mistakes: " + mistakes;
+    updateHint();
+  }
+
+  function updateHint() {
+    var hint = $("hint");
+    if (done) { hint.hidden = true; return; }
+    hint.hidden = false;
+    var key = $("key"), msg = $("hmsg");
+    if (typed.length >= text.length) {
+      key.textContent = "⌫"; msg.innerHTML = "Fix the red letters<small>Press Backspace, then type them again</small>"; return;
+    }
+    var bad = false;
+    for (var i = 0; i < typed.length; i++) if (typed[i] !== text[i]) { bad = true; break; }
+    if (bad) { key.textContent = "⌫"; msg.innerHTML = "Oops! Press Backspace<small>Delete back to the red letter and try again</small>"; return; }
+    var ch = text[typed.length], cap, t, sub = "";
+    if (ch === " ") { cap = "Space"; t = "Press the Space bar"; }
+    else if (ch === "\n") { cap = "Enter ↵"; t = "Press Enter"; sub = "This starts a new line"; }
+    else if (/[A-Z]/.test(ch)) { cap = ch; t = "Capital letter " + ch; sub = "Hold Shift and press " + ch; }
+    else if (/[a-z]/.test(ch)) { cap = ch; t = "Small letter " + ch; sub = "No Shift needed"; }
+    else { cap = ch; t = NAMES[ch] || "Symbol"; sub = (ch === "?" || ch === "!") ? "Hold Shift to type it" : ""; }
+    key.textContent = cap;
+    msg.innerHTML = t + (sub ? "<small>" + sub + "</small>" : "");
+  }
+
+  function shake(i) {
+    if (reduce || !spans[i] || !spans[i].animate) return;
+    spans[i].animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(0)" }], { duration: 220 });
+  }
+
+  function norm(c) {
+    if (c === "’" || c === "‘") return "'";
+    if (c === "“" || c === "”") return '"';
+    return c;
+  }
+
+  function addChar(c) {
+    if (done) return;
+    c = norm(c);
+    if (c.length !== 1 || typed.length >= text.length) return;
+    if (!startTime) startTime = Date.now();
+    var i = typed.length;
+    typed.push(c);
+    if (c !== text[i]) { mistakes++; render(); shake(i); return; }
+    render();
+    if (typed.join("") === text) finish();
+  }
+
+  function back() { if (!done && typed.length) { typed.pop(); render(); } }
+
+  function finish() {
+    done = true;
+    var secs = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+    var wpm = Math.round((text.length / 5) / (secs / 60));
+    var n = mistakes <= 2 ? 3 : mistakes <= 6 ? 2 : 1;
+    var titles = ["Nice work!", "Great job!", "Superstar typing!"];
+    $("rTitle").textContent = titles[n - 1];
+    $("stars").innerHTML = [1, 2, 3].map(function (k) { return '<span class="' + (k <= n ? "on" : "off") + '">★</span>'; }).join("");
+    $("rTime").textContent = secs + "s";
+    $("rWpm").textContent = wpm;
+    $("rMiss").textContent = mistakes;
+    $("result").hidden = false;
+    render();
+    confetti();
+  }
+
+  function confetti() {
+    if (reduce) return;
+    var box = document.createElement("div"); box.className = "confetti";
+    for (var i = 0; i < 70; i++) {
+      var p = document.createElement("i");
+      p.style.left = Math.random() * 100 + "%";
+      p.style.background = "var(" + COLORS[i % COLORS.length] + ")";
+      p.style.animationDuration = 2 + Math.random() * 1.8 + "s";
+      p.style.animationDelay = Math.random() * .5 + "s";
+      p.style.setProperty("--dx", (Math.random() * 160 - 80) + "px");
+      p.style.setProperty("--rot", (Math.random() * 720 - 360) + "deg");
+      box.appendChild(p);
+    }
+    document.body.appendChild(box);
+    setTimeout(function () { box.remove(); }, 4500);
+  }
+
+  function load(i) {
+    pIndex = (i + PARAS.length) % PARAS.length;
+    text = PARAS[pIndex]; typed = []; mistakes = 0; startTime = 0; done = false;
+    $("result").hidden = true;
+    $("chipPara").textContent = "Paragraph " + (pIndex + 1) + " of " + PARAS.length;
+    build(); render(); ta.focus();
+  }
+
+  ta.addEventListener("input", function () {
+    var v = ta.value; ta.value = "";
+    for (var i = 0; i < v.length; i++) addChar(v[i]);
+  });
+  ta.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); addChar("\n"); }
+    else if (e.key === "Backspace") { e.preventDefault(); back(); }
+    else if (e.key === "Tab") { /* let focus move */ }
+    $("caps").hidden = !(e.getModifierState && e.getModifierState("CapsLock"));
+  });
+  ta.addEventListener("keyup", function (e) { $("caps").hidden = !(e.getModifierState && e.getModifierState("CapsLock")); });
+  ta.addEventListener("focus", function () { board.classList.add("focused"); });
+  ta.addEventListener("blur", function () { board.classList.remove("focused"); });
+  board.addEventListener("pointerdown", function () { setTimeout(function () { ta.focus(); }, 0); });
+  $("btnNext").addEventListener("click", function () { load(pIndex + 1); });
+  $("btnRestart").addEventListener("click", function () { load(pIndex); });
+
+  load(0);
+})();
+</script>
+
+</body></html>

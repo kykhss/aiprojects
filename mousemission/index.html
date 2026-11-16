@@ -1,0 +1,641 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mouse Missions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: header with title and badge shelf, a level strip, a mission bubble beside a mouse diagram, then a big pretend desktop where every mission happens. */
+:root {
+  --bg: #e6f0ff;
+  --bg2: #fff0f5;
+  --card: #ffffff;
+  --ink: #1f2550;
+  --muted: #6b72a3;
+  --line: #dde3fa;
+  --accent: #2f6bff;
+  --accent-dark: #1d49c4;
+  --hot: #ff4f81;
+  --good: #14b86b;
+  --bad: #e5383b;
+  --gold: #ffb400;
+  --l1: #2f6bff;
+  --l2: #14b86b;
+  --l3: #f5801f;
+  --l4: #d1339f;
+  --wall1: #2e86f6;
+  --wall2: #7a4dff;
+  --font-display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --font-text: "Andika", "Verdana", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); background-image: linear-gradient(160deg, var(--bg), var(--bg2)); background-attachment: fixed;
+  color: var(--ink); font-family: var(--font-text); font-size: 16px; line-height: 1.5;
+  padding-block: 22px 40px; min-height: 100%;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+h1 { font-family: var(--font-display); font-weight: 700; margin: 0; font-size: clamp(2rem, 7vw, 3rem); line-height: 1.05; text-wrap: balance; }
+h1 span:nth-child(1){color:var(--l1)} h1 span:nth-child(2){color:var(--l2)} h1 span:nth-child(3){color:var(--l3)} h1 span:nth-child(4){color:var(--l4)}
+.sub { margin: 4px 0 0; color: var(--muted); max-width: 52ch; }
+.shelf { display: flex; gap: 10px; background: var(--card); padding: 8px 14px; border-radius: 999px; box-shadow: 0 6px 16px -8px rgba(40,60,160,.35); }
+.medal { width: 44px; height: 44px; }
+.medal svg { width: 100%; height: 100%; display: block; }
+.medal.off { filter: grayscale(1); opacity: .35; }
+
+.panel { background: var(--card); border-radius: 26px; padding: clamp(18px, 4vw, 30px); box-shadow: 0 18px 40px -20px rgba(40,60,160,.4); }
+.intro { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.intro h2 { font-family: var(--font-display); margin: 0; font-size: clamp(1.4rem, 5vw, 2rem); }
+.intro ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+label.nm { font-weight: 700; display: flex; flex-direction: column; gap: 6px; }
+input[type=text] { font: inherit; font-size: 1.1rem; padding: 10px 14px; border-radius: 14px; border: 3px solid var(--line); width: min(320px, 100%); color: var(--ink); background: #fff; }
+input[type=text]:focus-visible { outline: none; border-color: var(--accent); }
+
+button { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; cursor: pointer; border: none; border-radius: 16px; padding: 12px 24px; color: #fff; background: var(--accent); box-shadow: 0 5px 0 var(--accent-dark); transition: transform .08s, box-shadow .08s; }
+button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--accent-dark); }
+button:focus-visible { outline: 4px solid var(--hot); outline-offset: 3px; }
+button.alt { background: #fff; color: var(--accent); border: 2px solid var(--line); box-shadow: 0 5px 0 var(--line); }
+
+.game { display: flex; flex-direction: column; gap: 14px; }
+.levels { display: flex; flex-wrap: wrap; gap: 8px; }
+.lv { font-size: .98rem; padding: 8px 16px; border-radius: 999px; color: var(--ink); background: #fff; border: 3px solid var(--line); box-shadow: none; }
+.lv[aria-current="true"] { border-color: var(--lc); background: var(--lc); color: #fff; }
+.lv:disabled { opacity: .5; cursor: not-allowed; }
+.lv:active { transform: none; box-shadow: none; }
+
+.mission { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: stretch; }
+.bubble { background: var(--card); border-radius: 22px; padding: 16px 20px; box-shadow: 0 10px 24px -14px rgba(40,60,160,.45); border-left: 8px solid var(--lc, var(--accent)); min-width: 0; }
+.lvl { font-family: var(--font-display); font-weight: 600; color: var(--lc, var(--accent)); font-size: .95rem; letter-spacing: .04em; text-transform: uppercase; }
+.mtext { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.25rem, 4.2vw, 1.8rem); line-height: 1.2; margin: 2px 0 6px; text-wrap: balance; }
+.coach { margin: 0; color: var(--muted); font-size: 1rem; min-height: 1.5em; }
+.coach.bad { color: var(--bad); font-weight: 700; }
+.dots { display: flex; gap: 8px; margin-top: 10px; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--line); }
+.dots i.now { background: var(--lc); transform: scale(1.2); }
+.dots i.done { background: var(--good); }
+
+.mouse { background: var(--card); border-radius: 22px; padding: 10px 16px; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 150px; box-shadow: 0 10px 24px -14px rgba(40,60,160,.45); }
+.mouse svg { width: 56px; height: 76px; overflow: visible; }
+.mouse .cap { font-size: .8rem; text-align: center; color: var(--muted); line-height: 1.25; }
+.mbody { fill: #f3f5ff; stroke: #b7bfe8; stroke-width: 3; }
+.lb, .rb { fill: #fff; stroke: #b7bfe8; stroke-width: 3; }
+.mouse[data-mode="left"] .lb, .mouse[data-mode="double"] .lb, .mouse[data-mode="drag"] .lb, .mouse[data-mode="right"] .rb { fill: var(--hot); animation: pulse 1s ease-in-out infinite; }
+.mouse[data-mode="double"] .lb { animation-duration: .45s; }
+.mouse[data-mode="drag"] .lb { animation: none; }
+.x2 { font-family: var(--font-display); font-weight: 700; font-size: 20px; fill: var(--hot); display: none; }
+.mouse[data-mode="double"] .x2 { display: block; }
+.dragarrow { display: none; }
+.mouse[data-mode="drag"] .dragarrow { display: block; }
+@keyframes pulse { 50% { opacity: .35; } }
+
+.stage {
+  position: relative; border-radius: 26px; overflow: hidden; min-height: 400px;
+  background: radial-gradient(circle at 20% 15%, rgba(255,255,255,.22), transparent 40%), linear-gradient(135deg, var(--wall1), var(--wall2));
+  box-shadow: 0 18px 40px -20px rgba(40,60,160,.6); user-select: none; -webkit-user-select: none;
+}
+.canvas { padding: 22px; min-height: 400px; display: flex; flex-direction: column; justify-content: center; gap: 22px; }
+.row { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; align-items: flex-start; }
+.split { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 28px; }
+.side { flex: 1 1 200px; min-width: 0; }
+.tag { text-align: center; color: rgba(255,255,255,.9); font-family: var(--font-display); font-weight: 600; margin-bottom: 8px; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+
+.icon { width: 104px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: default; touch-action: none; }
+.pic { width: 84px; height: 84px; padding: 8px; border-radius: 20px; transition: transform .12s, background .12s; }
+.pic svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 3px rgba(0,0,0,.25)); }
+.lbl { color: #fff; background: rgba(20,20,70,.55); border-radius: 10px; padding: 1px 10px; font-weight: 700; font-size: .95rem; max-width: 100%; overflow-wrap: anywhere; text-align: center; }
+.icon.sel .pic { background: rgba(255,255,255,.4); outline: 3px solid #fff; }
+.icon.sel .lbl { background: var(--accent); }
+.icon.lifted { opacity: .35; }
+.icon.draggable { cursor: grab; }
+.drop.over .pic { background: rgba(255,255,255,.55); transform: scale(1.15); outline: 3px dashed #fff; }
+.drop.gulp .pic { animation: gulp .5s; }
+@keyframes gulp { 30% { transform: scale(1.3); } 60% { transform: scale(.9); } }
+.icon.gone { animation: poof .3s forwards; }
+@keyframes poof { to { transform: scale(0); opacity: 0; } }
+.icon.shake .pic { animation: shk .3s; }
+@keyframes shk { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.ghost { position: fixed; pointer-events: none; z-index: 60; transform: rotate(-4deg) scale(1.08); opacity: .95; }
+.rename { font: inherit; font-weight: 700; font-size: .95rem; width: 100%; text-align: center; border: 3px solid var(--hot); border-radius: 10px; padding: 0 4px; color: var(--ink); background: #fff; }
+
+.list { list-style: none; margin: 0 auto; padding: 8px; background: #fff; border-radius: 18px; width: min(380px, 100%); box-shadow: 0 10px 24px -12px rgba(0,0,0,.4); }
+.list li { display: flex; align-items: center; gap: 14px; padding: 6px 12px; border-radius: 12px; font-weight: 700; font-size: 1.15rem; color: var(--ink); cursor: default; }
+.list li svg { width: 36px; height: 36px; }
+.list li.sel { background: var(--accent); color: #fff; }
+.listhead { text-align: center; color: #fff; font-family: var(--font-display); font-weight: 600; margin-bottom: 8px; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+
+.ctx { position: absolute; z-index: 30; list-style: none; margin: 0; padding: 6px; background: #fff; border-radius: 16px; box-shadow: 0 14px 30px -8px rgba(0,0,0,.5); min-width: 170px; }
+.ctx button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: transparent; color: var(--ink); box-shadow: none; border-radius: 10px; padding: 8px 12px; font-size: 1.05rem; font-family: var(--font-text); font-weight: 700; }
+.ctx button:hover { background: #eaf0ff; }
+.ctx button:active { transform: none; }
+.ctx i { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+
+.overlay { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding: 16px; pointer-events: none; z-index: 40; }
+.overlay.dim { align-items: center; background: rgba(20,20,70,.5); pointer-events: auto; }
+.card { pointer-events: auto; background: #fff; border-radius: 24px; padding: 18px 24px; text-align: center; box-shadow: 0 20px 40px -10px rgba(0,0,0,.5); max-width: 460px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; animation: pop .35s cubic-bezier(.3,1.6,.5,1); }
+@keyframes pop { from { transform: scale(.7); opacity: 0; } }
+.card h3 { margin: 0; font-family: var(--font-display); font-size: 1.7rem; color: var(--good); }
+.card p { margin: 0; }
+.tick { width: 56px; height: 56px; border-radius: 50%; background: var(--good); display: grid; place-items: center; }
+.tick svg { width: 32px; height: 32px; }
+.stars { font-size: 2.6rem; letter-spacing: .1em; line-height: 1; }
+.stars .on { color: var(--gold); } .stars .off { color: #d9ddf2; }
+.win { pointer-events: auto; background: #fff; border-radius: 18px; overflow: hidden; max-width: 520px; width: 100%; box-shadow: 0 20px 40px -10px rgba(0,0,0,.6); animation: pop .35s cubic-bezier(.3,1.6,.5,1); }
+.wtitle { background: var(--lc); color: #fff; display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-family: var(--font-display); font-weight: 600; }
+.wtitle .d { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,.6); }
+.wbody { padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; }
+.wfiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.wfiles .icon { width: 84px; }
+.wfiles .lbl { background: #eef1ff; color: var(--ink); font-size: .85rem; }
+.wfiles .pic { width: 64px; height: 64px; padding: 4px; }
+.story { background: #fff8d9; border-radius: 12px; padding: 10px 14px; text-align: left; font-size: 1rem; margin: 0; }
+.bigimg { width: 150px; height: 120px; }
+.bigimg svg { width: 100%; height: 100%; }
+.okbar { background: #e2f8ee; color: #0b7a47; border-radius: 12px; padding: 8px 14px; font-weight: 700; width: 100%; }
+
+.cert { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; border: 6px double var(--gold); border-radius: 22px; padding: clamp(18px, 5vw, 36px); }
+.cert h2 { margin: 0; font-family: var(--font-display); font-size: clamp(1.8rem, 7vw, 3rem); color: var(--l4); text-wrap: balance; }
+.cert .who { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.6rem, 6vw, 2.4rem); color: var(--accent); }
+.cert .shelf { box-shadow: none; background: #f4f6ff; flex-wrap: wrap; justify-content: center; border-radius: 22px; }
+.cert .medal { width: 64px; height: 64px; }
+
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 80; }
+.confetti i { position: absolute; top: -20px; width: 10px; height: 16px; border-radius: 3px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translate(var(--dx), 110vh) rotate(var(--rot)); } }
+@media (max-width: 620px) { .mission { grid-template-columns: 1fr; } .mouse { flex-direction: row; width: auto; justify-content: center; } .mouse svg { height: 64px; width: 48px; } .mouse .cap { text-align: left; font-size: .9rem; } }
+@media (prefers-reduced-motion: reduce) { .mouse .lb, .mouse .rb { animation: none !important; } .card, .win { animation: none; } }
+</style>
+
+<main class="wrap">
+  <header class="top">
+    <div>
+      <h1 aria-label="Mouse Missions"><span>Mouse</span> <span>Mis</span><span>sions</span><span>!</span></h1>
+      <p class="sub">Learn to click, double click, right click and drag. Finish a level to win a badge.</p>
+    </div>
+    <div class="shelf" id="shelf" aria-label="Badges"></div>
+  </header>
+
+  <section class="panel intro" id="intro">
+    <h2>Ready to become a Mouse Master?</h2>
+    <ul>
+      <li><b>Level 1:</b> Click to pick things</li>
+      <li><b>Level 2:</b> Double click to open things</li>
+      <li><b>Level 3:</b> Right click for a menu (rename and delete)</li>
+      <li><b>Level 4:</b> Drag and drop into folders and the bin</li>
+    </ul>
+    <label class="nm" for="nameIn">What is your name?
+      <input type="text" id="nameIn" maxlength="20" placeholder="Type your name" autocomplete="off">
+    </label>
+    <button type="button" id="startBtn">Start Level 1</button>
+  </section>
+
+  <section class="game" id="game" hidden>
+    <nav class="levels" id="levels" aria-label="Levels"></nav>
+    <div class="mission" id="missionBox">
+      <div class="bubble">
+        <div class="lvl" id="mLvl"></div>
+        <p class="mtext" id="mText"></p>
+        <p class="coach" id="coach"></p>
+        <div class="dots" id="dots" aria-hidden="true"></div>
+      </div>
+      <div class="mouse" id="mouse" data-mode="left">
+        <svg viewBox="0 0 80 110" aria-hidden="true">
+          <rect class="mbody" x="10" y="4" width="60" height="102" rx="30"/>
+          <path class="lb" d="M10 42V34a30 30 0 0 1 30-30v38z"/>
+          <path class="rb" d="M40 4a30 30 0 0 1 30 30v8H40z"/>
+          <rect x="36" y="14" width="8" height="16" rx="4" fill="#b7bfe8"/>
+          <text class="x2" x="40" y="80" text-anchor="middle">x2</text>
+          <g class="dragarrow" fill="none" stroke="#ff4f81" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 70h36M50 62l8 8-8 8"/></g>
+        </svg>
+        <div class="cap" id="mouseCap"></div>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="canvas" id="canvas"></div>
+      <div class="overlay" id="overlay" hidden></div>
+    </div>
+  </section>
+
+  <section class="panel" id="done" hidden>
+    <div class="cert">
+      <div class="lvl" style="color:var(--gold)">Certificate</div>
+      <h2>Mouse Master!</h2>
+      <div>This certificate goes to</div>
+      <div class="who" id="certName"></div>
+      <div>for clicking, double clicking, right clicking and dragging like a pro.</div>
+      <div class="shelf" id="certShelf"></div>
+      <button type="button" id="againBtn">Play again</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var ICONS = {
+    folder: function (c) { return '<svg viewBox="0 0 64 64"><path d="M6 17a4 4 0 0 1 4-4h14l6 6h24a4 4 0 0 1 4 4v27a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="' + c + '"/><path d="M6 27h52v21a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="#fff" fill-opacity=".38"/></svg>'; },
+    file: function (c) { return '<svg viewBox="0 0 64 64"><path d="M15 6h24l12 12v36a4 4 0 0 1-4 4H15a4 4 0 0 1-4-4V10a4 4 0 0 1 4-4z" fill="#fff" stroke="' + c + '" stroke-width="3.5" stroke-linejoin="round"/><path d="M39 6v12h12z" fill="' + c + '"/><rect x="19" y="28" width="26" height="4" rx="2" fill="' + c + '"/><rect x="19" y="37" width="26" height="4" rx="2" fill="' + c + '" opacity=".6"/><rect x="19" y="46" width="16" height="4" rx="2" fill="' + c + '" opacity=".4"/></svg>'; },
+    image: function (c) { return '<svg viewBox="0 0 64 64"><rect x="8" y="10" width="48" height="44" rx="6" fill="#fff" stroke="' + c + '" stroke-width="3.5"/><circle cx="23" cy="26" r="5" fill="#ffc400"/><path d="M10 50l16-16 10 10 8-8 12 14v4H10z" fill="' + c + '"/></svg>'; },
+    music: function (c) { return '<svg viewBox="0 0 64 64"><rect x="6" y="6" width="52" height="52" rx="12" fill="' + c + '"/><path d="M27 41V19l17-4v21" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="22" cy="42" r="6" fill="#fff"/><circle cx="39" cy="37" r="6" fill="#fff"/></svg>'; },
+    game: function (c) { return '<svg viewBox="0 0 64 64"><rect x="5" y="16" width="54" height="32" rx="14" fill="' + c + '"/><rect x="17" y="26" width="4" height="12" rx="2" fill="#fff"/><rect x="13" y="30" width="12" height="4" rx="2" fill="#fff"/><circle cx="42" cy="28" r="3.5" fill="#fff"/><circle cx="49" cy="35" r="3.5" fill="#fff"/></svg>'; },
+    circle: function (c) { return '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="25" fill="' + c + '"/></svg>'; },
+    square: function (c) { return '<svg viewBox="0 0 64 64"><rect x="8" y="8" width="48" height="48" rx="6" fill="' + c + '"/></svg>'; },
+    triangle: function (c) { return '<svg viewBox="0 0 64 64"><path d="M32 9L57 53H7z" fill="' + c + '" stroke="' + c + '" stroke-width="5" stroke-linejoin="round"/></svg>'; },
+    star: function (c) { return '<svg viewBox="0 0 64 64"><polygon points="32,5 40,24 59,25 44,38 49,57 32,46 15,57 20,38 5,25 24,24" fill="' + c + '" stroke="' + c + '" stroke-width="3" stroke-linejoin="round"/></svg>'; },
+    heart: function (c) { return '<svg viewBox="0 0 64 64"><path d="M32 57C10 41 6 29 6 21a13 13 0 0 1 26-4 13 13 0 0 1 26 4c0 8-4 20-26 36z" fill="' + c + '"/></svg>'; },
+    trash: function (c) { return '<svg viewBox="0 0 64 64"><rect x="22" y="5" width="20" height="8" rx="3" fill="' + c + '"/><rect x="7" y="11" width="50" height="8" rx="4" fill="' + c + '"/><path d="M12 22h40l-3 33a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4z" fill="' + c + '" fill-opacity=".85"/><rect x="25" y="29" width="4" height="24" rx="2" fill="#fff"/><rect x="35" y="29" width="4" height="24" rx="2" fill="#fff"/></svg>'; }
+  };
+  var LC = ["#2f6bff", "#14b86b", "#f5801f", "#d1339f"];
+  var BADGES = ["Click Champ", "Double Click Pro", "Right Click Wizard", "Drag & Drop Master"];
+  var MODECAP = { left: "Press the LEFT button once", double: "Press the LEFT button twice, fast", right: "Press the RIGHT button once", drag: "Hold LEFT, move, then let go" };
+
+  var state = { name: "", level: 0, mission: 0, mistakes: 0, stars: [0, 0, 0, 0], badges: [false, false, false, false], unlocked: 1, locked: false, sel: null };
+  var stage = $("stage"), canvas = $("canvas"), overlay = $("overlay"), coach = $("coach");
+
+  function medal(i, on) {
+    var c = LC[i];
+    return '<div class="medal' + (on ? "" : " off") + '" title="' + BADGES[i] + '"><svg viewBox="0 0 48 48"><path d="M14 2h8l4 14h-8z" fill="' + c + '" opacity=".7"/><path d="M34 2h-8l-4 14h8z" fill="' + c + '"/><circle cx="24" cy="30" r="15" fill="' + c + '"/><circle cx="24" cy="30" r="11" fill="none" stroke="#fff" stroke-width="2" stroke-opacity=".7"/><text x="24" y="36" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="17" fill="#fff">' + (i + 1) + '</text></svg></div>';
+  }
+  function renderShelf() {
+    var h = ""; for (var i = 0; i < 4; i++) h += medal(i, state.badges[i]);
+    $("shelf").innerHTML = h; $("certShelf").innerHTML = h;
+  }
+  function renderLevels() {
+    var names = ["1 Click", "2 Double click", "3 Right click", "4 Drag & drop"], h = "";
+    for (var i = 0; i < 4; i++) {
+      h += '<button type="button" class="lv alt" data-i="' + i + '" style="--lc:' + LC[i] + '"' + (i === state.level ? ' aria-current="true"' : "") + (i >= state.unlocked ? " disabled" : "") + ">" + names[i] + "</button>";
+    }
+    $("levels").innerHTML = h;
+  }
+
+  /* ---------- helpers ---------- */
+  function say(msg, bad) { coach.textContent = msg; coach.className = "coach" + (bad ? " bad" : ""); }
+  function wrong(msg) { state.mistakes++; say(msg, true); }
+  function mkIcon(spec) {
+    var d = document.createElement("div");
+    d.className = "icon"; d.dataset.id = spec.id; d.dataset.label = spec.label;
+    d.innerHTML = '<div class="pic">' + ICONS[spec.kind](spec.color) + '</div><span class="lbl"></span>';
+    d.querySelector(".lbl").textContent = spec.label;
+    if (spec.drop) d.classList.add("drop");
+    return d;
+  }
+  function row(list) { var r = document.createElement("div"); r.className = "row"; list.forEach(function (e) { r.appendChild(e); }); return r; }
+  function select(el) { clearSel(); if (el) { el.classList.add("sel"); state.sel = el; } }
+  function clearSel() { if (state.sel) state.sel.classList.remove("sel"); state.sel = null; }
+  function closeMenu() { var m = stage.querySelector(".ctx"); if (m) m.remove(); }
+  function confetti() {
+    if (reduce) return;
+    var box = document.createElement("div"); box.className = "confetti";
+    for (var i = 0; i < 70; i++) {
+      var p = document.createElement("i");
+      p.style.left = Math.random() * 100 + "%"; p.style.background = LC[i % 4];
+      p.style.animationDuration = 2 + Math.random() * 1.6 + "s"; p.style.animationDelay = Math.random() * .4 + "s";
+      p.style.setProperty("--dx", (Math.random() * 160 - 80) + "px"); p.style.setProperty("--rot", (Math.random() * 720 - 360) + "deg");
+      box.appendChild(p);
+    }
+    document.body.appendChild(box); setTimeout(function () { box.remove(); }, 4200);
+  }
+  var TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+  function success(o) {
+    state.locked = true; if (!o.keepMenu) closeMenu();
+    var lastM = state.mission === LEVELS[state.level].missions.length - 1;
+    var btn = '<button type="button" id="nextBtn">' + (lastM ? "Finish level" : "Next mission") + "</button>";
+    if (o.win) {
+      overlay.className = "overlay dim";
+      overlay.innerHTML = '<div class="win" role="dialog" aria-label="' + o.win.title + '"><div class="wtitle"><span class="d"></span><span class="d"></span><span class="d"></span><b>' + o.win.title + '</b></div><div class="wbody">' + o.win.html + '<div class="okbar">' + o.title + " " + o.msg + "</div>" + btn + "</div></div>";
+    } else {
+      overlay.className = "overlay";
+      overlay.innerHTML = '<div class="card" role="status"><div class="tick">' + TICK + "</div><h3>" + o.title + "</h3><p>" + o.msg + "</p>" + btn + "</div>";
+    }
+    overlay.hidden = false; confetti();
+    $("nextBtn").addEventListener("click", advance);
+    $("nextBtn").focus();
+  }
+  function advance() {
+    if (state.mission < LEVELS[state.level].missions.length - 1) { state.mission++; loadMission(); } else levelDone();
+  }
+  function levelDone() {
+    var m = state.mistakes, n = m <= 1 ? 3 : m <= 4 ? 2 : 1, L = state.level;
+    state.stars[L] = n; state.badges[L] = true; state.unlocked = Math.max(state.unlocked, L + 2);
+    renderShelf(); renderLevels();
+    var last = L === 3;
+    overlay.className = "overlay dim";
+    overlay.innerHTML = '<div class="card" role="status">' + medal(L, true).replace('class="medal"', 'class="medal" style="width:84px;height:84px"') +
+      "<h3>Level " + (L + 1) + " complete!</h3><p>You earned the <b>" + BADGES[L] + "</b> badge.</p><div class=\"stars\">" +
+      [1, 2, 3].map(function (k) { return '<span class="' + (k <= n ? "on" : "off") + '">★</span>'; }).join("") + "</div><button type=\"button\" id=\"nextBtn\">" + (last ? "Get my certificate" : "Start Level " + (L + 2)) + "</button></div>";
+    overlay.hidden = false; confetti();
+    $("nextBtn").addEventListener("click", function () { if (last) showCert(); else startLevel(L + 1); });
+    $("nextBtn").focus();
+  }
+  function showCert() { $("game").hidden = true; $("done").hidden = false; $("certName").textContent = state.name; confetti(); }
+
+  /* pick missions: click or dblclick on an icon */
+  function pick(icons, targetId, ev, ok) {
+    var target = icons.filter(function (e) { return e.dataset.id === targetId; })[0], t;
+    icons.forEach(function (el) {
+      el.addEventListener(ev, function () {
+        if (state.locked) return;
+        clearTimeout(t);
+        if (el === target) ok(el); else wrong('That is "' + el.dataset.label + '". Look for "' + target.dataset.label + '".');
+      });
+      if (ev === "dblclick") {
+        el.addEventListener("click", function () {
+          if (state.locked || el !== target) return;
+          clearTimeout(t);
+          t = setTimeout(function () { if (!state.locked) say("Good start! Now press twice, quickly: click-click.", false); }, 900);
+        });
+      }
+    });
+  }
+
+  /* context menu (level 3) */
+  function openMenu(e, icon, handlers) {
+    closeMenu();
+    var m = document.createElement("ul"); m.className = "ctx";
+    var items = [["Open", "#2f6bff"], ["Rename", "#f5801f"], ["Copy", "#14b86b"], ["Delete", "#e5383b"]];
+    items.forEach(function (it) {
+      var li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button"; b.innerHTML = '<i style="background:' + it[1] + '"></i>' + it[0];
+      b.addEventListener("click", function (ev) { ev.stopPropagation(); if (state.locked) return; closeMenu(); handlers[it[0]](icon); });
+      li.appendChild(b); m.appendChild(li);
+    });
+    stage.appendChild(m);
+    var r = stage.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    x = Math.max(8, Math.min(x, r.width - m.offsetWidth - 8)); y = Math.max(8, Math.min(y, r.height - m.offsetHeight - 8));
+    m.style.left = x + "px"; m.style.top = y + "px";
+  }
+  function startRename(icon, done) {
+    var lbl = icon.querySelector(".lbl"), old = icon.dataset.label, inp = document.createElement("input");
+    inp.type = "text"; inp.className = "rename"; inp.value = old; inp.maxLength = 16;
+    lbl.replaceWith(inp); inp.focus(); inp.select();
+    var finished = false;
+    function finish(commit) {
+      if (finished) return; finished = true;
+      var v = inp.value.trim(), n = document.createElement("span"); n.className = "lbl";
+      var changed = commit && v && v !== old;
+      n.textContent = changed ? v : old; if (changed) icon.dataset.label = v;
+      inp.replaceWith(n); done(changed);
+    }
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") finish(true); else if (e.key === "Escape") finish(false); });
+    inp.addEventListener("blur", function () { finish(true); });
+    inp.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+  }
+  function removeIcon(icon, cb) { icon.classList.add("gone"); setTimeout(function () { icon.remove(); if (cb) cb(); }, 300); }
+
+  /* drag and drop with pointer events */
+  function makeDrag(el, onDrop) {
+    el.classList.add("draggable");
+    el.addEventListener("pointerdown", function (e) {
+      if (e.button !== 0 || state.locked) return;
+      e.preventDefault();
+      var r = el.getBoundingClientRect(), ox = e.clientX - r.left, oy = e.clientY - r.top, moved = 0, over = null;
+      var ghost = el.cloneNode(true); ghost.classList.add("ghost"); ghost.classList.remove("sel", "draggable");
+      ghost.style.width = r.width + "px"; document.body.appendChild(ghost); el.classList.add("lifted");
+      function under(ev) { var n = document.elementFromPoint(ev.clientX, ev.clientY); return n ? n.closest(".drop") : null; }
+      function move(ev) {
+        ghost.style.left = ev.clientX - ox + "px"; ghost.style.top = ev.clientY - oy + "px";
+        moved = Math.max(moved, Math.abs(ev.clientX - e.clientX) + Math.abs(ev.clientY - e.clientY));
+        var t = under(ev); if (t !== over) { if (over) over.classList.remove("over"); over = t; if (over) over.classList.add("over"); }
+      }
+      function up(ev) {
+        window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+        var t = under(ev); ghost.remove(); el.classList.remove("lifted"); if (over) over.classList.remove("over");
+        if (t) onDrop(el, t); else if (moved > 12) say("Let go on top of a folder or the bin.", false);
+      }
+      move(e);
+      window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+    });
+  }
+  function gulp(t) { t.classList.add("gulp"); setTimeout(function () { t.classList.remove("gulp"); }, 600); }
+  function bounce(el) { el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+
+  /* ---------- missions ---------- */
+  function shapesRow(ids) { return row(ids); }
+  var LEVELS = [
+    { missions: [
+      { mode: "left", text: "Click the yellow star.", hint: "Move the pointer onto the star and press the left button once.", build: function () {
+        var icons = [
+          mkIcon({ id: "circle", kind: "circle", color: "#4cc9f0", label: "Circle" }),
+          mkIcon({ id: "square", kind: "square", color: "#7bd88f", label: "Square" }),
+          mkIcon({ id: "star", kind: "star", color: "#ffd23f", label: "Star" }),
+          mkIcon({ id: "triangle", kind: "triangle", color: "#ff7eb6", label: "Triangle" })
+        ];
+        canvas.appendChild(row(icons));
+        pick(icons, "star", "click", function () { success({ title: "Nice click!", msg: "You picked the star. One click selects something." }); });
+      } },
+      { mode: "left", text: "Click the word Triangle in the list.", hint: "Find the row that says Triangle and click on it.", build: function () {
+        var head = document.createElement("div"); head.className = "listhead"; head.textContent = "My Shapes";
+        var ul = document.createElement("ul"); ul.className = "list";
+        var data = [["Circle", "circle", "#4cc9f0"], ["Square", "square", "#7bd88f"], ["Triangle", "triangle", "#ff7eb6"], ["Star", "star", "#ffd23f"], ["Heart", "heart", "#f94144"]];
+        data.forEach(function (d) {
+          var li = document.createElement("li"); li.innerHTML = ICONS[d[1]](d[2]) + "<span>" + d[0] + "</span>";
+          li.addEventListener("click", function () {
+            if (state.locked) return;
+            ul.querySelectorAll("li").forEach(function (x) { x.classList.remove("sel"); }); li.classList.add("sel");
+            if (d[0] === "Triangle") success({ title: "Well done!", msg: "You selected Triangle from the list." });
+            else wrong('That is "' + d[0] + '". Look for the row called Triangle.');
+          });
+          ul.appendChild(li);
+        });
+        canvas.appendChild(head); canvas.appendChild(ul);
+      } },
+      { mode: "left", text: "Click the folder called Pictures.", hint: "Read the names under the folders, then click the right one.", build: function () {
+        var icons = [
+          mkIcon({ id: "music", kind: "folder", color: "#ff9f1c", label: "Music" }),
+          mkIcon({ id: "pictures", kind: "folder", color: "#2ec4b6", label: "Pictures" }),
+          mkIcon({ id: "games", kind: "folder", color: "#9b5de5", label: "Games" })
+        ];
+        canvas.appendChild(row(icons));
+        pick(icons, "pictures", "click", function () { success({ title: "Great reading!", msg: "You found the Pictures folder." }); });
+      } }
+    ] },
+    { missions: [
+      { mode: "double", text: "Double click the folder called Music to open it.", hint: "Press the left button twice, very fast.", build: function () {
+        var icons = [
+          mkIcon({ id: "pictures", kind: "folder", color: "#2ec4b6", label: "Pictures" }),
+          mkIcon({ id: "music", kind: "folder", color: "#ff9f1c", label: "Music" }),
+          mkIcon({ id: "games", kind: "folder", color: "#9b5de5", label: "Games" })
+        ];
+        canvas.appendChild(row(icons));
+        pick(icons, "music", "dblclick", function () {
+          var f = [["Happy Song", "#ff4f81"], ["Dance Beat", "#2f6bff"], ["Lullaby", "#14b86b"]].map(function (x) { return '<div class="icon"><div class="pic">' + ICONS.music(x[1]) + '</div><span class="lbl">' + x[0] + "</span></div>"; }).join("");
+          success({ title: "Success!", msg: "You opened the Music folder with a double click.", win: { title: "Music", html: '<div class="wfiles">' + f + "</div>" } });
+        });
+      } },
+      { mode: "double", text: "Double click the file called Story to read it.", hint: "Click twice quickly without moving the mouse.", build: function () {
+        var icons = [
+          mkIcon({ id: "list", kind: "file", color: "#f5801f", label: "Shopping" }),
+          mkIcon({ id: "story", kind: "file", color: "#2f6bff", label: "Story" }),
+          mkIcon({ id: "diary", kind: "file", color: "#d1339f", label: "Diary" })
+        ];
+        canvas.appendChild(row(icons));
+        pick(icons, "story", "dblclick", function () {
+          success({ title: "Success!", msg: "You opened the Story file.", win: { title: "Story", html: '<p class="story">Once upon a time, a little robot learned to use a mouse. Click, click, double click! Soon it could open every folder in the land.</p>' } });
+        });
+      } },
+      { mode: "double", text: "Double click the picture called Sunset.", hint: "Find the picture with the sun and mountains.", build: function () {
+        var icons = [
+          mkIcon({ id: "beach", kind: "image", color: "#0fb5c4", label: "Beach" }),
+          mkIcon({ id: "sunset", kind: "image", color: "#f5801f", label: "Sunset" }),
+          mkIcon({ id: "forest", kind: "image", color: "#14b86b", label: "Forest" })
+        ];
+        canvas.appendChild(row(icons));
+        pick(icons, "sunset", "dblclick", function () {
+          success({ title: "Success!", msg: "The Sunset picture opened.", win: { title: "Sunset", html: '<div class="bigimg">' + ICONS.image("#f5801f") + "</div>" } });
+        });
+      } }
+    ] },
+    { missions: [
+      { mode: "right", text: "Right click the file called Notes.", hint: "Press the RIGHT mouse button once on the file.", build: function () { rcBuild("menu"); } },
+      { mode: "right", text: "Right click Notes, choose Rename, type a new name, then press Enter.", hint: "Menu first, then Rename, then type, then Enter.", build: function () { rcBuild("rename"); } },
+      { mode: "right", text: "Right click Old Photo and choose Delete.", hint: "Right click, then pick Delete from the menu.", build: function () { rcBuild("delete"); } }
+    ] },
+    { missions: [
+      { mode: "drag", text: "Drag the file Homework into the School folder.", hint: "Hold the left button on Homework, move it over School, then let go.", build: function () {
+        var hw = mkIcon({ id: "hw", kind: "file", color: "#2f6bff", label: "Homework" });
+        var school = mkIcon({ id: "school", kind: "folder", color: "#ff9f1c", label: "School", drop: true });
+        canvas.appendChild(split([hw], [school]));
+        makeDrag(hw, function (el, t) {
+          if (t !== school) { wrong("That is not the School folder."); return; }
+          el.remove(); gulp(t); success({ title: "Dropped!", msg: "Homework is now inside the School folder." });
+        });
+      } },
+      { mode: "drag", text: "Drag Old Photo into the Trash bin.", hint: "Only throw away the file called Old Photo.", build: function () {
+        var junk = mkIcon({ id: "junk", kind: "image", color: "#8a8fb5", label: "Old Photo" });
+        var n = mkIcon({ id: "notes", kind: "file", color: "#14b86b", label: "Notes" });
+        var s = mkIcon({ id: "song", kind: "music", color: "#d1339f", label: "Song" });
+        var bin = mkIcon({ id: "bin", kind: "trash", color: "#5d6bb0", label: "Trash", drop: true });
+        canvas.appendChild(split([junk, n, s], [bin]));
+        [junk, n, s].forEach(function (el) {
+          makeDrag(el, function (e2, t) {
+            if (t !== bin) { wrong("The Trash bin is the one with the bin picture."); return; }
+            if (e2 !== junk) { wrong('Careful! "' + e2.dataset.label + '" is useful. Only throw away Old Photo.'); bounce(e2); return; }
+            e2.remove(); gulp(t); success({ title: "Cleaned up!", msg: "Old Photo went into the Trash." });
+          });
+        });
+      } },
+      { mode: "drag", text: "Sort the files. Drag each file into the right folder.", hint: "Songs go in Music, photos in Pictures, games in Games.", build: function () {
+        var files = [
+          mkIcon({ id: "music", kind: "music", color: "#d1339f", label: "Song" }),
+          mkIcon({ id: "pictures", kind: "image", color: "#0fb5c4", label: "Photo" }),
+          mkIcon({ id: "games", kind: "game", color: "#7a4dff", label: "Game" })
+        ];
+        var folders = [
+          mkIcon({ id: "music", kind: "folder", color: "#ff9f1c", label: "Music", drop: true }),
+          mkIcon({ id: "pictures", kind: "folder", color: "#2ec4b6", label: "Pictures", drop: true }),
+          mkIcon({ id: "games", kind: "folder", color: "#9b5de5", label: "Games", drop: true })
+        ];
+        canvas.appendChild(split(files, folders)); var left = 3;
+        files.forEach(function (el) {
+          makeDrag(el, function (e2, t) {
+            if (t.dataset.id !== e2.dataset.id) { wrong('"' + e2.dataset.label + '" does not go in ' + t.dataset.label + "."); bounce(e2); return; }
+            e2.remove(); gulp(t); left--; say(left + (left === 1 ? " file" : " files") + " left to sort.", false);
+            if (!left) success({ title: "All sorted!", msg: "Every file is in the right folder." });
+          });
+        });
+      } }
+    ] }
+  ];
+  LEVELS[0].name = "Click"; LEVELS[1].name = "Double click"; LEVELS[2].name = "Right click"; LEVELS[3].name = "Drag and drop";
+
+  function split(a, b) {
+    var d = document.createElement("div"); d.className = "split";
+    var l = document.createElement("div"), r = document.createElement("div"); l.className = "side"; r.className = "side";
+    l.appendChild(row(a)); r.appendChild(row(b)); d.appendChild(l); d.appendChild(r); return d;
+  }
+
+  function rcBuild(kind) {
+    var items = kind === "delete"
+      ? [mkIcon({ id: "junk", kind: "image", color: "#8a8fb5", label: "Old Photo" }), mkIcon({ id: "notes", kind: "file", color: "#14b86b", label: "Notes" }), mkIcon({ id: "song", kind: "music", color: "#d1339f", label: "Song" })]
+      : [mkIcon({ id: "notes", kind: "file", color: "#14b86b", label: "Notes" }), mkIcon({ id: "photo", kind: "image", color: "#0fb5c4", label: "Photo" }), mkIcon({ id: "song", kind: "music", color: "#d1339f", label: "Song" })];
+    canvas.appendChild(row(items));
+    var targetId = kind === "delete" ? "junk" : "notes", targetName = kind === "delete" ? "Old Photo" : "Notes";
+    var handlers = {
+      Open: function (ic) { say('"' + ic.dataset.label + '" would open. This mission wants something else.', false); },
+      Copy: function (ic) { say('A copy of "' + ic.dataset.label + '" was made. This mission wants something else.', false); },
+      Rename: function (ic) {
+        startRename(ic, function (changed) {
+          if (kind === "rename" && ic.dataset.id === targetId && changed) success({ title: "Renamed!", msg: 'Notes is now called "' + ic.dataset.label + '".' });
+          else if (kind === "rename") say("Type a new name, then press Enter.", true);
+        });
+      },
+      Delete: function (ic) {
+        if (kind !== "delete") { wrong("Not this time! Please do not delete anything in this mission."); return; }
+        if (ic.dataset.id !== targetId) { wrong('"' + ic.dataset.label + '" is useful. Only delete Old Photo.'); bounce(ic); return; }
+        removeIcon(ic, function () { success({ title: "Deleted!", msg: "Old Photo is gone." }); });
+      }
+    };
+    items.forEach(function (ic) {
+      ic.addEventListener("contextmenu", function (e) {
+        e.preventDefault(); e.stopPropagation();
+        if (state.locked) return;
+        select(ic); openMenu(e, ic, handlers);
+        if (kind === "menu") {
+          if (ic.dataset.id === targetId) success({ keepMenu: true, title: "Menu opened!", msg: "That is the right click menu. It shows what you can do with a file." });
+          else wrong('That menu is for "' + ic.dataset.label + '". Right click Notes.');
+        } else if (ic.dataset.id !== targetId) {
+          say('That menu is for "' + ic.dataset.label + '". Use ' + targetName + ".", true);
+        }
+      });
+    });
+  }
+
+  /* ---------- mission loading ---------- */
+  function loadMission() {
+    state.locked = false; overlay.hidden = true; overlay.innerHTML = ""; canvas.innerHTML = ""; closeMenu(); clearSel();
+    var L = LEVELS[state.level], m = L.missions[state.mission], c = LC[state.level];
+    stage.style.setProperty("--lc", c); $("missionBox").style.setProperty("--lc", c);
+    $("mLvl").textContent = "Level " + (state.level + 1) + ": " + L.name + "  •  Mission " + (state.mission + 1) + " of " + L.missions.length;
+    $("mText").textContent = m.text; say(m.hint, false);
+    $("mouse").dataset.mode = m.mode; $("mouseCap").textContent = MODECAP[m.mode];
+    var d = ""; for (var i = 0; i < L.missions.length; i++) d += '<i class="' + (i < state.mission ? "done" : i === state.mission ? "now" : "") + '"></i>';
+    $("dots").innerHTML = d;
+    m.build();
+  }
+  function startLevel(i) {
+    state.level = i; state.mission = 0; state.mistakes = 0;
+    document.querySelector(".game").style.setProperty("--lc", LC[i]);
+    renderLevels(); loadMission();
+  }
+
+  /* ---------- events ---------- */
+  stage.addEventListener("pointerdown", function (e) {
+    if (e.target.closest(".ctx") || e.target.closest(".overlay")) return;
+    var ic = e.target.closest(".icon");
+    if (!ic) { closeMenu(); clearSel(); return; }
+    if (e.target.closest(".rename")) return;
+    if (!stage.querySelector(".ctx") || e.button !== 2) closeMenu();
+    if (e.button === 0 || e.button === 2) select(ic);
+  });
+  stage.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+    if (state.locked) return;
+    var mode = LEVELS[state.level].missions[state.mission].mode;
+    if (mode !== "right") say("This mission needs a different button. Look at the mouse picture.", true);
+    else closeMenu();
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
+  $("levels").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || b.disabled) return; startLevel(+b.dataset.i);
+  });
+  $("startBtn").addEventListener("click", function () {
+    state.name = ($("nameIn").value || "").trim() || "Champion";
+    $("intro").hidden = true; $("game").hidden = false; startLevel(0);
+  });
+  $("nameIn").addEventListener("keydown", function (e) { if (e.key === "Enter") $("startBtn").click(); });
+  $("againBtn").addEventListener("click", function () {
+    state.stars = [0, 0, 0, 0]; state.badges = [false, false, false, false]; state.unlocked = 1;
+    renderShelf(); $("done").hidden = true; $("game").hidden = false; startLevel(0);
+  });
+
+  renderShelf();
+})();
+</script>
+
+</body></html>

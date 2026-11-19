@@ -1,0 +1,612 @@
+// Arduino Lessons - app logic with Web Serial API, STK500 Flasher & Right-Side Serial Monitor
+
+const KEY = "arduinoLessons.v2";
+
+// Flatten all sessions into one list of lessons with a unique id
+const ALL = [];
+SESSIONS.forEach((session, si) => {
+  session.lessons.forEach((lesson, li) => {
+    ALL.push({ id: si + "-" + li, session: session, sessionIndex: si, lesson: lesson, first: li === 0 });
+  });
+});
+
+// Saved progress: { current: 0, done: {"0-0": true}, code: {"0-0": "..."} }
+function loadState() {
+  try {
+    return JSON.parse(localStorage.getItem(KEY)) || { current: 0, done: {}, code: {} };
+  } catch (e) {
+    return { current: 0, done: {}, code: {} };
+  }
+}
+function saveState() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+}
+
+const state = loadState();
+if (!state.done) state.done = {};
+if (!state.code) state.code = {};
+if (!(state.current >= 0 && state.current < ALL.length)) state.current = 0;
+
+const $ = (id) => document.getElementById(id);
+const sidebar = $("sidebar");
+const editor = $("editor");
+const boardSelect = $("boardSelect");
+const portBadge = $("portBadge");
+const boardStatus = $("boardStatus");
+const uploadBtn = $("uploadBtn");
+const notesIntro = $("notesIntro");
+const notesSections = $("notesSections");
+const circuitImage = $("circuitImage");
+const diagramPlaceholder = $("diagramPlaceholder");
+const diagramFileHint = $("diagramFileHint");
+const diagramZoomBtn = $("diagramZoomBtn");
+const diagramDialog = $("diagramDialog");
+const largeCircuitImage = $("largeCircuitImage");
+
+// Right-Side Serial Monitor elements
+const serialSidebar = $("serialSidebar");
+const serialDot = $("serialDot");
+const baudSelect = $("baudSelect");
+const serialConnectBtn = $("serialConnectBtn");
+const serialTimestamp = $("serialTimestamp");
+const serialAutoscroll = $("serialAutoscroll");
+const serialOutput = $("serialOutput");
+const serialInput = $("serialInput");
+const lineEndingSelect = $("lineEndingSelect");
+
+const BOARD_NAMES = {
+  uno: "Arduino Uno",
+  nano: "Arduino Nano",
+  "nano-old": "Arduino Nano (Old Bootloader)",
+};
+
+// Web Serial state
+let selectedSerialPort = null;
+let serialReader = null;
+let isSerialReading = false;
+let lineBuffer = "";
+
+function stripComments(code) {
+  return code.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+}
+
+function renderSidebar() {
+  sidebar.innerHTML = "";
+  ALL.forEach((item, i) => {
+    if (item.first) {
+      const h = document.createElement("div");
+      h.className = "session-title";
+      h.textContent = item.session.title;
+      sidebar.appendChild(h);
+    }
+    const b = document.createElement("button");
+    if (i === state.current) b.classList.add("active");
+    const name = document.createElement("span");
+    name.textContent = item.lesson.title;
+    b.appendChild(name);
+    if (state.done[item.id]) {
+      const tick = document.createElement("span");
+      tick.className = "done";
+      tick.textContent = "✓";
+      b.appendChild(tick);
+    }
+    b.addEventListener("click", () => {
+      saveEditor();
+      state.current = i;
+      saveState();
+      showLesson();
+      sidebar.classList.remove("open");
+    });
+    sidebar.appendChild(b);
+  });
+  const count = ALL.filter((item) => state.done[item.id]).length;
+  $("progress").textContent = count + " / " + ALL.length + " done";
+}
+
+function saveEditor() {
+  state.code[ALL[state.current].id] = editor.value;
+  saveState();
+}
+
+function showLesson() {
+  const item = ALL[state.current];
+  const lesson = item.lesson;
+  $("sessionName").textContent = item.session.title;
+  $("lessonTitle").textContent = lesson.title;
+  $("lessonText").innerHTML = lesson.explanation;
+  $("taskText").textContent = lesson.task;
+  renderStudyNotes(lesson);
+  editor.value = state.code[item.id] != null ? state.code[item.id] : lesson.code;
+  $("hint").hidden = true;
+  $("results").innerHTML = "";
+  $("banner").hidden = true;
+  $("nextBtn").hidden = !(state.done[item.id] && state.current < ALL.length - 1);
+  renderSidebar();
+  window.scrollTo(0, 0);
+}
+
+function renderStudyNotes(lesson) {
+  const notes = lesson.notes || {};
+  notesIntro.textContent = notes.intro || "Read the lesson notes, then use the task to practice.";
+  notesSections.replaceChildren();
+
+  (notes.sections || []).forEach((section, index) => {
+    const details = document.createElement("details");
+    details.className = "note-section";
+    details.open = index === 0;
+    const summary = document.createElement("summary");
+    summary.textContent = section.title;
+    details.appendChild(summary);
+    if (section.text) {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = section.text;
+      details.appendChild(paragraph);
+    }
+    if (Array.isArray(section.points) && section.points.length) {
+      const list = document.createElement("ul");
+      section.points.forEach((point) => {
+        const item = document.createElement("li");
+        item.textContent = point;
+        list.appendChild(item);
+      });
+      details.appendChild(list);
+    }
+    notesSections.appendChild(details);
+  });
+
+  const diagram = notes.diagram || {};
+  const file = diagram.file || `${lesson.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`;
+  const src = `assets/${file}`;
+  circuitImage.dataset.lessonSrc = src;
+  circuitImage.hidden = true;
+  diagramPlaceholder.hidden = false;
+  diagramZoomBtn.hidden = true;
+  circuitImage.alt = diagram.alt || `${lesson.title} circuit diagram`;
+  diagramFileHint.textContent = `Add your PNG as ${src} to show it here.`;
+  circuitImage.onload = () => {
+    if (circuitImage.dataset.lessonSrc !== src) return;
+    circuitImage.hidden = false;
+    diagramPlaceholder.hidden = true;
+    diagramZoomBtn.hidden = false;
+  };
+  circuitImage.onerror = () => {
+    if (circuitImage.dataset.lessonSrc !== src) return;
+    circuitImage.hidden = true;
+    diagramPlaceholder.hidden = false;
+    diagramZoomBtn.hidden = true;
+  };
+  circuitImage.src = src;
+  largeCircuitImage.src = src;
+  largeCircuitImage.alt = circuitImage.alt;
+  $("diagramDialogTitle").textContent = `${lesson.title} · Circuit diagram`;
+}
+
+function checkCode() {
+  const item = ALL[state.current];
+  saveEditor();
+  const clean = stripComments(editor.value);
+  const list = $("results");
+  list.innerHTML = "";
+  let allPass = true;
+
+  item.lesson.checks.forEach((c) => {
+    const found = c.pattern.test(clean);
+    const pass = c.not ? !found : found;
+    if (!pass) allPass = false;
+    const li = document.createElement("li");
+    li.className = pass ? "pass" : "fail";
+    const mark = document.createElement("span");
+    mark.className = "mark";
+    mark.textContent = pass ? "✓" : "✗";
+    li.appendChild(mark);
+    li.appendChild(document.createTextNode(pass ? c.label : c.fail));
+    list.appendChild(li);
+  });
+
+  const banner = $("banner");
+  banner.hidden = false;
+  if (allPass) {
+    banner.className = "banner success";
+    banner.textContent = "Great job! All changes are correct.";
+    state.done[item.id] = true;
+    saveState();
+    renderSidebar();
+    $("nextBtn").hidden = state.current >= ALL.length - 1;
+  } else {
+    banner.className = "banner try";
+    banner.textContent = "Not yet. Read the red points and try again.";
+  }
+}
+
+$("checkBtn").addEventListener("click", checkCode);
+
+$("hintBtn").addEventListener("click", () => {
+  const h = $("hint");
+  h.textContent = "Hint: " + ALL[state.current].lesson.hint;
+  h.hidden = !h.hidden;
+});
+
+$("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset the code to the original?")) {
+    delete state.code[ALL[state.current].id];
+    saveState();
+    showLesson();
+  }
+});
+
+$("nextBtn").addEventListener("click", () => {
+  state.current += 1;
+  saveState();
+  showLesson();
+});
+
+$("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+
+editor.addEventListener("input", saveEditor);
+
+async function copyCode() {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(editor.value);
+    } else {
+      editor.focus();
+      editor.select();
+      if (!document.execCommand("copy")) throw new Error("Copy was blocked by the browser.");
+    }
+    boardStatus.textContent = "Code copied to clipboard.";
+  } catch (error) {
+    boardStatus.textContent = `Could not copy code: ${error.message}`;
+  }
+}
+
+// --- WEB SERIAL API PORT SELECTION ---
+async function selectPort() {
+  if (!("serial" in navigator)) {
+    boardStatus.textContent = "Web Serial is not supported here. Please open this app in Google Chrome or Microsoft Edge.";
+    return false;
+  }
+
+  try {
+    if (isSerialReading) await disconnectSerialMonitor();
+
+    const port = await navigator.serial.requestPort({
+      filters: [
+        { usbVendorId: 0x2341 }, // Official Arduino
+        { usbVendorId: 0x1A86 }, // CH340 / CH341 USB-Serial
+        { usbVendorId: 0x0403 }, // FTDI
+        { usbVendorId: 0x10C4 }, // CP210x
+        { usbVendorId: 0x2A03 }, // Arduino.org
+      ],
+    });
+
+    selectedSerialPort = port;
+    const info = port.getInfo();
+    const vid = info.usbVendorId ? info.usbVendorId.toString(16).toUpperCase().padStart(4, "0") : "USB";
+    portBadge.textContent = `Port (${vid})`;
+    portBadge.classList.add("connected");
+    boardStatus.textContent = `USB Serial port selected (VID:${vid}). Ready to upload.`;
+    return true;
+  } catch (error) {
+    if (error.name !== "NotFoundError") {
+      boardStatus.textContent = `Port error: ${error.message}`;
+    }
+    return false;
+  }
+}
+
+if ("serial" in navigator) {
+  navigator.serial.addEventListener("disconnect", (event) => {
+    if (selectedSerialPort && event.target === selectedSerialPort) {
+      isSerialReading = false;
+      selectedSerialPort = null;
+      portBadge.textContent = "No port";
+      portBadge.classList.remove("connected");
+      serialDot.classList.remove("live");
+      serialConnectBtn.textContent = "Connect";
+      boardStatus.textContent = "Arduino disconnected from USB.";
+    }
+  });
+}
+
+// --- STK500v1 BOOTLOADER FLASHER OVER WEB SERIAL ---
+function parseIntelHex(hexString) {
+  const lines = hexString.trim().split(/\r?\n/);
+  const memory = new Uint8Array(32768);
+  let maxAddr = 0;
+
+  for (const line of lines) {
+    if (!line.startsWith(":")) continue;
+    const len = parseInt(line.substr(1, 2), 16);
+    const addr = parseInt(line.substr(3, 4), 16);
+    const type = parseInt(line.substr(7, 2), 16);
+    if (type === 0x00) {
+      for (let i = 0; i < len; i++) {
+        memory[addr + i] = parseInt(line.substr(9 + i * 2, 2), 16);
+      }
+      if (addr + len > maxAddr) maxAddr = addr + len;
+    }
+  }
+  return memory.slice(0, maxAddr);
+}
+
+async function readExactBytes(reader, expectedCount, timeoutMs = 1000) {
+  const buffer = [];
+  const deadline = Date.now() + timeoutMs;
+
+  while (buffer.length < expectedCount) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new Error("Bootloader response timed out. Check selected Board type.");
+
+    const readPromise = reader.read();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Bootloader timeout")), remaining)
+    );
+
+    const { value, done } = await Promise.race([readPromise, timeoutPromise]);
+    if (done) break;
+    if (value) {
+      for (const byte of value) buffer.push(byte);
+    }
+  }
+  return new Uint8Array(buffer);
+}
+
+async function flashHexOverWebSerial(port, hexString, baudRate) {
+  const firmware = parseIntelHex(hexString);
+  if (!firmware.length) throw new Error("Compiled binary is empty.");
+
+  await port.open({ baudRate });
+  const writer = port.writable.getWriter();
+  const reader = port.readable.getReader();
+
+  try {
+    await port.setSignals({ dataTerminalReady: false, requestToSend: false });
+    await new Promise((r) => setTimeout(r, 250));
+    await port.setSignals({ dataTerminalReady: true, requestToSend: true });
+    await new Promise((r) => setTimeout(r, 250));
+
+    const sendCommand = async (bytes, expectedReplyLen = 2) => {
+      await writer.write(new Uint8Array(bytes));
+      const reply = await readExactBytes(reader, expectedReplyLen, 1200);
+      if (reply[0] !== 0x14 || reply[reply.length - 1] !== 0x10) {
+        throw new Error("STK500 sync mismatch. Verify Board selection (Uno vs Nano / Old Bootloader).");
+      }
+      return reply;
+    };
+
+    let synced = false;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      try {
+        await sendCommand([0x30, 0x20], 2);
+        synced = true;
+        break;
+      } catch (e) {
+        await new Promise((r) => setTimeout(r, 80));
+      }
+    }
+    if (!synced) {
+      throw new Error("Could not sync with Arduino bootloader. Try switching between Nano and Nano (Old Bootloader).");
+    }
+
+    await sendCommand([0x50, 0x20], 2);
+
+    const pageSize = 128;
+    for (let addr = 0; addr < firmware.length; addr += pageSize) {
+      const wordAddr = addr >> 1;
+      await sendCommand([0x55, wordAddr & 0xff, (wordAddr >> 8) & 0xff, 0x20], 2);
+
+      const slice = firmware.slice(addr, addr + pageSize);
+      const paddedPage = new Uint8Array(pageSize).fill(0xff);
+      paddedPage.set(slice);
+
+      await sendCommand([0x64, 0x00, pageSize, 0x46, ...paddedPage, 0x20], 2);
+    }
+
+    await sendCommand([0x51, 0x20], 2);
+  } finally {
+    writer.releaseLock();
+    reader.releaseLock();
+    await port.close();
+  }
+}
+
+async function uploadCode() {
+  const code = editor.value.trim();
+  const board = boardSelect.value;
+  if (!code) {
+    boardStatus.textContent = "The sketch is empty.";
+    return;
+  }
+
+  if (!selectedSerialPort) {
+    const ok = await selectPort();
+    if (!ok) return;
+  }
+
+  const wasMonitoring = isSerialReading;
+  if (wasMonitoring) await disconnectSerialMonitor();
+
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = "Uploading…";
+  boardStatus.textContent = `Compiling sketch for ${BOARD_NAMES[board]}…`;
+
+  try {
+    const compileRes = await fetch("https://hexi.wokwi.com/build", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sketch: code,
+        board: board === "uno" ? "uno" : "nano",
+      }),
+    });
+
+    if (!compileRes.ok) {
+      throw new Error(`Compiler service returned HTTP ${compileRes.status}`);
+    }
+
+    const compiled = await compileRes.json();
+    if (!compiled.hex) {
+      throw new Error(compiled.stderr || "Compilation failed. Check your code syntax.");
+    }
+
+    boardStatus.textContent = `Flashing ${BOARD_NAMES[board]} over USB…`;
+    const baudRate = board === "nano-old" ? 57600 : 115200;
+    await flashHexOverWebSerial(selectedSerialPort, compiled.hex, baudRate);
+
+    boardStatus.textContent = `${BOARD_NAMES[board]} upload completed successfully!`;
+
+    if (wasMonitoring || code.includes("Serial.begin")) {
+      serialSidebar.classList.remove("collapsed");
+      await connectSerialMonitor();
+    }
+  } catch (error) {
+    boardStatus.textContent = `Upload failed: ${error.message}`;
+  } finally {
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = "Upload to board";
+  }
+}
+
+// --- RIGHT-SIDE SERIAL MONITOR ---
+function appendSerialText(chunk) {
+  if (!serialTimestamp.checked) {
+    serialOutput.textContent += chunk;
+  } else {
+    lineBuffer += chunk;
+    const lines = lineBuffer.split("\n");
+    lineBuffer = lines.pop();
+    const now = new Date().toLocaleTimeString([], { hour12: false });
+    lines.forEach((line) => {
+      serialOutput.textContent += `[${now}] ${line}\n`;
+    });
+  }
+
+  if (serialAutoscroll.checked) {
+    serialOutput.scrollTop = serialOutput.scrollHeight;
+  }
+}
+
+async function connectSerialMonitor() {
+  if (!selectedSerialPort) {
+    const ok = await selectPort();
+    if (!ok) return;
+  }
+  if (isSerialReading) return;
+
+  const baudRate = parseInt(baudSelect.value, 10) || 9600;
+  try {
+    await selectedSerialPort.open({ baudRate });
+    isSerialReading = true;
+    lineBuffer = "";
+    serialDot.classList.add("live");
+    serialConnectBtn.textContent = "Disconnect";
+
+    const decoder = new TextDecoderStream();
+    const inputDone = selectedSerialPort.readable.pipeTo(decoder.writable);
+    serialReader = decoder.readable.getReader();
+
+    (async () => {
+      try {
+        while (isSerialReading) {
+          const { value, done } = await serialReader.read();
+          if (done) break;
+          if (value) appendSerialText(value);
+        }
+      } catch (e) {
+        // Ignore read abort when disconnecting
+      } finally {
+        await inputDone.catch(() => {});
+      }
+    })();
+  } catch (error) {
+    boardStatus.textContent = `Serial Monitor error: ${error.message}`;
+  }
+}
+
+async function disconnectSerialMonitor() {
+  isSerialReading = false;
+  serialDot.classList.remove("live");
+  serialConnectBtn.textContent = "Connect";
+  try {
+    if (serialReader) {
+      await serialReader.cancel();
+      serialReader.releaseLock();
+      serialReader = null;
+    }
+    if (selectedSerialPort && selectedSerialPort.readable) {
+      await selectedSerialPort.close();
+    }
+  } catch (e) {
+    // Ignore close errors if port already closed
+  }
+}
+
+async function sendSerialData() {
+  const text = serialInput.value;
+  if (!text) return;
+  if (!isSerialReading || !selectedSerialPort || !selectedSerialPort.writable) {
+    boardStatus.textContent = "Click Connect in the Serial Monitor before sending data.";
+    return;
+  }
+
+  const endingMap = { "\\n": "\n", "\\r\\n": "\r\n", "": "" };
+  const ending = endingMap[lineEndingSelect.value] ?? "\n";
+
+  try {
+    const encoder = new TextEncoder();
+    const writer = selectedSerialPort.writable.getWriter();
+    await writer.write(encoder.encode(text + ending));
+    writer.releaseLock();
+    serialInput.value = "";
+  } catch (error) {
+    boardStatus.textContent = `Send error: ${error.message}`;
+  }
+}
+
+// Event bindings
+$("copyBtn").addEventListener("click", copyCode);
+$("selectPortBtn").addEventListener("click", selectPort);
+uploadBtn.addEventListener("click", uploadCode);
+
+$("serialToggleBtn").addEventListener("click", () => {
+  serialSidebar.classList.toggle("collapsed");
+});
+$("serialCloseBtn").addEventListener("click", () => {
+  serialSidebar.classList.add("collapsed");
+});
+serialConnectBtn.addEventListener("click", () => {
+  if (isSerialReading) disconnectSerialMonitor();
+  else connectSerialMonitor();
+});
+baudSelect.addEventListener("change", async () => {
+  if (isSerialReading) {
+    await disconnectSerialMonitor();
+    await connectSerialMonitor();
+  }
+});
+$("serialClearBtn").addEventListener("click", () => {
+  serialOutput.textContent = "";
+  lineBuffer = "";
+});
+$("serialSendBtn").addEventListener("click", sendSerialData);
+serialInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendSerialData();
+});
+
+diagramZoomBtn.addEventListener("click", () => {
+  if (typeof diagramDialog.showModal === "function") diagramDialog.showModal();
+});
+$("closeDiagramBtn").addEventListener("click", () => diagramDialog.close());
+
+// Tab key inserts two spaces instead of leaving the editor
+editor.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const s = editor.selectionStart;
+    editor.value = editor.value.slice(0, s) + "  " + editor.value.slice(editor.selectionEnd);
+    editor.selectionStart = editor.selectionEnd = s + 2;
+    saveEditor();
+  }
+});
+
+showLesson();

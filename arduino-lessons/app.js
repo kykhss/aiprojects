@@ -70,8 +70,24 @@ const BOARD_NAMES = {
 // Web Serial state
 let selectedSerialPort = null;
 let serialReader = null;
+let serialPipeDone = null;   // promise of port.readable -> decoder pipe
+let serialReadLoop = null;   // promise of the monitor read loop
 let isSerialReading = false;
+let isUploading = false;
+let serialBusy = false;      // guards connect/disconnect from running at the same time
 let lineBuffer = "";
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Always leaves the port closed. Never throws (safe to call on an already closed port).
+async function closePortSafely(port) {
+  if (!port) return;
+  try {
+    await port.close();
+  } catch (e) {
+    // Already closed, or still locked. Nothing more we can do here.
+  }
+}
 
 function stripComments(code) {
   return code.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
@@ -313,6 +329,8 @@ async function selectPort() {
 
   try {
     if (isSerialReading) await disconnectSerialMonitor();
+    // If a different port was open before, make sure it is released.
+    await closePortSafely(selectedSerialPort);
 
     const port = await navigator.serial.requestPort({
       filters: [
@@ -345,6 +363,9 @@ if ("serial" in navigator) {
     if (selectedSerialPort && event.target === selectedSerialPort) {
       isSerialReading = false;
       selectedSerialPort = null;
+      serialReader = null;
+      serialPipeDone = null;
+      serialReadLoop = null;
       portBadge.textContent = "No port";
       portBadge.classList.remove("connected");
       serialDot.classList.remove("live");
@@ -376,45 +397,53 @@ function parseIntelHex(hexString) {
   return memory.slice(0, maxAddr);
 }
 
-async function readExactBytes(reader, expectedCount, timeoutMs = 1000) {
-  const buffer = [];
-  const deadline = Date.now() + timeoutMs;
-
-  while (buffer.length < expectedCount) {
-    const remaining = deadline - Date.now();
-    if (remaining <= 0) throw new Error("Bootloader response timed out. Check selected Board type.");
-
-    const readPromise = reader.read();
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Bootloader timeout")), remaining)
-    );
-
-    const { value, done } = await Promise.race([readPromise, timeoutPromise]);
-    if (done) break;
-    if (value) {
-      for (const byte of value) buffer.push(byte);
-    }
-  }
-  return new Uint8Array(buffer);
-}
-
 async function flashHexOverWebSerial(port, hexString, baudRate) {
   const firmware = parseIntelHex(hexString);
   if (!firmware.length) throw new Error("Compiled binary is empty.");
 
+  // Make sure nothing is holding the port from an earlier session.
+  await closePortSafely(port);
   await port.open({ baudRate });
+
   const writer = port.writable.getWriter();
   const reader = port.readable.getReader();
 
+  // One single read pump fills a buffer. This avoids leaving abandoned
+  // reader.read() calls behind when a bootloader reply times out.
+  const rx = [];
+  const pump = (async () => {
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (value) for (const byte of value) rx.push(byte);
+      }
+    } catch (e) {
+      // Reader cancelled or port closed: stop quietly.
+    }
+  })();
+
+  const readBytes = async (count, timeoutMs) => {
+    const deadline = Date.now() + timeoutMs;
+    while (rx.length < count) {
+      if (Date.now() > deadline) {
+        throw new Error("Bootloader response timed out. Check selected Board type.");
+      }
+      await sleep(5);
+    }
+    return new Uint8Array(rx.splice(0, count));
+  };
+
   try {
     await port.setSignals({ dataTerminalReady: false, requestToSend: false });
-    await new Promise((r) => setTimeout(r, 250));
+    await sleep(250);
     await port.setSignals({ dataTerminalReady: true, requestToSend: true });
-    await new Promise((r) => setTimeout(r, 250));
+    await sleep(250);
 
     const sendCommand = async (bytes, expectedReplyLen = 2) => {
+      rx.length = 0; // drop stale bytes before each command
       await writer.write(new Uint8Array(bytes));
-      const reply = await readExactBytes(reader, expectedReplyLen, 1200);
+      const reply = await readBytes(expectedReplyLen, 1200);
       if (reply[0] !== 0x14 || reply[reply.length - 1] !== 0x10) {
         throw new Error("STK500 sync mismatch. Verify Board selection (Uno vs Nano / Old Bootloader).");
       }
@@ -428,7 +457,7 @@ async function flashHexOverWebSerial(port, hexString, baudRate) {
         synced = true;
         break;
       } catch (e) {
-        await new Promise((r) => setTimeout(r, 80));
+        await sleep(80);
       }
     }
     if (!synced) {
@@ -451,13 +480,17 @@ async function flashHexOverWebSerial(port, hexString, baudRate) {
 
     await sendCommand([0x51, 0x20], 2);
   } finally {
-    writer.releaseLock();
-    reader.releaseLock();
-    await port.close();
+    // Cleanup runs step by step; one failing step must never skip port.close().
+    try { await reader.cancel(); } catch (e) { /* ignore */ }
+    try { await pump; } catch (e) { /* ignore */ }
+    try { reader.releaseLock(); } catch (e) { /* ignore */ }
+    try { writer.releaseLock(); } catch (e) { /* ignore */ }
+    await closePortSafely(port);
   }
 }
 
 async function uploadCode() {
+  if (isUploading) return;
   const code = editor.value.trim();
   const board = boardSelect.value;
   if (!code) {
@@ -470,6 +503,7 @@ async function uploadCode() {
     if (!ok) return;
   }
 
+  isUploading = true;
   const wasMonitoring = isSerialReading;
   if (wasMonitoring) await disconnectSerialMonitor();
 
@@ -503,12 +537,16 @@ async function uploadCode() {
     boardStatus.textContent = `${BOARD_NAMES[board]} upload completed successfully!`;
 
     if (wasMonitoring || code.includes("Serial.begin")) {
+      // Give the board a moment to reboot into the new sketch.
+      await sleep(400);
+      isUploading = false;
       serialSidebar.classList.remove("collapsed");
       await connectSerialMonitor();
     }
   } catch (error) {
     boardStatus.textContent = `Upload failed: ${error.message}`;
   } finally {
+    isUploading = false;
     uploadBtn.disabled = false;
     uploadBtn.textContent = "Upload to board";
   }
@@ -534,15 +572,21 @@ function appendSerialText(chunk) {
 }
 
 async function connectSerialMonitor() {
+  if (serialBusy || isUploading) return;
   if (!selectedSerialPort) {
     const ok = await selectPort();
     if (!ok) return;
   }
   if (isSerialReading) return;
 
+  serialBusy = true;
+  const port = selectedSerialPort;
   const baudRate = parseInt(baudSelect.value, 10) || 9600;
   try {
-    await selectedSerialPort.open({ baudRate });
+    // Defensive: if the port is somehow still open, close it first.
+    if (port.readable || port.writable) await closePortSafely(port);
+
+    await port.open({ baudRate });
     isSerialReading = true;
     lineBuffer = "";
     serialDot.classList.add("live");
@@ -550,43 +594,62 @@ async function connectSerialMonitor() {
     setConnectionPills(true, "Serial live");
 
     const decoder = new TextDecoderStream();
-    const inputDone = selectedSerialPort.readable.pipeTo(decoder.writable);
-    serialReader = decoder.readable.getReader();
+    serialPipeDone = port.readable.pipeTo(decoder.writable).catch(() => {});
+    const reader = decoder.readable.getReader();
+    serialReader = reader;
 
-    (async () => {
+    serialReadLoop = (async () => {
       try {
-        while (isSerialReading) {
-          const { value, done } = await serialReader.read();
+        while (true) {
+          const { value, done } = await reader.read();
           if (done) break;
           if (value) appendSerialText(value);
         }
       } catch (e) {
         // Ignore read abort when disconnecting
-      } finally {
-        await inputDone.catch(() => {});
       }
     })();
   } catch (error) {
+    isSerialReading = false;
+    serialDot.classList.remove("live");
+    serialConnectBtn.textContent = "Connect";
     boardStatus.textContent = `Serial Monitor error: ${error.message}`;
+    await closePortSafely(port);
+  } finally {
+    serialBusy = false;
   }
 }
 
 async function disconnectSerialMonitor() {
+  // Wait if a connect/disconnect is still in progress.
+  while (serialBusy) await sleep(20);
+  serialBusy = true;
+
   isSerialReading = false;
   serialDot.classList.remove("live");
   serialConnectBtn.textContent = "Connect";
-  setConnectionPills(!!selectedSerialPort, selectedSerialPort ? "USB selected" : "Not connected");
+
+  const port = selectedSerialPort;
+  const reader = serialReader;
+  const pipeDone = serialPipeDone;
+  const readLoop = serialReadLoop;
+  serialReader = null;
+  serialPipeDone = null;
+  serialReadLoop = null;
+
   try {
-    if (serialReader) {
-      await serialReader.cancel();
-      serialReader.releaseLock();
-      serialReader = null;
-    }
-    if (selectedSerialPort && selectedSerialPort.readable) {
-      await selectedSerialPort.close();
-    }
-  } catch (e) {
-    // Ignore close errors if port already closed
+    // 1) Cancel the reader: this also cancels the pipe and port.readable.
+    if (reader) { try { await reader.cancel(); } catch (e) { /* ignore */ } }
+    // 2) WAIT until the pipe has really released port.readable. Closing the
+    //    port before this point fails silently and leaves the port open.
+    if (pipeDone) { try { await pipeDone; } catch (e) { /* ignore */ } }
+    if (readLoop) { try { await readLoop; } catch (e) { /* ignore */ } }
+    if (reader) { try { reader.releaseLock(); } catch (e) { /* ignore */ } }
+    // 3) Now the port can be closed for real.
+    await closePortSafely(port);
+  } finally {
+    setConnectionPills(!!selectedSerialPort, selectedSerialPort ? "USB selected" : "Not connected");
+    serialBusy = false;
   }
 }
 
@@ -601,14 +664,17 @@ async function sendSerialData() {
   const endingMap = { "\\n": "\n", "\\r\\n": "\r\n", "": "" };
   const ending = endingMap[lineEndingSelect.value] ?? "\n";
 
+  let writer = null;
   try {
     const encoder = new TextEncoder();
-    const writer = selectedSerialPort.writable.getWriter();
+    writer = selectedSerialPort.writable.getWriter();
     await writer.write(encoder.encode(text + ending));
-    writer.releaseLock();
     serialInput.value = "";
   } catch (error) {
     boardStatus.textContent = `Send error: ${error.message}`;
+  } finally {
+    // Always release the writer, otherwise port.close() fails later.
+    if (writer) { try { writer.releaseLock(); } catch (e) { /* ignore */ } }
   }
 }
 

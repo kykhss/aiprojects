@@ -1,160 +1,128 @@
-/*
-  SESSION 2: Mini Project — Traffic Light Controller
-  Student-friendly progression:
-    1. Build & Time a Traffic Signal (3 outputs working in sequence)
-    2. Rewire with Variables (Why named variables save time when moving wires)
-*/
-
+// Session 2: Joystick & Serial Explorer — student mission pack
 SESSIONS.push({
-  title: "Session 2: Traffic Light Project",
+  title: "Session 2: Joystick & Serial Explorer",
   lessons: [
     {
-      title: "1. Traffic Light Sequence",
-      explanation:
-        "Real traffic lights follow a strict sequence: <strong>Red → Green → Yellow</strong>[cite: 2]. " +
-        "We control three separate LEDs one after another using <code>HIGH</code>, <code>delay()</code>, and <code>LOW</code>[cite: 2].",
+      title: "1. Meet the Joystick",
+      explanation: "A joystick is an input device. It has two tiny variable resistors: one for left/right (X) and one for up/down (Y). The Arduino reads them with analogRead() and reads the push button with digitalRead().",
       notes: {
-        intro: "Build a miniature intersection on your breadboard using Red, Yellow, and Green LEDs[cite: 2].",
+        intro: "Mission: move the joystick and watch the numbers change in the Serial Monitor. You are teaching Arduino to listen!",
         sections: [
           {
-            title: "Breadboard wiring checklist",
-            text: "Each LED needs its own digital pin and its own protective resistor (220–330Ω)[cite: 2].",
+            title: "Connect the joystick",
+            text: "Use the joystick module pins: VCC to 5V, GND to GND, VRx to A0, VRy to A1 and SW to digital pin 2.",
             points: [
-              "Red LED → Pin 11 | Yellow LED → Pin 10 | Green LED → Pin 9[cite: 2].",
-              "Connect all three short legs (cathodes) to the breadboard GND rail, and connect that rail to Arduino GND[cite: 2].",
-            ],
-          },
+              "Check the labels on your own module before wiring.",
+              "The joystick button is commonly HIGH when released and LOW when pressed when using INPUT_PULLUP."
+            ]
+          }
+          ,
           {
-            title: "Reading the light cycle",
-            text: "Notice how each light turns ON, waits for its delay, and turns OFF before the next light turns ON[cite: 2].",
+            title: "Read the values",
+            text: "analogRead() gives a number from 0 to 1023. The centre is usually near 512. The button is a digital input.",
             points: [
-              "In the starter code: Red = 3s, Green = 3s, Yellow = 1s[cite: 2].",
-              "Busy intersections give Green more time than Yellow[cite: 2].",
-            ],
-          },
+              "X changes when you move left or right.",
+              "Y changes when you move up or down.",
+              "Serial.println() sends readable values to the Serial Monitor."
+            ]
+          }
+          ,
+          {
+            title: "Serial Monitor",
+            text: "Set the Serial Monitor baud rate to 9600, matching Serial.begin(9600).",
+            points: [
+              "Use one line per reading so the values are easy to follow.",
+              "If the monitor is blank, check the baud rate and USB connection."
+            ]
+          }
         ],
-        diagram: { file: "traffic-light-timing.png", alt: "Arduino Uno traffic light wiring with red, yellow, and green LEDs" },
+        diagram: { file: "session2-lesson1.svg", alt: "Lesson wiring and connection diagram" }
       },
-      code: `int red = 11;
-int yellow = 10;
-int green = 9;
-
-void setup() {
-  pinMode(red, OUTPUT);
-  pinMode(yellow, OUTPUT);
-  pinMode(green, OUTPUT);
-}
-
-void loop() {
-  // Red phase
-  digitalWrite(red, HIGH);
-  delay(3000);
-  digitalWrite(red, LOW);
-
-  // Green phase
-  digitalWrite(green, HIGH);
-  delay(3000);
-  digitalWrite(green, LOW);
-
-  // Yellow phase
-  digitalWrite(yellow, HIGH);
-  delay(1000);
-  digitalWrite(yellow, LOW);
-}`,
-      task: "Give traffic more time to pass: keep Green ON for 5 seconds (5000 ms) and Yellow ON for 2 seconds (2000 ms). Keep Red at 3 seconds[cite: 2].",
-      hint: "Change delay(3000) under Green to delay(5000), and delay(1000) under Yellow to delay(2000)[cite: 2].",
+      code: "const int xPin = A0;\nconst int yPin = A1;\nconst int buttonPin = 2;\n\nvoid setup() {\n  pinMode(buttonPin, INPUT_PULLUP);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int xValue = analogRead(xPin);\n  int yValue = analogRead(yPin);\n  int buttonState = digitalRead(buttonPin);\n\n  Serial.print(\"X: \");\n  Serial.print(xValue);\n  Serial.print(\" | Y: \");\n  Serial.print(yValue);\n  Serial.print(\" | Button: \");\n  Serial.println(buttonState == LOW ? \"PRESSED\" : \"released\");\n\n  delay(200);\n}",
+      task: "Upload the sketch, open Serial Monitor at 9600 baud, and record the X and Y values when the joystick is centred, pushed left, and pushed up.",
+      hint: "Use analogRead(A0) and analogRead(A1) for the two joystick axes. The button uses INPUT_PULLUP.",
       checks: [
         {
-          label: "Green light stays ON for 5000 ms[cite: 2]",
-          fail: "Set the delay after digitalWrite(green, HIGH) to 5000[cite: 2].",
-          pattern: /digitalWrite\(\s*green\s*,\s*HIGH\s*\)\s*;\s*delay\(\s*5000\s*\)\s*;/,
-        },
+          label: "Serial starts at 9600 baud",
+          fail: "Add Serial.begin(9600); in setup().",
+          pattern: /Serial\.begin\s*\(\s*9600\s*\)\s*;/
+        }
+        ,
         {
-          label: "Yellow light stays ON for 2000 ms[cite: 2]",
-          fail: "Set the delay after digitalWrite(yellow, HIGH) to 2000[cite: 2].",
-          pattern: /digitalWrite\(\s*yellow\s*,\s*HIGH\s*\)\s*;\s*delay\(\s*2000\s*\)\s*;/,
-        },
+          label: "Both joystick axes are read",
+          fail: "Read both A0 and A1 using analogRead().",
+          pattern: /analogRead\s*\(\s*xPin\s*\)/
+        }
+        ,
         {
-          label: "Red light remains 3000 ms[cite: 2]",
-          fail: "Keep Red's delay at 3000 ms[cite: 2].",
-          pattern: /digitalWrite\(\s*red\s*,\s*HIGH\s*\)\s*;\s*delay\(\s*3000\s*\)\s*;/,
-        },
-      ],
-    },
+          label: "Y axis is also read",
+          fail: "Add an analogRead() for yPin.",
+          pattern: /analogRead\s*\(\s*yPin\s*\)/
+        }
+        ,
+        {
+          label: "Button uses the pull-up input",
+          fail: "Set buttonPin to INPUT_PULLUP.",
+          pattern: /pinMode\s*\(\s*buttonPin\s*,\s*INPUT_PULLUP\s*\)/
+        }
+      ]
+    }
+    ,
     {
-      title: "2. Move Pins Using Variables",
-      explanation:
-        "Because we saved our pin numbers in variables (<code>red</code>, <code>yellow</code>, <code>green</code>) at the top of the sketch, " +
-        "moving wires to new Arduino pins only takes three quick edits[cite: 2]!",
+      title: "2. Joystick Direction Controller",
+      explanation: "Now turn raw joystick numbers into directions. Values below 400 can mean LEFT or DOWN, values above 600 can mean RIGHT or UP, and values between them mean CENTRE. The exact centre varies slightly between modules.",
       notes: {
-        intro: "Good programmers avoid typing raw pin numbers everywhere. Naming your pins makes hardware changes fast and mistake-free[cite: 2].",
+        intro: "Mission: make Arduino name the direction you choose. This is a simple example of turning sensor input into a decision.",
         sections: [
           {
-            title: "Why variables are useful",
-            text: "When you change int red = 11; to int red = 8;, every line in setup() and loop() automatically uses pin 8[cite: 2].",
+            title: "Choose a threshold",
+            text: "A threshold is a boundary used to make a decision. Here 400 and 600 create a centre zone.",
             points: [
-              "Always update your physical breadboard wires to match your new code[cite: 2].",
-              "Pins 6, 7, and 8 work great as standard digital outputs[cite: 2].",
-            ],
-          },
+              "If x is less than 400, report LEFT.",
+              "If x is greater than 600, report RIGHT.",
+              "Otherwise report CENTRE."
+            ]
+          }
+          ,
           {
-            title: "Troubleshooting tip",
-            text: "If an LED doesn't light up after rewiring, check three things:",
+            title: "Send messages",
+            text: "Serial.println() sends a word or message to the computer.",
             points: [
-              "Does the variable number at the top match the physical pin hole on the Arduino[cite: 2]?",
-              "Is the LED's long leg facing the resistor/pin and short leg facing GND[cite: 1, 2]?",
-            ],
-          },
+              "The Serial Monitor is useful for testing sensors before connecting motors or lights.",
+              "Use else if so only one direction is reported at a time."
+            ]
+          }
         ],
-        diagram: { file: "change-pins.png", alt: "Traffic light LEDs rewired from Arduino pins 11, 10, and 9 to pins 8, 7, and 6" },
+        diagram: { file: "session2-lesson2.svg", alt: "Lesson wiring and connection diagram" }
       },
-      code: `int red = 11;
-int yellow = 10;
-int green = 9;
-
-void setup() {
-  pinMode(red, OUTPUT);
-  pinMode(yellow, OUTPUT);
-  pinMode(green, OUTPUT);
-}
-
-void loop() {
-  digitalWrite(red, HIGH);
-  delay(3000);
-  digitalWrite(red, LOW);
-
-  digitalWrite(green, HIGH);
-  delay(3000);
-  digitalWrite(green, LOW);
-
-  digitalWrite(yellow, HIGH);
-  delay(1000);
-  digitalWrite(yellow, LOW);
-}`,
-      task: "Move your traffic light to new pins: set Red to pin 8, Yellow to pin 7, and Green to pin 6[cite: 2].",
-      hint: "Update the first three lines to: int red = 8; int yellow = 7; int green = 6;[cite: 2].",
+      code: "const int xPin = A0;\nconst int yPin = A1;\n\nvoid setup() {\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int x = analogRead(xPin);\n  int y = analogRead(yPin);\n\n  if (x < 400) {\n    Serial.println(\"LEFT\");\n  } else if (x > 600) {\n    Serial.println(\"RIGHT\");\n  } else if (y < 400) {\n    Serial.println(\"UP\");\n  } else if (y > 600) {\n    Serial.println(\"DOWN\");\n  } else {\n    Serial.println(\"CENTRE\");\n  }\n\n  delay(150);\n}",
+      task: "Change the threshold values to 350 and 650. Test all four directions and the centre position.",
+      hint: "Use if, else if and else. X usually controls left/right; Y usually controls up/down.",
       checks: [
         {
-          label: "Red assigned to pin 8[cite: 2]",
-          fail: "Set int red = 8; at the top of the code[cite: 2].",
-          pattern: /int\s+red\s*=\s*8\s*;/,
-        },
+          label: "Serial communication is enabled",
+          fail: "Add Serial.begin(9600);.",
+          pattern: /Serial\.begin\s*\(\s*9600\s*\)\s*;/
+        }
+        ,
         {
-          label: "Yellow assigned to pin 7[cite: 2]",
-          fail: "Set int yellow = 7; at the top of the code[cite: 2].",
-          pattern: /int\s+yellow\s*=\s*7\s*;/,
-        },
+          label: "Left direction is detected",
+          fail: "Add a condition for x < 350.",
+          pattern: /x\s*<\s*350/
+        }
+        ,
         {
-          label: "Green assigned to pin 6[cite: 2]",
-          fail: "Set int green = 6; at the top of the code[cite: 2].",
-          pattern: /int\s+green\s*=\s*6\s*;/,
-        },
+          label: "Right direction is detected",
+          fail: "Add a condition for x > 650.",
+          pattern: /x\s*>\s*650/
+        }
+        ,
         {
-          label: "All pinMode() setups preserved[cite: 2]",
-          fail: "Keep all three pinMode() lines inside setup()[cite: 2].",
-          pattern: /pinMode\(\s*red\s*,\s*OUTPUT\s*\)\s*;[\s\S]*pinMode\(\s*yellow\s*,\s*OUTPUT\s*\)\s*;[\s\S]*pinMode\(\s*green\s*,\s*OUTPUT\s*\)\s*;/,
-        },
-      ],
-    },
-  ],
+          label: "A centre message is available",
+          fail: "Add a CENTRE message for the remaining position.",
+          pattern: /CENTRE/
+        }
+      ]
+    }
+  ]
 });

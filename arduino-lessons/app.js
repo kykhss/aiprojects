@@ -53,6 +53,13 @@ const serialAutoscroll = $("serialAutoscroll");
 const serialOutput = $("serialOutput");
 const serialInput = $("serialInput");
 const lineEndingSelect = $("lineEndingSelect");
+function setConnectionPills(connected, label) {
+  document.querySelectorAll("[data-connection-status]").forEach((el) => {
+    el.textContent = label || (connected ? "Connected" : "Not connected");
+    el.classList.toggle("is-connected", !!connected);
+    el.classList.toggle("is-disconnected", !connected);
+  });
+}
 
 const BOARD_NAMES = {
   uno: "Arduino Uno",
@@ -71,36 +78,19 @@ function stripComments(code) {
 }
 
 function renderSidebar() {
-  sidebar.innerHTML = "";
+  sidebar.querySelectorAll(".session-title, .lesson-link").forEach((node) => node.remove());
   ALL.forEach((item, i) => {
-    if (item.first) {
-      const h = document.createElement("div");
-      h.className = "session-title";
-      h.textContent = item.session.title;
-      sidebar.appendChild(h);
-    }
-    const b = document.createElement("button");
-    if (i === state.current) b.classList.add("active");
-    const name = document.createElement("span");
-    name.textContent = item.lesson.title;
-    b.appendChild(name);
-    if (state.done[item.id]) {
-      const tick = document.createElement("span");
-      tick.className = "done";
-      tick.textContent = "✓";
-      b.appendChild(tick);
-    }
-    b.addEventListener("click", () => {
-      saveEditor();
-      state.current = i;
-      saveState();
-      showLesson();
-      sidebar.classList.remove("open");
-    });
-    sidebar.appendChild(b);
+    if (item.first) { const h=document.createElement("div"); h.className="session-title"; h.textContent=item.session.title; sidebar.appendChild(h); }
+    const b=document.createElement("button"); b.type="button"; b.className="lesson-link"; if(i===state.current)b.classList.add("active");
+    const number=document.createElement("span"); number.className="lesson-number"; number.textContent=String(i+1).padStart(2,"0");
+    const name=document.createElement("span"); name.textContent=item.lesson.title; b.append(number,name);
+    if(state.done[item.id]){const tick=document.createElement("span");tick.className="done";tick.textContent="★";b.appendChild(tick);}
+    b.addEventListener("click",()=>{saveEditor();state.current=i;saveState();showLesson();sidebar.classList.remove("open");}); sidebar.appendChild(b);
   });
-  const count = ALL.filter((item) => state.done[item.id]).length;
-  $("progress").textContent = count + " / " + ALL.length + " done";
+  const count=ALL.filter(item=>state.done[item.id]).length; const percent=ALL.length?Math.round(count/ALL.length*100):0;
+  $("progress").textContent=count+" / "+ALL.length+" lessons";
+  if($("completedCount"))$("completedCount").textContent=percent+"%";
+  if($("progressFill"))$("progressFill").style.width=percent+"%";
 }
 
 function saveEditor() {
@@ -109,26 +99,81 @@ function saveEditor() {
 }
 
 function showLesson() {
-  const item = ALL[state.current];
-  const lesson = item.lesson;
-  $("sessionName").textContent = item.session.title;
-  $("lessonTitle").textContent = lesson.title;
-  $("lessonText").innerHTML = lesson.explanation;
-  $("taskText").textContent = lesson.task;
-  renderStudyNotes(lesson);
-  editor.value = state.code[item.id] != null ? state.code[item.id] : lesson.code;
-  $("hint").hidden = true;
-  $("results").innerHTML = "";
-  $("banner").hidden = true;
-  $("nextBtn").hidden = !(state.done[item.id] && state.current < ALL.length - 1);
-  renderSidebar();
-  window.scrollTo(0, 0);
+  if(!ALL.length){$("lessonTitle").textContent="Your lessons are getting ready";$("lessonText").textContent="Add a session file to start learning.";editor.value="";return;}
+  const item=ALL[state.current], lesson=item.lesson;
+  $("sessionName").textContent=item.session.title; $("lessonTitle").textContent=lesson.title;
+  $("lessonText").innerHTML=lesson.explanation||"Let's explore this Arduino idea together.";
+  $("taskText").textContent=lesson.task||"Try the example and experiment with the code.";
+  if($("lessonCounter"))$("lessonCounter").textContent=`Lesson ${state.current+1} of ${ALL.length}`;
+  if($("prevBtn"))$("prevBtn").disabled=state.current===0;
+  renderStudyNotes(lesson); editor.value=state.code[item.id]!=null?state.code[item.id]:(lesson.code||"");
+  $("hint").hidden=true; $("results").innerHTML=""; $("banner").hidden=true;
+  $("nextBtn").hidden=!(state.done[item.id]&&state.current<ALL.length-1); renderSidebar(); updateLedPreview();
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
 function renderStudyNotes(lesson) {
   const notes = lesson.notes || {};
   notesIntro.textContent = notes.intro || "Read the lesson notes, then use the task to practice.";
   notesSections.replaceChildren();
+
+  // Optional one-question knowledge check for this lesson.
+  const oldQuiz = document.getElementById("lessonQuiz");
+  if (oldQuiz) oldQuiz.remove();
+  if (lesson.quiz && Array.isArray(lesson.quiz.options)) {
+    const quiz = lesson.quiz;
+    const card = document.createElement("section");
+    card.className = "lesson-quiz";
+    card.id = "lessonQuiz";
+    const heading = document.createElement("h3");
+    heading.textContent = "⚡ Quick knowledge check";
+    const question = document.createElement("p");
+    question.className = "quiz-question";
+    question.textContent = quiz.question;
+    const choices = document.createElement("div");
+    choices.className = "quiz-options";
+    const feedback = document.createElement("p");
+    feedback.className = "quiz-feedback";
+    feedback.setAttribute("aria-live", "polite");
+    quiz.options.forEach((option, index) => {
+      const choice = document.createElement("button");
+      choice.type = "button";
+      choice.className = "quiz-choice";
+      choice.textContent = option;
+      choice.addEventListener("click", () => {
+        choices.querySelectorAll("button").forEach((button) => {
+          button.disabled = true;
+          button.classList.remove("correct", "incorrect");
+        });
+        if (index === quiz.answer) {
+          choice.classList.add("correct");
+          feedback.className = "quiz-feedback correct-text";
+          feedback.textContent = "🌟 " + (quiz.explanation || "That's right!");
+        } else {
+          choice.classList.add("incorrect");
+          feedback.className = "quiz-feedback incorrect-text";
+          feedback.textContent = "💡 Not quite. " + (quiz.explanation || "Read the lesson notes and try again.");
+          const retry = document.createElement("button");
+          retry.type = "button";
+          retry.className = "quiz-retry";
+          retry.textContent = "Try again";
+          retry.addEventListener("click", () => {
+            choices.querySelectorAll("button").forEach((button) => {
+              button.disabled = false;
+              button.classList.remove("correct", "incorrect");
+            });
+            feedback.textContent = "";
+            feedback.className = "quiz-feedback";
+            retry.remove();
+          });
+          feedback.appendChild(retry);
+        }
+      });
+      choices.appendChild(choice);
+    });
+    card.append(heading, question, choices, feedback);
+    notesSections.appendChild(card);
+  }
 
   (notes.sections || []).forEach((section, index) => {
     const details = document.createElement("details");
@@ -162,7 +207,7 @@ function renderStudyNotes(lesson) {
   diagramPlaceholder.hidden = false;
   diagramZoomBtn.hidden = true;
   circuitImage.alt = diagram.alt || `${lesson.title} circuit diagram`;
-  diagramFileHint.textContent = `Add your PNG as ${src} to show it here.`;
+  diagramFileHint.textContent = `Keep the lesson diagram at ${src} to show it here.`;
   circuitImage.onload = () => {
     if (circuitImage.dataset.lessonSrc !== src) return;
     circuitImage.hidden = false;
@@ -189,7 +234,7 @@ function checkCode() {
   list.innerHTML = "";
   let allPass = true;
 
-  item.lesson.checks.forEach((c) => {
+  (item.lesson.checks || []).forEach((c) => {
     const found = c.pattern.test(clean);
     const pass = c.not ? !found : found;
     if (!pass) allPass = false;
@@ -207,14 +252,14 @@ function checkCode() {
   banner.hidden = false;
   if (allPass) {
     banner.className = "banner success";
-    banner.textContent = "Great job! All changes are correct.";
+    banner.textContent = "🌟 Amazing work! You completed this mission. You earned a star!";
     state.done[item.id] = true;
     saveState();
     renderSidebar();
     $("nextBtn").hidden = state.current >= ALL.length - 1;
   } else {
     banner.className = "banner try";
-    banner.textContent = "Not yet. Read the red points and try again.";
+    banner.textContent = "🧩 Almost there! Check the pink tips and give it another try. You can do it!";
   }
 }
 
@@ -285,6 +330,7 @@ async function selectPort() {
     portBadge.textContent = `Port (${vid})`;
     portBadge.classList.add("connected");
     boardStatus.textContent = `USB Serial port selected (VID:${vid}). Ready to upload.`;
+    setConnectionPills(true, "USB selected");
     return true;
   } catch (error) {
     if (error.name !== "NotFoundError") {
@@ -304,6 +350,7 @@ if ("serial" in navigator) {
       serialDot.classList.remove("live");
       serialConnectBtn.textContent = "Connect";
       boardStatus.textContent = "Arduino disconnected from USB.";
+      setConnectionPills(false, "Not connected");
     }
   });
 }
@@ -500,6 +547,7 @@ async function connectSerialMonitor() {
     lineBuffer = "";
     serialDot.classList.add("live");
     serialConnectBtn.textContent = "Disconnect";
+    setConnectionPills(true, "Serial live");
 
     const decoder = new TextDecoderStream();
     const inputDone = selectedSerialPort.readable.pipeTo(decoder.writable);
@@ -527,6 +575,7 @@ async function disconnectSerialMonitor() {
   isSerialReading = false;
   serialDot.classList.remove("live");
   serialConnectBtn.textContent = "Connect";
+  setConnectionPills(!!selectedSerialPort, selectedSerialPort ? "USB selected" : "Not connected");
   try {
     if (serialReader) {
       await serialReader.cancel();
@@ -608,5 +657,64 @@ editor.addEventListener("keydown", (e) => {
     saveEditor();
   }
 });
+
+
+// Lesson 1 only: live browser simulation of the built-in Arduino LED.
+let blinkTimer = null, blinkPhaseStartedAt = 0, blinkIsOn = false, blinkRunning = false, blinkRemaining = 0;
+const blinkCard = $("blinkPreviewCard"), blinkOnInput = $("blinkOnTime"), blinkOffInput = $("blinkOffTime");
+const blinkBulb = $("ledBulb"), blinkState = $("ledState"), blinkCaption = $("ledCaption");
+const blinkBar = $("blinkCycleBar"), blinkPhase = $("cyclePhase"), blinkCountdown = $("cycleCountdown");
+function blinkDuration(){ return Number(blinkIsOn ? blinkOnInput.value : blinkOffInput.value); }
+function updateBlinkLabels(){ $("blinkOnValue").textContent = `${blinkOnInput.value} ms`; $("blinkOffValue").textContent = `${blinkOffInput.value} ms`; }
+function paintBlinkState(on){
+  blinkIsOn=on; blinkBulb.classList.toggle("on",on); blinkBulb.setAttribute("aria-label",on?"Built-in LED is on":"Built-in LED is off");
+  blinkState.textContent=on?"LED ON":"LED OFF"; blinkState.className="sim-state "+(on?"state-on":"state-off");
+  blinkCaption.textContent=on?`HIGH · Light is ON for ${blinkOnInput.value} ms`:`LOW · Light is OFF for ${blinkOffInput.value} ms`;
+  blinkPhase.textContent=on?"Current phase · ON":"Current phase · OFF";
+}
+function stopBlinkTimer(){ if(blinkTimer) clearTimeout(blinkTimer); blinkTimer=null; }
+function scheduleBlinkPhase(duration){
+  stopBlinkTimer(); blinkPhaseStartedAt=performance.now(); blinkRemaining=duration;
+  const tick=()=>{
+    if(!blinkRunning)return;
+    const elapsed=performance.now()-blinkPhaseStartedAt, left=Math.max(0,duration-elapsed);
+    blinkCountdown.textContent=`${(left/1000).toFixed(1)} s`; blinkBar.style.width=`${Math.min(100,elapsed/duration*100)}%`;
+    if(left<=0){ paintBlinkState(!blinkIsOn); scheduleBlinkPhase(blinkDuration()); return; }
+    blinkTimer=setTimeout(tick,Math.min(40,left));
+  }; tick();
+}
+function startBlinkPreview(){
+  if(blinkRunning)return; blinkRunning=true; $("blinkStartBtn").disabled=true; $("blinkPauseBtn").disabled=false;
+  if(blinkRemaining>0) scheduleBlinkPhase(blinkRemaining);
+  else { paintBlinkState(true); scheduleBlinkPhase(Number(blinkOnInput.value)); }
+}
+function pauseBlinkPreview(){
+  if(!blinkRunning)return;
+  blinkRemaining=Math.max(0,blinkDuration()-(performance.now()-blinkPhaseStartedAt)); stopBlinkTimer(); blinkRunning=false;
+  $("blinkStartBtn").disabled=false; $("blinkStartBtn").textContent="▶ Resume blinking"; $("blinkPauseBtn").disabled=true;
+  blinkState.textContent="PAUSED"; blinkPhase.textContent="Simulation paused"; blinkCountdown.textContent=`${(blinkRemaining/1000).toFixed(1)} s left`;
+}
+function resetBlinkPreview(){
+  stopBlinkTimer(); blinkRunning=false; blinkRemaining=0; blinkIsOn=false;
+  $("blinkStartBtn").disabled=false; $("blinkStartBtn").textContent="▶ Start blinking"; $("blinkPauseBtn").disabled=true;
+  blinkBulb.classList.remove("on"); blinkBulb.setAttribute("aria-label","Built-in LED is off");
+  blinkState.textContent="READY"; blinkState.className="sim-state"; blinkCaption.textContent="Press Start to run your first blink.";
+  blinkPhase.textContent="Waiting to start"; blinkCountdown.textContent="—"; blinkBar.style.width="0%";
+}
+function updateLedPreview(){
+  const show=(ALL[state.current]?.lesson?.title||"").toLowerCase().includes("blink the built-in led");
+  blinkCard.hidden=!show; resetBlinkPreview(); updateBlinkLabels();
+}
+$("blinkStartBtn").addEventListener("click",startBlinkPreview);
+$("blinkPauseBtn").addEventListener("click",pauseBlinkPreview);
+$("blinkResetBtn").addEventListener("click",resetBlinkPreview);
+[blinkOnInput,blinkOffInput].forEach(input=>input.addEventListener("input",()=>{
+  updateBlinkLabels();
+  if(blinkRunning && ((blinkIsOn && input===blinkOnInput)||(!blinkIsOn && input===blinkOffInput))){
+    const elapsed=performance.now()-blinkPhaseStartedAt, remaining=Math.max(0,blinkDuration()-elapsed);
+    scheduleBlinkPhase(remaining);
+  } else if(!blinkRunning && blinkRemaining>0){ blinkRemaining=blinkDuration(); blinkCountdown.textContent=`${(blinkRemaining/1000).toFixed(1)} s left`; }
+}));
+if($("prevBtn"))$("prevBtn").addEventListener("click",()=>{if(state.current<=0)return;saveEditor();state.current--;saveState();showLesson();});
 
 showLesson();

@@ -1,164 +1,90 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Arduino Lessons</title>
+  <meta name="theme-color" content="#5b4bdb">
+  <title>Arduino Adventure Lab</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topbar">
-    <button id="menuBtn" class="icon-btn" aria-label="Open lessons menu">☰</button>
-    <h1>Arduino Lessons</h1>
-
-    <div class="board-toolbar" aria-label="Arduino board connection">
-      <label for="boardSelect">Board</label>
-      <select id="boardSelect" aria-label="Arduino board">
-        <option value="uno">Arduino Uno</option>
-        <option value="nano">Arduino Nano</option>
-        <option value="nano-old">Nano (Old Bootloader)</option>
-      </select>
-      <span id="portBadge" class="port-badge" title="Selected USB Port">No port</span>
-      <button id="selectPortBtn" class="topbar-btn" type="button">Select Port</button>
+    <div class="brand-wrap">
+      <button id="menuBtn" class="icon-btn" aria-label="Open lessons menu">☰</button>
+      <div class="brand-mark" aria-hidden="true">⚡</div>
+      <div class="brand-copy"><h1>Arduino Adventure</h1><span>LEARN · BUILD · EXPLORE</span></div>
     </div>
-
-    <div class="topbar-right">
-      <span id="progress" class="progress"></span>
-      <button id="serialToggleBtn" class="topbar-btn" type="button" title="Show or hide Serial Monitor">
-        Serial Monitor
-      </button>
+    <div class="board-toolbar">
+      <label for="boardSelect">BOARD</label>
+      <select id="boardSelect" aria-label="Arduino board"><option value="uno">Arduino Uno</option><option value="nano">Arduino Nano</option><option value="nano-old">Nano · Old Bootloader</option></select>
+      <span id="portBadge" class="port-badge" data-port-status>No board yet</span>
+      <span class="connection-pill is-disconnected" data-connection-status>Not connected</span>
+      <button id="selectPortBtn" class="topbar-btn" type="button">Connect USB</button>
     </div>
+    <div class="topbar-right"><span id="progress" class="progress">0 / 0 lessons</span><button id="serialToggleBtn" class="topbar-btn" type="button">⌁ Serial Lab</button></div>
   </header>
 
   <div class="layout" id="appLayout">
-    <!-- Left Column: Sessions & Lessons -->
-    <nav id="sidebar" class="sidebar" aria-label="Lessons"></nav>
+    <nav id="sidebar" class="sidebar" aria-label="Lesson menu">
+      <div class="sidebar-intro"><span class="tiny-label">YOUR LEARNING PATH</span><h2>My adventures</h2><p>Choose a lesson and collect stars!</p></div>
+      <div class="sidebar-progress"><div class="progress-meta"><span>Journey progress</span><strong id="completedCount">0%</strong></div><div class="progress-track"><span id="progressFill"></span></div></div>
+    </nav>
 
-    <!-- Center Column: Lesson Notes & Code Editor -->
     <main class="content">
-      <div class="lesson-header">
-        <div>
-          <p id="sessionName" class="session-name"></p>
-          <h2 id="lessonTitle"></h2>
-        </div>
-      </div>
+      <section class="welcome-strip"><div><span class="eyebrow">WELCOME, YOUNG INVENTOR!</span><h2>Let’s make something <em>awesome.</em></h2><p>Small steps, bright ideas, real Arduino magic.</p></div><div class="welcome-art" aria-hidden="true"><span class="spark s1">✦</span><span class="spark s2">✧</span><div class="mini-board"><i></i><i></i><i></i><b>UNO</b></div></div></section>
+
+      <div class="lesson-topline"><div><p id="sessionName" class="session-name"></p><div class="lesson-heading-row"><h1 id="lessonTitle">Choose your first lesson</h1><span class="lesson-counter" id="lessonCounter">Lesson 1</span></div></div><div class="lesson-nav"><button id="prevBtn" class="btn ghost small-btn" type="button" disabled>← Back</button><button id="nextBtn" class="btn small-btn next-btn" type="button" hidden>Next lesson →</button></div></div>
       <p id="lessonText" class="explain"></p>
 
-      <div class="task">
-        <strong>Your task:</strong> <span id="taskText"></span>
-      </div>
-
-      <section class="study-notes" aria-labelledby="notesHeading">
-        <div class="notes-heading">
-          <div>
-            <p class="eyebrow">LEARN AT YOUR OWN PACE</p>
-            <h3 id="notesHeading">Self-study notes</h3>
+      <section class="visual-card blink-preview-card" id="blinkPreviewCard" aria-label="Live built-in LED blink simulator">
+        <div class="visual-head"><div><span class="eyebrow">LIVE SIMULATOR · LESSON 1</span><h3>💡 Watch the Arduino LED blink</h3><p>Change the ON and OFF times and see the LED respond instantly.</p></div><span class="live-label"><i></i> LIVE PREVIEW</span></div>
+        <div class="blink-simulator">
+          <div class="sim-board">
+            <div class="sim-board-top"><span>ARDUINO</span><b>UNO</b></div><div class="sim-board-chip">ATmega328P</div>
+            <div class="sim-led-row"><span class="sim-pin">D13</span><div class="sim-led" id="ledBulb" aria-label="Built-in LED is off"><span></span></div><span class="sim-led-label">L · BUILT-IN LED</span></div>
+            <div class="sim-board-usb">USB</div><div class="sim-board-caption">Arduino Uno · Pin 13</div>
           </div>
-          <span class="notes-hint">Click a topic to expand</span>
+          <div class="sim-readout"><div class="sim-state" id="ledState">READY</div><div class="sim-caption" id="ledCaption" aria-live="polite">Press Start to run your first blink.</div>
+            <div class="sim-cycle-track"><span id="blinkCycleBar"></span></div><div class="sim-cycle-meta"><span id="cyclePhase">Waiting to start</span><strong id="cycleCountdown">—</strong></div>
+          </div>
         </div>
-        <p id="notesIntro" class="notes-intro"></p>
-        <div id="notesSections" class="notes-sections"></div>
-        <figure class="circuit-figure">
-          <figcaption class="figure-heading">
-            <span>Circuit diagram</span>
-            <button id="diagramZoomBtn" class="btn small-btn" type="button" hidden>Enlarge diagram</button>
-          </figcaption>
-          <div id="diagramPlaceholder" class="diagram-placeholder" role="status">
-            <span class="diagram-icon" aria-hidden="true">⌁</span>
-            <strong>Student circuit diagram</strong>
-            <span id="diagramFileHint"></span>
-          </div>
-          <img id="circuitImage" class="circuit-image" alt="" hidden>
-        </figure>
+        <div class="blink-timing-controls">
+          <label class="timing-control" for="blinkOnTime"><span>🟡 LED ON time <strong id="blinkOnValue">1000 ms</strong></span><input id="blinkOnTime" type="range" min="100" max="3000" step="100" value="1000"></label>
+          <label class="timing-control" for="blinkOffTime"><span>🌙 LED OFF time <strong id="blinkOffValue">1000 ms</strong></span><input id="blinkOffTime" type="range" min="100" max="3000" step="100" value="1000"></label>
+        </div>
+        <div class="blink-actions"><button id="blinkStartBtn" class="btn upload-btn" type="button">▶ Start blinking</button><button id="blinkPauseBtn" class="btn ghost" type="button" disabled>Ⅱ Pause</button><button id="blinkResetBtn" class="btn ghost" type="button">↺ Reset</button><span class="sim-note">Browser simulation · Does not control the physical board</span></div>
+        <div class="blink-teacher-tip">👩‍🏫 <strong>Try this:</strong> Set ON = 2000 ms and OFF = 500 ms. Which part of the blink takes longer?</div>
       </section>
 
-      <section class="editor-card" aria-label="Code Editor">
-        <div class="editor-toolbar">
-          <div>
-            <label for="editor" class="editor-label">Edit the code</label>
-            <span class="editor-file">Arduino sketch · .ino</span>
-          </div>
-          <div class="editor-actions">
-            <button id="copyBtn" class="btn small-btn" type="button">Copy</button>
-            <button id="resetBtn" class="btn small-btn" type="button">Reset</button>
-            <button id="uploadBtn" class="btn small-btn primary" type="button">Upload to board</button>
-          </div>
-        </div>
+      <section class="task-card"><div class="task-icon">🎯</div><div><span class="eyebrow">YOUR MINI MISSION</span><p id="taskText">Your task will appear here.</p></div></section>
 
-        <p id="boardStatus" class="board-status" role="status" aria-live="polite">
-          Click <strong>Select Port</strong> in the top bar (Chrome or Edge) to connect your Arduino via USB.
-        </p>
-
-        <textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
-
-        <div class="buttons">
-          <button id="checkBtn" class="btn primary">Check my code</button>
-          <button id="hintBtn" class="btn">Hint</button>
-          <button id="nextBtn" class="btn success-btn" hidden>Next lesson →</button>
-        </div>
-
-        <div id="hint" class="hint" hidden></div>
-        <ul id="results" class="results" aria-live="polite"></ul>
-        <div id="banner" class="banner" hidden></div>
+      <section class="study-notes" aria-labelledby="notesHeading"><div class="section-heading"><div><span class="eyebrow">DISCOVER THE IDEAS</span><h3 id="notesHeading">Learn it step by step</h3></div><span class="friendly-tip">Tap a card to explore ↓</span></div><p id="notesIntro" class="notes-intro"></p><div id="notesSections" class="notes-sections"></div>
+        <figure class="circuit-figure"><figcaption class="figure-heading"><span>🔌 Circuit picture</span><button id="diagramZoomBtn" class="btn small-btn" type="button" hidden>View bigger</button></figcaption><div id="diagramPlaceholder" class="diagram-placeholder"><div class="placeholder-icon">🧩</div><strong>Your circuit picture goes here</strong><span id="diagramFileHint"></span></div><img id="circuitImage" class="circuit-image" alt="" hidden></figure>
       </section>
+
+      <section class="editor-card"><div class="editor-toolbar"><div><span class="eyebrow">TIME TO CREATE</span><h3>🧑‍💻 Your Arduino code</h3><span class="editor-file">Arduino sketch · .ino</span></div><div class="editor-actions"><button id="copyBtn" class="btn small-btn" type="button">Copy code</button><button id="resetBtn" class="btn small-btn" type="button">↺ Reset</button><button id="uploadBtn" class="btn small-btn upload-btn" type="button">⚡ Upload</button></div></div>
+        <p id="boardStatus" class="board-status" role="status" aria-live="polite">💡 Connect your Arduino with USB, then choose Connect USB above.</p>
+        <div class="code-wrap"><div class="code-top"><span><i></i><i></i><i></i></span><b>sketch.ino</b><span>ARDUINO C++</span></div><textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Arduino code editor"></textarea></div>
+        <div class="buttons"><button id="checkBtn" class="btn check-btn" type="button">✓ Check my work</button><button id="hintBtn" class="btn hint-btn" type="button">💡 Give me a hint</button></div>
+        <div id="hint" class="hint" hidden></div><ul id="results" class="results" aria-live="polite"></ul><div id="banner" class="banner" hidden></div>
+      </section>
+      <footer class="page-footer">🌈 Keep experimenting. Every great inventor starts with a little curiosity!</footer>
     </main>
 
-    <!-- Right Column: Dedicated Live Serial Monitor -->
-    <aside id="serialSidebar" class="serial-sidebar" aria-label="Serial Monitor">
-      <div class="serial-header">
-        <div class="serial-title-group">
-          <span id="serialDot" class="status-dot" aria-hidden="true"></span>
-          <h3>Serial Monitor</h3>
-        </div>
-        <button id="serialCloseBtn" class="icon-close-btn" type="button" aria-label="Close Serial Monitor">✕</button>
-      </div>
-
-      <div class="serial-controls">
-        <select id="baudSelect" aria-label="Baud rate">
-          <option value="9600" selected>9600 baud</option>
-          <option value="115200">115200 baud</option>
-          <option value="57600">57600 baud</option>
-          <option value="38400">38400 baud</option>
-        </select>
-        <button id="serialConnectBtn" class="btn small-btn primary" type="button">Connect</button>
-        <button id="serialClearBtn" class="btn small-btn" type="button">Clear</button>
-      </div>
-
-      <div class="serial-options">
-        <label class="checkbox-label">
-          <input type="checkbox" id="serialTimestamp"> Timestamps
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" id="serialAutoscroll" checked> Auto-scroll
-        </label>
-      </div>
-
-      <div id="serialOutput" class="serial-output" role="log" aria-live="polite"></div>
-
-      <div class="serial-input-box">
-        <input id="serialInput" type="text" placeholder="Send text to Arduino…" autocomplete="off">
-        <select id="lineEndingSelect" aria-label="Line ending">
-          <option value="\n" selected>NL (\n)</option>
-          <option value="\r\n">CRLF (\r\n)</option>
-          <option value="">None</option>
-        </select>
-        <button id="serialSendBtn" class="btn small-btn primary" type="button">Send</button>
-      </div>
+    <aside id="serialSidebar" class="serial-sidebar collapsed" aria-label="Serial monitor"><div class="serial-header"><div class="serial-title-group"><span id="serialDot" class="status-dot"></span><div><h3>Serial Lab</h3><small>Talk to your Arduino</small></div><span class="connection-pill is-disconnected" data-connection-status>Not connected</span></div><button id="serialCloseBtn" class="icon-close-btn" type="button" aria-label="Close serial monitor">✕</button></div>
+      <div class="serial-controls"><select id="baudSelect" aria-label="Baud rate"><option value="9600" selected>9600 baud</option><option value="115200">115200 baud</option><option value="57600">57600 baud</option><option value="38400">38400 baud</option></select><button id="serialConnectBtn" class="btn small-btn upload-btn" type="button">Connect</button><button id="serialClearBtn" class="btn small-btn" type="button">Clear</button></div>
+      <div class="serial-options"><label class="checkbox-label"><input type="checkbox" id="serialTimestamp"> Time</label><label class="checkbox-label"><input type="checkbox" id="serialAutoscroll" checked> Auto-scroll</label></div>
+      <details class="security-settings"><summary>⚙ Extra settings</summary><label class="checkbox-label"><input type="checkbox" id="pauseWhenHidden"> Disconnect when tab is hidden</label><label class="checkbox-label"><input type="checkbox" id="confirmCloudCompile"> Confirm before online compile</label><p>Sketch compilation sends code to the online compiler. Do not include passwords or secret keys.</p><p>Serial messages stay in this browser tab.</p></details>
+      <div id="serialOutput" class="serial-output" role="log" aria-live="polite"></div><div class="serial-input-box"><input id="serialInput" type="text" placeholder="Type a message…" autocomplete="off"><select id="lineEndingSelect" aria-label="Line ending"><option value="\n" selected>NL</option><option value="\r\n">CRLF</option><option value="">None</option></select><button id="serialSendBtn" class="btn small-btn upload-btn" type="button">Send</button></div>
     </aside>
   </div>
-
-  <dialog id="diagramDialog" class="diagram-dialog" aria-label="Large circuit diagram">
-    <div class="dialog-toolbar">
-      <span id="diagramDialogTitle">Circuit diagram</span>
-      <button id="closeDiagramBtn" class="btn small-btn" type="button">Close</button>
-    </div>
-    <img id="largeCircuitImage" alt="">
-  </dialog>
-
-  <script src="sessions.js"></script>
-  <script src="sessions/session1.js"></script>
+  <dialog id="diagramDialog" class="diagram-dialog" aria-label="Large circuit diagram"><div class="dialog-toolbar"><strong id="diagramDialogTitle">Circuit picture</strong><button id="closeDiagramBtn" class="btn small-btn" type="button">Close</button></div><img id="largeCircuitImage" alt=""></dialog>
+  <script src="sessions.js"></script><script src="sessions/session1.js"></script>
   <script src="sessions/session2.js"></script>
   <script src="sessions/session3.js"></script>
-  <script src="app.js"></script>
+  <script src="sessions/session4.js"></script>
+  <script src="sessions/session5.js"></script>
+  <script src="sessions/session6.js"></script>
+  <script src="sessions/session7.js"></script><script src="app.js"></script>
 </body>
 </html>

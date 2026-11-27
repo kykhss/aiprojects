@@ -489,6 +489,16 @@ async function flashHexOverWebSerial(port, hexString, baudRate) {
   }
 }
 
+// Closes every open connection to the board (monitor reader, pipe, writer, port).
+async function closeAllConnections() {
+  if (isSerialReading || serialReader || serialPipeDone) {
+    await disconnectSerialMonitor();
+  }
+  // Even if the monitor was not running, force the port closed.
+  await closePortSafely(selectedSerialPort);
+  await sleep(200); // let the OS release the USB serial device
+}
+
 async function uploadCode() {
   if (isUploading) return;
   const code = editor.value.trim();
@@ -505,7 +515,8 @@ async function uploadCode() {
 
   isUploading = true;
   const wasMonitoring = isSerialReading;
-  if (wasMonitoring) await disconnectSerialMonitor();
+  boardStatus.textContent = "Closing all serial connections…";
+  await closeAllConnections();
 
   uploadBtn.disabled = true;
   uploadBtn.textContent = "Uploading…";

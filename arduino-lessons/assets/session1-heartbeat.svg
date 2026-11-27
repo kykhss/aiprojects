@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="820" viewBox="0 0 1280 820">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff8f6"/><stop offset="1" stop-color="#f1f5ff"/></linearGradient></defs>
+<style>
+.title{font:800 42px Arial;fill:#182b45}.sub{font:600 22px Arial;fill:#50627a}.label{font:700 24px Arial;fill:#25364d}.small{font:600 18px Arial;fill:#68788d}
+</style>
+<rect width="1280" height="820" rx="30" fill="url(#bg)"/><rect x="42" y="40" width="1196" height="740" rx="28" fill="#fff" stroke="#e0e7f0" stroke-width="3"/>
+<text x="90" y="115" class="sub">SESSION 1 · LESSON 2</text><text x="90" y="175" class="title">Create a Heartbeat Rhythm ❤️</text>
+<text x="90" y="235" class="label">LED sequence over time</text>
+<path d="M120 540 H1150" stroke="#9aa9bb" stroke-width="4" stroke-linecap="round"/>
+<path d="M150 540 V360 H260 V540 H330 V360 H550 V540 H1040 V360 H1150" fill="none" stroke="#e85b69" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+<g fill="#25364d" font-family="Arial" font-size="20" font-weight="700">
+<text x="205" y="325" text-anchor="middle">ON</text><text x="295" y="590" text-anchor="middle">OFF</text><text x="440" y="325" text-anchor="middle">ON</text><text x="795" y="590" text-anchor="middle">REST</text>
+</g>
+<g stroke="#c6d2e0" stroke-width="2" stroke-dasharray="8 8"><path d="M150 360 V620"/><path d="M260 360 V620"/><path d="M330 360 V620"/><path d="M550 360 V620"/><path d="M1040 360 V620"/></g>
+<g fill="#fff0f1" stroke="#efb0b6" stroke-width="2"><rect x="120" y="660" width="220" height="62" rx="16"/><rect x="360" y="660" width="220" height="62" rx="16"/><rect x="600" y="660" width="220" height="62" rx="16"/><rect x="840" y="660" width="300" height="62" rx="16"/></g>
+<g fill="#a33d4a" font-family="Arial" font-size="21" font-weight="700" text-anchor="middle"><text x="230" y="700">150 ms ON</text><text x="470" y="700">150 ms OFF</text><text x="710" y="700">300 ms ON</text><text x="990" y="700">900 ms REST</text></g>
+<text x="640" y="755" text-anchor="middle" class="small">Then loop() repeats the pattern from the beginning.</text>
+</svg>
